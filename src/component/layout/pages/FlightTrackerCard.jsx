@@ -1,4 +1,4 @@
-import video2 from "../../../assets/video2.mp4";
+import video from "../../../assets/video.mp4";
 
 export default function FlightTrackerCard() {
   return (
@@ -34,7 +34,7 @@ export default function FlightTrackerCard() {
     <div className="flex-1 relative rounded-xl overflow-hidden order-1 md:order-2 flex justify-start md:justify-end">
       <video
         className="w-52 h-52 object-cover rounded-xl"
-        src={video2}
+        src={video}
         autoPlay
         loop
         muted
