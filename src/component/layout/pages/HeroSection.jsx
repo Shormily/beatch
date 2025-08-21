@@ -203,9 +203,9 @@ export default function HeroSection() {
       {/* ---------- Background video ---------- */}
       <div className="relative w-full h-[39vh] 
                 sm:h-[20vh]      /* small tablets */
-                md:h-[20vh]      /* standard iPad 768x1024 */
+                md:h-[25vh]      /* standard iPad 768x1024 */
                 lg:h-[20vh]      /* large iPad 820x1180 */
-                xl:h-[27vh]      /* iPad Pro 1024x1366 */
+                xl:h-[39vh]      /* iPad Pro 1024x1366 */
                 flex items-start justify-center overflow-hidden max-[754px]:hidden">
 
         <video
@@ -233,7 +233,7 @@ export default function HeroSection() {
 
       <div className=" bg-gradient-to-b from-red-50 to-gray-100  ">
         <div className="max-w-[1200px] mx-auto px-8 pt-8 lg:pt-0 ">
-          <div className="relative z-0 md:z-0 lg:z-40 bg-white rounded-md shadow-lg max-w-[360px] xl:mt-[-100px] lg:mt-[-80px] 
+          <div className="relative z-0 md:z-0 lg:z-40 bg-white sm:rounded-none lg:rounded-md sm:shadow-lg shadow-[0_4px_12px_rgba(239,68,68,0.25)] shadow-lg max-w-[360px] xl:mt-[-100px] lg:mt-[-80px] 
            mx-auto">
             <div className="rounded-md overflow-hidden ">
               <div className="flex justify-center gap-2 sm:gap-3 md:gap-4 p-2">
@@ -326,12 +326,19 @@ export default function HeroSection() {
 
                 {/* Search button */}
                 <div className="w-full lg:w-auto flex justify-center lg:justify-end">
-                  <button
-                    className="w-full lg:w-24 h-16 rounded-md bg-red-700 hover:bg-red-500 text-white flex items-center justify-center"
-                    title="Search"
-                  >
-                    <CiSearch size={32} />
-                  </button>
+                 <button
+  className="w-full lg:w-24 h-16 rounded-md bg-red-700 hover:bg-red-500 text-white flex items-center justify-center gap-2"
+  title="Search"
+>
+  {/* Icon: Always show */}
+  <CiSearch className="inline-block" size={32} />
+
+  {/* Text: Only show on small/medium screens (below lg) */}
+  <span className="lg:hidden font-semibold">Search</span>
+</button>
+
+
+
                 </div>
               </div>
 
