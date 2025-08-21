@@ -1,10 +1,10 @@
-// import AirlineAlliances from "./AirlineAlliances";
-// import DestinationSlider from "./DestinationSlider";
-// import Explore from "./Explore";
-// import FlightTrackerCard from "./FlightTrackerCard";
+import AirlineAlliances from "./AirlineAlliances";
+import DestinationSlider from "./DestinationSlider";
+import Explore from "./Explore";
+import FlightTrackerCard from "./FlightTrackerCard";
 import HeroSection from "./HeroSection";
-// import OfferSlider from "./OfferSlider";
-// import TravelAppSection from "./TravelAppSection";
+import OfferSlider from "./OfferSlider";
+import TravelAppSection from "./TravelAppSection";
 
 
 const Home = () => {
@@ -13,14 +13,14 @@ const Home = () => {
             <div className="font-murecho">
                 <div className="bg-gradient-to-b from-gray-100 to-white">
                     <HeroSection />
-                    {/* <OfferSlider /> */}
-                    ok
+                    <OfferSlider />
+                    
                 </div>
-                 {/* <FlightTrackerCard/>
+                 <FlightTrackerCard/>
                 <DestinationSlider/>
             <AirlineAlliances />
             <TravelAppSection/>
-            <Explore/> */}
+            <Explore/>
             </div>
             
             
