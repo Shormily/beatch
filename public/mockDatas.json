@@ -1,0 +1,46 @@
+{
+  "offers": [
+    {
+      "id": 1,
+      "title": "Up to 17% OFF Domestic Flights",
+      "subtitle": "T&C Apply",
+      "image": "/offers/Travel.jpg",
+      "type": "flight"
+    },
+    {
+      "id": 2,
+      "title": "Seamless Travelling with Online EMI",
+      "subtitle": "T&C Apply",
+      "image": "/offers/Travel1.png",
+      "type": "hotel"
+    },
+    {
+      "id": 3,
+      "title": "Seamless Travelling with Online EMI",
+      "subtitle": "T&C Apply",
+      "image": "/offers/Travel2.webp",
+      "type": "flight"
+    },
+    {
+      "id": 4,
+      "title": "Seamless Travelling with Online EMI",
+      "subtitle": "T&C Apply",
+      "image": "/offers/Travel3.png",
+      "type": "hotel"
+    },
+    {
+      "id": 5,
+      "title": "Save on Hotels and Flights",
+      "subtitle": "T&C Apply",
+      "image": "/offers/Travel4.png",
+      "type": "flight"
+    },
+    {
+      "id": 6,
+      "title": "Save on Hotels and Flights",
+      "subtitle": "T&C Apply",
+      "image": "/offers/Travel6.jpg",
+      "type": "hotel"
+    }
+  ]
+}

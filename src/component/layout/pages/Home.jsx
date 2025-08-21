@@ -14,7 +14,7 @@ const Home = () => {
                 <div className="bg-gradient-to-b from-gray-100 to-white">
                     <HeroSection />
                     {/* <OfferSlider /> */}
-                    
+                    ok
                 </div>
                  {/* <FlightTrackerCard/>
                 <DestinationSlider/>

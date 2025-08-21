@@ -1,0 +1,45 @@
+[
+  {
+    "id": 1,
+    "name": "Male",
+    "price": "Starts from BDT 11,490",
+    "image": "/asset/Des.png"
+  },
+  {
+    "id": 2,
+    "name": "Colombo",
+    "price": "Starts from BDT 19,734",
+    "image": "/asset/Des1.png"
+  },
+  {
+    "id": 3,
+    "name": "Cox's Bazar",
+    "price": "Starts from BDT 12,250",
+    "image": "/asset/Des2.png"
+  },
+  {
+    "id": 4,
+    "name": "Kenya",
+    "price": "Starts from BDT 483,599",
+    "image": "/asset/Des3.png"
+  },
+  {
+    "id": 5,
+    "name": "Thailand",
+    "price": "Starts from BDT 22,500",
+    "image": "/asset/Des4.png"
+  },
+  {
+    "id": 6,
+    "name": "Dubai",
+    "price": "Starts from BDT 35,000",
+    "image": "/asset/Des5.png"
+  },
+  {
+    "id": 7,
+    "name": "Dubai",
+    "price": "Starts from BDT 35,000",
+    "image": "/asset/Des7.png"
+  }
+]
+
