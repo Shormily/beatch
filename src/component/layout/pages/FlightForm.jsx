@@ -16,7 +16,7 @@ export default function FlightForm() {
   return (
     <div className=" px-5 pt-7 pb-2 relative">
       {/* Trip type */}
-     <div className="flex gap-2 mb-5 flex-nowrap overflow-x-auto">
+    <div className="flex gap-2 mb-5">
   {["One Way", "Round Trip", "Multi City"].map((trip, i) => (
     <label
       key={i}
@@ -32,6 +32,7 @@ export default function FlightForm() {
     </label>
   ))}
 </div>
+
 
 
       {/* Inputs */}
