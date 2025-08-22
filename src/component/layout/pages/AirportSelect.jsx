@@ -40,7 +40,7 @@ const selectedAirport = AIRPORTS.find(
     <div className="relative" ref={boxRef}>
      <div
   className="h-20 border border-gray-300 rounded-lg px-3 pt-2 pb-4 bg-white transition flex flex-col 
-             focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-200"
+            "
 >
   {/* Always show label */}
   <span className="text-[12px] text-gray-500">{label}</span>
