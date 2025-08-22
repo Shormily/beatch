@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { CiSearch } from "react-icons/ci";
-import { IoSwapHorizontal } from "react-icons/io5";
+import { AiOutlineSwap } from "react-icons/ai";
 import FirsttripCalendarClone from "./calender";
 import AirportSelect from "./AirportSelect";
 
@@ -20,13 +20,13 @@ export default function FlightForm() {
         {["One Way", "Round Trip", "Multi City"].map((trip, i) => (
           <label
             key={i}
-            className="flex items-center gap-1 cursor-pointer font-normal sm:text-[12px] lg:text-[14px]"
+            className="flex items-center gap-1 cursor-pointer font-normal sm:text-[12px] lg:text-[14px] md:text-[14px]"
           >
             <input
               type="radio"
               name="trip"
               defaultChecked={i === 0}
-              className="w-4 h-4 accent-red-600 font-bold"
+              className=" sm:w-3 sm:h-3 lg:w-4 lg:h-4  accent-red-600 font-bold"
             />
             {trip}
           </label>
@@ -46,7 +46,7 @@ export default function FlightForm() {
             flex w-10 h-10 rounded-full bg-red-700 text-white items-center justify-center shadow-lg z-20"
             title="Swap"
           >
-            <IoSwapHorizontal className="text-xl" />
+            <AiOutlineSwap className="text-xl" />
           </button>
         </div>
 
