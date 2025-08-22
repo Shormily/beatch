@@ -56,7 +56,7 @@ export default function FlightForm() {
         </div>
 
         {/* Traveller */}
-        <div className="lg:basis-[20%] min-w-[180px] h-20 border border-gray-300 rounded-md px-4 pt-2 pb-1 flex flex-col justify-between">
+        <div className="lg:basis-[20%] min-w-[180px] h-20 border border-gray-300 rounded-lg px-4 pt-2 pb-1 flex flex-col justify-between">
           <span className="text-[12px] text-gray-500">Traveller, Class</span>
           <div>
             <p className="font-semibold leading-4 pb-2">1 Traveller</p>

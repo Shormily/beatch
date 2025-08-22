@@ -45,7 +45,7 @@ export default function HeroSection() {
   <div className="max-w-[1200px] mx-auto px-8 pt-0 lg:pt-8">
     <div
       className={`
-        bg-white rounded-md shadow-lg max-w-[360px] mx-auto relative z-30
+        bg-white rounded-xl shadow-lg max-w-[360px] mx-auto relative z-30
         -mt-20 sm:-mt-20 md:-mt-20 lg:-mt-24 xl:-mt-28 mt-6 sm:mt-0
         transition-all
 

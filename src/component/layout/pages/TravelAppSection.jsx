@@ -19,13 +19,13 @@ const TravelAppSection = () => {
             backgroundPosition: "center center",
           }}
         >
-          <div className="px-6 lg:px-20 py-6 grid grid-cols-1 lg:grid-cols-2 items-center gap-8">
+          <div className="px-6 pt-16 py-8 lg:px-20 py-6 grid grid-cols-1 lg:grid-cols-2 items-center gap-8">
             {/* Left side (Phones) */}
-            <div className=" flex items-center justify-center lg:justify-start gap-6">
+            <div className=" flex items-center justify-center lg:justify-start gap-6 ">
               <img
                 src={AppsImg}
                 alt="App Screen 1"
-                className="w-80 sm:w-80 md:w-80 lg:w-auto drop-shadow-2xl "
+                className="w-96 sm:w-80 md:w-80 lg:w-auto drop-shadow-2xl "
               />
             </div>
 
