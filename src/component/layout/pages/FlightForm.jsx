@@ -14,7 +14,7 @@ export default function FlightForm() {
   };
 
   return (
-    <div className=" px-5 pt-7 pb-2 relative">
+    <div className="px-3 sm:px-6 lg:px-6 pt-7 pb-2 relative">
       {/* Trip type */}
     <div className="flex gap-2 mb-5">
   {["One Way", "Round Trip", "Multi City"].map((trip, i) => (
