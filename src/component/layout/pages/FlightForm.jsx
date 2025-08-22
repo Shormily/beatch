@@ -14,24 +14,25 @@ export default function FlightForm() {
   };
 
   return (
-    <div className="px-3 pt-7 pb-2 relative">
+    <div className=" px-5 pt-7 pb-2 relative">
       {/* Trip type */}
-      <div className="flex gap-2 mb-5 flex-nowrap overflow-x-auto">
-        {["One Way", "Round Trip", "Multi City"].map((trip, i) => (
-          <label
-            key={i}
-            className="flex items-center gap-1 cursor-pointer font-normal sm:text-[8px] lg:text-[14px] md:text-[14px]"
-          >
-            <input
-              type="radio"
-              name="trip"
-              defaultChecked={i === 0}
-              className=" sm:w-3 sm:h-3 lg:w-4 lg:h-4  accent-red-600 font-bold"
-            />
-            {trip}
-          </label>
-        ))}
-      </div>
+     <div className="flex gap-2 mb-5 flex-nowrap overflow-x-auto">
+  {["One Way", "Round Trip", "Multi City"].map((trip, i) => (
+    <label
+      key={i}
+      className="flex items-center gap-1 cursor-pointer font-normal sm:text-[8px] lg:text-[14px] md:text-[14px] whitespace-nowrap"
+    >
+      <input
+        type="radio"
+        name="trip"
+        defaultChecked={i === 0}
+        className="sm:w-3 sm:h-3 lg:w-4 lg:h-4 accent-red-600 font-bold"
+      />
+      {trip}
+    </label>
+  ))}
+</div>
+
 
       {/* Inputs */}
       <div className="flex flex-col lg:flex-row gap-4">
@@ -88,10 +89,10 @@ export default function FlightForm() {
         {/* Search button */}
         <div className="w-full lg:w-auto flex justify-center lg:justify-end flex-shrink-0 mt-4 lg:mt-0">
           <button
-            className="w-32 sm:w-36 md:w-40 lg:w-24 h-20 rounded-md bg-red-700 hover:bg-red-500 text-white flex items-center justify-center gap-2"
+            className="w-32 sm:w-36 md:w-40 lg:w-24 sm:h-18 md:h-18 lg:h-20 rounded-md bg-red-700 hover:bg-red-500 text-white flex items-center justify-center gap-2"
             title="Search"
           >
-            <CiSearch className="inline-block" size={40} />
+            <CiSearch className="inline-block" size={36} />
             <span className="lg:hidden font-semibold text-sm">Search</span>
           </button>
         </div>
