@@ -29,39 +29,39 @@ export default function Navbar() {
   return (
     <>
       {/* Top Navbar */}
-      <nav className="bg-white shadow shadow-lg sticky top-0 z-50 py-2 text-[14px] font-murecho">
+      <nav className="bg-white shadow shadow-lg sticky top-0 z-50 py-0 sm:py-2 md:py-2 lg:py-2 text-[14px] font-murecho">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="flex justify-between items-center h-14 md:h-16">
-           {/* Left side (Toggle + Logo) -- Only Small Screen */}
-<div className="flex items-center gap-3 md:hidden">
-  {/* Mobile Toggle Button */}
-  <button
-    className="text-2xl flex items-center"
-    onClick={() => setOpen(!open)}
-  >
-    <FaBars />
-  </button>
+            {/* Left side (Toggle + Logo) -- Only Small Screen */}
+            <div className="flex items-center gap-3 md:hidden">
+              {/* Mobile Toggle Button */}
+              <button
+                className="text-2xl flex items-center"
+                onClick={() => setOpen(!open)}
+              >
+                <FaBars />
+              </button>
 
-  {/* Logo */}
-  <Link to={"/"} className="flex items-center">
-    <img
-      className="h-8 w-auto"  // ছোট height মোবাইলের জন্য
-      src={navlogo}
-      alt="logo"
-    />
-  </Link>
-</div>
+              {/* Logo */}
+              <Link to={"/"} className="flex items-center">
+                <img
+                  className="h-8 w-auto"  // ছোট height মোবাইলের জন্য
+                  src={navlogo}
+                  alt="logo"
+                />
+              </Link>
+            </div>
 
-{/* Left side (Only Medium & Large Screen) */}
-<div className="hidden md:flex items-center gap-3">
-  <Link to={"/"}>
-    <img
-      className="h-12 w-auto"  // আগের মতো থাকবে
-      src={navlogo}
-      alt="logo"
-    />
-  </Link>
-</div>
+            {/* Left side (Only Medium & Large Screen) */}
+            <div className="hidden md:flex items-center gap-3">
+              <Link to={"/"}>
+                <img
+                  className="h-12 w-auto"  // আগের মতো থাকবে
+                  src={navlogo}
+                  alt="logo"
+                />
+              </Link>
+            </div>
 
 
 
@@ -75,8 +75,8 @@ export default function Navbar() {
                     key={item.to}
                     to={item.to}
                     className={`relative flex flex-col items-center group ${isActive
-                        ? "text-gray-800 font-semibold"
-                        : "text-black"
+                      ? "text-gray-800 font-semibold"
+                      : "text-black"
                       }`}
                   >
                     <img className="h-7 w-auto mb-1" src={item.icon} alt="" />
