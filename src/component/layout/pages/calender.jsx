@@ -34,10 +34,10 @@ export default function FirsttripCalendarClone() {
   {/* Departure */}
   <div className="sm:w-1/2 w-full relative">
     <div
-      className="h-16 border border-gray-300 rounded-md sm:rounded-l-xl px-4 pb-1 flex flex-col justify-between bg-white cursor-pointer"
+      className="h-20 border border-gray-300 rounded-md sm:rounded-l-md sm:rounded-r-none px-4 pb-1 flex flex-col justify-between bg-white cursor-pointer"
       onClick={(e) => e.currentTarget.querySelector("input").focus()}
     >
-      <label className="text-[12px] text-gray-500">Departure</label>
+      <label className="text-[12px] text-gray-500 pt-2">Departure</label>
       <div className="flex flex-col gap-0.5">
         <DatePicker
           selected={range.startDate}
@@ -45,7 +45,7 @@ export default function FirsttripCalendarClone() {
           dateFormat="MM/dd/yyyy"
           calendarClassName="custom-calendar"
           popperContainer={PopperContainer}
-          className="font-semibold text-sm bg-transparent outline-none w-full cursor-pointer"
+          className="font-semibold text-sm pb-1 bg-transparent outline-none w-full cursor-pointer"
           popperPlacement="bottom"
         />
         <span className="text-[12px] text-gray-500">
@@ -58,10 +58,10 @@ export default function FirsttripCalendarClone() {
   {/* Return */}
   <div className="sm:w-1/2 w-full relative">
     <div
-      className="h-16 border border-gray-300 rounded-md sm:rounded-r-xl sm:border-l-0 px-4 pb-1 flex flex-col justify-between bg-white cursor-pointer"
+      className="h-20 border border-gray-300 rounded-md sm:rounded-r-md sm:rounded-l-none sm:border-l-0 px-4 pb-1 flex flex-col justify-between bg-white cursor-pointer"
       onClick={(e) => e.currentTarget.querySelector("input").focus()}
     >
-      <label className="text-[12px] text-gray-500">Return</label>
+      <label className="text-[12px] text-gray-500 pt-2">Return</label>
       <div className="flex flex-col gap-0.5">
         <DatePicker
           selected={range.endDate}
@@ -79,7 +79,6 @@ export default function FirsttripCalendarClone() {
     </div>
   </div>
 </div>
-
 
   );
 }

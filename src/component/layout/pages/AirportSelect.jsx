@@ -32,25 +32,43 @@ export default function AirportSelect({ label, value, onChange, placeholder = "A
       a.city.toLowerCase().includes(q.toLowerCase()) ||
       a.code.toLowerCase().includes(q.toLowerCase())
   );
+const selectedAirport = AIRPORTS.find(
+  (a) => `${a.city}, ${a.country}`.toLowerCase() === q.toLowerCase()
+);
 
   return (
     <div className="relative" ref={boxRef}>
-      <div
-        className="h-16 border border-gray-300 rounded-xl px-4 pt-2 pb-1 flex flex-col justify-between
-               bg-white focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-200 transition"
-      >
-        <span className="text-[12px] text-gray-500">{label}</span>
-        <input
-          className="outline-none bg-transparent font-semibold placeholder-gray-400"
-          value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          placeholder={placeholder}
-        />
-      </div>
+     <div
+  className="h-20 border border-gray-300 rounded-md px-3 pt-2 pb-4 bg-white transition flex flex-col 
+             focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-200"
+>
+  {/* Always show label */}
+  <span className="text-[12px] text-gray-500">{label}</span>
+
+  {/* Input container */}
+  <div className={`flex-1 flex ${!selectedAirport?.name ? "items-center" : "items-start"} `}>
+    <input
+      className="outline-none bg-transparent font-normal placeholder-gray-600 text-[14px] w-full"
+      value={q}
+      onChange={(e) => {
+        setQ(e.target.value);
+        setOpen(true);
+      }}
+      onFocus={() => setOpen(true)}
+      placeholder={placeholder}
+    />
+  </div>
+
+  {/* Airport Name */}
+  {selectedAirport?.name && (
+    <span className="text-[12px] text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis w-full">
+      {selectedAirport.name}
+    </span>
+  )}
+</div>
+
+
+
 
       {/* dropdown */}
       {open && (

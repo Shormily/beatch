@@ -14,12 +14,20 @@ export default function FlightForm() {
   };
 
   return (
-    <div className="p-6 relative">
+    <div className="px-5 pt-7 pb-2 relative">
       {/* Trip type */}
-      <div className="flex flex-wrap gap-6 mb-5 text-[14px]">
+      <div className="flex gap-2 mb-5 flex-nowrap overflow-x-auto">
         {["One Way", "Round Trip", "Multi City"].map((trip, i) => (
-          <label key={i} className="flex items-center gap-2 cursor-pointer font-semibold">
-            <input type="radio" name="trip" defaultChecked={i === 0} className="w-5 h-5 accent-red-600" />
+          <label
+            key={i}
+            className="flex items-center gap-1 cursor-pointer font-normal sm:text-[12px] lg:text-[14px]"
+          >
+            <input
+              type="radio"
+              name="trip"
+              defaultChecked={i === 0}
+              className="w-4 h-4 accent-red-600 font-bold"
+            />
             {trip}
           </label>
         ))}
@@ -35,7 +43,7 @@ export default function FlightForm() {
             type="button"
             onClick={swap}
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 
-            flex w-10 h-10 rounded-full bg-red-600 text-white items-center justify-center shadow-lg z-20"
+            flex w-10 h-10 rounded-full bg-red-700 text-white items-center justify-center shadow-lg z-20"
             title="Swap"
           >
             <IoSwapHorizontal className="text-xl" />
@@ -48,34 +56,65 @@ export default function FlightForm() {
         </div>
 
         {/* Traveller */}
-        <div className="lg:basis-[20%] min-w-[180px] h-16 border border-gray-300 rounded-xl px-4 pt-2 pb-1 flex flex-col justify-between">
+        <div className="lg:basis-[20%] min-w-[180px] h-20 border border-gray-300 rounded-md px-4 pt-2 pb-1 flex flex-col justify-between">
           <span className="text-[12px] text-gray-500">Traveller, Class</span>
           <div>
-            <p className="font-semibold leading-4">1 Traveller</p>
-            <p className="text-xs text-gray-400">Economy</p>
+            <p className="font-semibold leading-4 pb-2">1 Traveller</p>
+            <p className="text-[12px] text-gray-500">Economy</p>
           </div>
         </div>
 
+        {/* SMALL SCREEN Fare Type (Above Search Button) */}
+        <div className="flex flex-wrap text-[14px] gap-6 mt-4 cursor-pointer font-normal lg:hidden">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="fare"
+              defaultChecked
+              className="w-4 h-4 accent-red-600"
+            />
+            Regular Fare
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="fare"
+              className="w-4 h-4 accent-red-600"
+            />
+            Student Fare
+          </label>
+        </div>
+
         {/* Search button */}
-        <div className="w-full lg:w-auto flex justify-center lg:justify-end">
+        <div className="w-full lg:w-auto flex justify-center lg:justify-end flex-shrink-0 mt-4 lg:mt-0">
           <button
-            className="w-full lg:w-24 h-16 rounded-md bg-red-700 hover:bg-red-500 text-white flex items-center justify-center gap-2"
+            className="w-32 sm:w-36 md:w-40 lg:w-24 h-20 rounded-md bg-red-700 hover:bg-red-500 text-white flex items-center justify-center gap-2"
             title="Search"
           >
-            <CiSearch className="inline-block" size={32} />
-            <span className="lg:hidden font-semibold">Search</span>
+            <CiSearch className="inline-block" size={40} />
+            <span className="lg:hidden font-semibold text-sm">Search</span>
           </button>
         </div>
       </div>
 
-      {/* Fare type */}
-      <div className="flex text-[14px] gap-6 mt-5 cursor-pointer font-semibold">
+      {/* LARGE SCREEN Fare Type (Stays below on large screens) */}
+      <div className="hidden lg:flex flex-wrap text-[14px] gap-6 mt-5 cursor-pointer font-normal">
         <label className="flex items-center gap-2">
-          <input type="radio" name="fare" defaultChecked className="w-5 h-5 accent-red-600" />
+          <input
+            type="radio"
+            name="fare"
+            defaultChecked
+            className="w-4 h-4 accent-red-600"
+          />
           Regular Fare
         </label>
         <label className="flex items-center gap-2">
-          <input type="radio" name="fare" className="w-5 h-5 accent-red-600" /> Student Fare
+          <input
+            type="radio"
+            name="fare"
+            className="w-4 h-4 accent-red-600"
+          />
+          Student Fare
         </label>
       </div>
     </div>
