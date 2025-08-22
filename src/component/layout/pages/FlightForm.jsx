@@ -90,10 +90,10 @@ export default function FlightForm() {
         {/* Search button */}
         <div className="w-full lg:w-auto flex justify-center lg:justify-end flex-shrink-0 mt-4 lg:mt-0">
           <button
-            className="w-32 sm:w-36 md:w-40 lg:w-24 sm:h-18 md:h-18 lg:h-20 rounded-md bg-red-700 hover:bg-red-500 text-white flex items-center justify-center gap-2"
+            className="w-32 sm:w-36 md:w-40 lg:w-24 sm:h-18 md:h-18 py-1 lg:h-20 rounded-md bg-red-700 hover:bg-red-500 text-white flex items-center justify-center gap-2"
             title="Search"
           >
-            <CiSearch className="inline-block" size={36} />
+            <CiSearch className="inline-block " size={36} />
             <span className="lg:hidden font-semibold text-sm">Search</span>
           </button>
         </div>

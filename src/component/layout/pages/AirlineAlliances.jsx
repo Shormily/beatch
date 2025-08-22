@@ -31,7 +31,7 @@ const AirlineAlliances = () => {
   return (
     <div className="bg-white py-12 font-murecho">
       <div className="max-w-[1240px] mx-auto text-center px-8">
-        <h2 className="text-3xl md:text-3xl font-bold text-gray-900">
+        <h2 className="text-2xl sm:text-4xl md:text-3xl lg:text-4xl font-bold text-gray-900">
           Travel Beyond Expectations with Our Trusted Airline Alliances
         </h2>
         <p className="text-gray-600 mt-2">
