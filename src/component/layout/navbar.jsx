@@ -45,7 +45,7 @@ export default function Navbar() {
               {/* Logo */}
               <Link to={"/"} className="flex items-center">
                 <img
-                  className="h-8 w-auto"  // ছোট height মোবাইলের জন্য
+                  className="h-10 w-auto mb-2"  // ছোট height মোবাইলের জন্য
                   src={navlogo}
                   alt="logo"
                 />
@@ -135,7 +135,7 @@ export default function Navbar() {
             }`}
         >
           <div className="flex justify-between items-center p-4 ">
-            <img className="h-10" src={navlogo} alt="logo" />
+            <img className="h-10 " src={navlogo} alt="logo" />
             <button onClick={() => setOpen(false)}>
               <RxCross1 className="text-xl" />
             </button>
