@@ -30,9 +30,9 @@ export default function FirsttripCalendarClone() {
   );
 
   return (
-   <div className="basis-[35%] flex flex-col sm:flex-row gap-2 sm:gap-0">
+   <div className="basis-[35%] flex flex-col sm:flex-row gap-4 sm:gap-0">
   {/* Departure */}
-  <div className="sm:w-1/2 w-full relative">
+  <div className="sm:w-1/2 w-full relative sm:gap-4">
     <div
       className="h-20 border border-gray-300 rounded-lg sm:rounded-l-md sm:rounded-r-none px-4 pb-1 flex flex-col justify-between bg-white cursor-pointer"
       onClick={(e) => e.currentTarget.querySelector("input").focus()}
@@ -58,7 +58,7 @@ export default function FirsttripCalendarClone() {
   {/* Return */}
   <div className="sm:w-1/2 w-full relative">
     <div
-      className="h-20 border border-gray-300 rounded-lg sm:rounded-r-md sm:rounded-l-none sm:border-l-0 px-4 pb-1 flex flex-col justify-between bg-white cursor-pointer"
+      className="h-20 border border-gray-300 rounded-lg  sm:rounded-r-md sm:rounded-l-none sm:border-l-0 px-4 pb-1 flex flex-col justify-between bg-white cursor-pointer"
       onClick={(e) => e.currentTarget.querySelector("input").focus()}
     >
       <label className="text-[12px] text-gray-500 pt-2">Return</label>

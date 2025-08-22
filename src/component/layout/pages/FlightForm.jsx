@@ -20,7 +20,7 @@ export default function FlightForm() {
         {["One Way", "Round Trip", "Multi City"].map((trip, i) => (
           <label
             key={i}
-            className="flex items-center gap-1 cursor-pointer font-normal sm:text-[5px] lg:text-[14px] md:text-[14px]"
+            className="flex items-center gap-1 cursor-pointer font-normal sm:text-[8px] lg:text-[14px] md:text-[14px]"
           >
             <input
               type="radio"
