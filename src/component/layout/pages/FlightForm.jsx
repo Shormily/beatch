@@ -14,13 +14,13 @@ export default function FlightForm() {
   };
 
   return (
-    <div className="px-5 pt-7 pb-2 relative">
+    <div className="px-3 pt-7 pb-2 relative">
       {/* Trip type */}
       <div className="flex gap-2 mb-5 flex-nowrap overflow-x-auto">
         {["One Way", "Round Trip", "Multi City"].map((trip, i) => (
           <label
             key={i}
-            className="flex items-center gap-1 cursor-pointer font-normal sm:text-[12px] lg:text-[14px] md:text-[14px]"
+            className="flex items-center gap-1 cursor-pointer font-normal sm:text-[5px] lg:text-[14px] md:text-[14px]"
           >
             <input
               type="radio"

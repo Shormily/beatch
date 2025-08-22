@@ -34,20 +34,20 @@ export default function Navbar() {
           <div className="flex justify-between items-center h-14 md:h-16">
             {/* Left side (Toggle + Logo) */}
             <div className="flex items-center gap-3">
-  {/* Mobile Toggle Button */}
-  <button className="md:hidden text-2xl" onClick={() => setOpen(!open)}>
-    {open ? <FaBars /> : <FaBars />}
-  </button>
+              {/* Mobile Toggle Button */}
+              <button className="md:hidden text-2xl" onClick={() => setOpen(!open)}>
+                {open ? <FaBars /> : <FaBars />}
+              </button>
 
-  {/* Logo */}
-  <Link to={"/"}>
-    <img
-      className="h-12 w-auto sm:mb-4 lg:mb-1"
-      src={navlogo}
-      alt="logo"
-    />
-  </Link>
-</div>
+              {/* Logo */}
+              <Link to={"/"}>
+                <img
+                  className="h-12 w-auto sm:mb-5 lg:mb-1"
+                  src={navlogo}
+                  alt="logo"
+                />
+              </Link>
+            </div>
 
 
             {/* Menu Items (Desktop) */}
@@ -58,11 +58,10 @@ export default function Navbar() {
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    className={`relative flex flex-col items-center group ${
-                      isActive
+                    className={`relative flex flex-col items-center group ${isActive
                         ? "text-gray-800 font-semibold"
                         : "text-black"
-                    }`}
+                      }`}
                   >
                     <img className="h-7 w-auto mb-1" src={item.icon} alt="" />
                     {/* Gradient only for Business Class */}
@@ -77,10 +76,9 @@ export default function Navbar() {
                     {/* Animated underline */}
                     <span
                       className={`absolute -bottom-1 left-1/2 h-[2px] bg-red-500 transition-all duration-300 transform -translate-x-1/2
-                        ${
-                          isActive
-                            ? "w-full"
-                            : "w-0 group-hover:w-full"
+                        ${isActive
+                          ? "w-full"
+                          : "w-0 group-hover:w-full"
                         }
                       `}
                     />
@@ -117,9 +115,8 @@ export default function Navbar() {
 
         {/* Mobile Drawer */}
         <div
-          className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 z-50 ${
-            open ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 z-50 ${open ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           <div className="flex justify-between items-center p-4 ">
             <img className="h-10" src={navlogo} alt="logo" />
@@ -135,10 +132,9 @@ export default function Navbar() {
                 to={item.to}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 ${
-                    item.label === "Business Class"
-                      ? "bg-gradient-to-r from-teal-900 to-teal-400 bg-clip-text text-transparent font-semibold"
-                      : isActive
+                  `flex items-center gap-3 ${item.label === "Business Class"
+                    ? "bg-gradient-to-r from-teal-900 to-teal-400 bg-clip-text text-transparent font-semibold"
+                    : isActive
                       ? "text-red-500 font-semibold"
                       : "text-black"
                   }`
@@ -174,10 +170,9 @@ export default function Navbar() {
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${
-                isActive
-                  ? "bg-[#7A1C1C] text-white"
-                  : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${isActive
+                ? "bg-[#7A1C1C] text-white"
+                : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Flight"
@@ -188,10 +183,9 @@ export default function Navbar() {
           <NavLink
             to="/hotel"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${
-                isActive
-                  ? "bg-[#7A1C1C] text-white"
-                  : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${isActive
+                ? "bg-[#7A1C1C] text-white"
+                : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Hotel"
@@ -202,10 +196,9 @@ export default function Navbar() {
           <NavLink
             to="/promotions"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${
-                isActive
-                  ? "bg-[#7A1C1C] text-white"
-                  : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${isActive
+                ? "bg-[#7A1C1C] text-white"
+                : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Promotions"
@@ -216,10 +209,9 @@ export default function Navbar() {
           <NavLink
             to="/business"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${
-                isActive
-                  ? "bg-[#7A1C1C] text-white"
-                  : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${isActive
+                ? "bg-[#7A1C1C] text-white"
+                : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Business"
