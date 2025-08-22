@@ -29,7 +29,7 @@ export default function Navbar() {
   return (
     <>
       {/* Top Navbar */}
-      <nav className="bg-white shadow sticky top-0 z-50 py-2 text-[14px] font-murecho">
+      <nav className="bg-white shadow shadow-lg sticky top-0 z-50 py-2 text-[14px] font-murecho">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Left side (Toggle + Logo) */}
