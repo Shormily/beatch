@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import video2 from "./assets/video2.mp4";
+// import video2 from "./assets/video2.mp4";
 import Tabs from "./Tabs";
 import FlightForm from "./FlightForm";
 import HotelForm from "./HotelForm";
@@ -42,13 +42,13 @@ export default function HeroSection() {
         [@media(min-width:1024px)_and_(max-width:1366px)]:h-[0vh]
         [@media(min-width:1024px)_and_(max-width:1366px)]:min-h-[200px]`}
       >
-        <video
+        {/* <video
           className="absolute inset-0 w-full h-full object-cover"
           src={video2}
           autoPlay
           loop
           muted
-        />
+        /> */}
         <div className="absolute inset-0 bg-black/14 " />
         <div className="relative z-20 w-full max-w-[1200px] mx-auto text-white px-8 pt-14">
           <h1 className="text-5xl font-bold">
