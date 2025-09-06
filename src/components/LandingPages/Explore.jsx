@@ -1,5 +1,5 @@
 import { HiOutlineArrowRight } from "react-icons/hi";
-import getStarted from "../../../assets/getStarted.webp";
+import getStarted from "./assets/getStarted.webp";
 
 const Explore = () => {
   return (

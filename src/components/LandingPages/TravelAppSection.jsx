@@ -1,6 +1,6 @@
-import AppsImg from "../../../assets/AppsImg.png";
-import bgPattern from "../../../assets/bgPattern.png";
-import qr from "../../../assets/qr.png";
+import AppsImg from "./assets/AppsImg.png";
+import bgPattern from "./assets/bgPattern.png";
+import qr from "./assets/qr.png";
 import { TfiDownload } from "react-icons/tfi";
 
 

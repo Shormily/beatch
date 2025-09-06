@@ -1,15 +1,15 @@
-import Air from "../../../assets/Air.png";
-import Air2 from "../../../assets/Air2.png";
-import Air3 from "../../../assets/Air3.png";
-import Air5 from "../../../assets/Air5.png";
-import Air7 from "../../../assets/Air7.png";
-import Air8 from "../../../assets/Air8.png";
-import Air9 from "../../../assets/Air9.png";
-import Air10 from "../../../assets/Air10.png";
-import Air11 from "../../../assets/Air11.webp";
-import Air12 from "../../../assets/Air12.webp";
-import Air13 from "../../../assets/Air13.png";
-import Air14 from "../../../assets/Air14.png";
+import Air from "./assets/Air.png";
+import Air2 from "./assets/Air2.png";
+import Air3 from "./assets/Air3.png";
+import Air5 from "./assets/Air5.png";
+import Air7 from "./assets/Air7.png";
+import Air8 from "./assets/Air8.png";
+import Air9 from "./assets/Air9.png";
+import Air10 from "./assets/Air10.png";
+import Air11 from "./assets/Air11.webp";
+import Air12 from "./assets/Air12.webp";
+import Air13 from "./assets/Air13.png";
+import Air14 from "./assets/Air14.png";
 
 // Fake data
 const airlines = [

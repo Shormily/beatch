@@ -1,6 +1,5 @@
-import React from "react";
-import FlightImg from "../../../assets/Flight.png";
-import HotelImg from "../../../assets/Hotel.png";
+import FlightImg from "./assets/Flight.png";
+import HotelImg from "./assets/Hotel.png";
 
 export default function Tabs({ activeTab, setActiveTab }) {
     return (

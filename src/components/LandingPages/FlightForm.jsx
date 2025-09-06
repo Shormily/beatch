@@ -3,6 +3,7 @@ import { CiSearch } from "react-icons/ci";
 import { AiOutlineSwap } from "react-icons/ai";
 import FirsttripCalendarClone from "./calender";
 import AirportSelect from "./AirportSelect";
+import TravellerSelect from "../../pages/Traveller/TravellerSelect";
 
 export default function FlightForm() {
   const [from, setFrom] = useState("");
@@ -16,25 +17,22 @@ export default function FlightForm() {
   return (
     <div className="px-3 sm:px-6 lg:px-6 pt-7 pb-2 relative">
       {/* Trip type */}
-    <div className="flex gap-2 mb-5">
-  {["One Way", "Round Trip", "Multi City"].map((trip, i) => (
-    <label
-      key={i}
-      className="flex items-center gap-1 cursor-pointer font-normal text-[10px] sm:text-[14px] lg:text-[14x] md:text-[14] whitespace-nowrap"
-    >
-      <input
-        type="radio"
-        name="trip"
-        defaultChecked={i === 0}
-        className="w-4 h-4  sm:w-3 sm:h-3 lg:w-4 lg:h-4 accent-red-600 font-bold"
-      />
-      {trip}
-    </label>
-  ))}
-</div>
-
-
-
+      <div className="flex gap-2 mb-5">
+        {["One Way", "Round Trip", "Multi City"].map((trip, i) => (
+          <label
+            key={i}
+            className="flex items-center gap-1 cursor-pointer font-normal text-[10px] sm:text-[14px] lg:text-[14x] md:text-[14] whitespace-nowrap"
+          >
+            <input
+              type="radio"
+              name="trip"
+              defaultChecked={i === 0}
+              className="w-4 h-4  sm:w-3 sm:h-3 lg:w-4 lg:h-4 accent-red-600 font-bold"
+            />
+            {trip}
+          </label>
+        ))}
+      </div>
       {/* Inputs */}
       <div className="flex flex-col lg:flex-row gap-4">
         {/* From + To */}
@@ -58,13 +56,7 @@ export default function FlightForm() {
         </div>
 
         {/* Traveller */}
-        <div className="lg:basis-[20%] min-w-[180px] h-20 border border-gray-300 rounded-lg px-4 pt-2 pb-1 flex flex-col justify-between">
-          <span className="text-[12px] text-gray-500">Traveller, Class</span>
-          <div>
-            <p className="font-semibold leading-4 pb-2">1 Traveller</p>
-            <p className="text-[12px] text-gray-500">Economy</p>
-          </div>
-        </div>
+        <TravellerSelect/>
 
         {/* SMALL SCREEN Fare Type (Above Search Button) */}
         <div className="flex flex-wrap text-[14px] gap-6 mt-4 cursor-pointer font-normal lg:hidden">
@@ -88,6 +80,7 @@ export default function FlightForm() {
         </div>
 
         {/* Search button */}
+        
         <div className="w-full lg:w-auto flex justify-center lg:justify-end flex-shrink-0 mt-4 lg:mt-0">
           <button
             className="w-32 sm:w-36 md:w-40 lg:w-24 sm:h-18 md:h-18 py-1 lg:h-20 rounded-md bg-red-700 hover:bg-red-500 text-white flex items-center justify-center gap-2"

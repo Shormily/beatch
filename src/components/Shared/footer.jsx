@@ -2,13 +2,13 @@ import { FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
 import { FaXTwitter, FaYoutube } from "react-icons/fa6";
 import { MdEmail, MdLocationOn, MdPhone } from "react-icons/md";
 import { Link } from "react-router-dom";
-import logo from "../../assets/logo.png";
-import TATA from "../../assets/TATA.png"; // iata/lata
-import BASIS from "../../assets/BASIS.png";
-import CAB from "../../assets/CAB.webp";
-import DBID from "../../assets/DBID.webp";
-import pci from "../../assets/pci.png";
-import pay from "../../assets/pay.png";
+import logo from "../LandingPages/assets/logo.png";
+import TATA from "../LandingPages/assets/TATA.png"; // iata/lata
+import BASIS from "../LandingPages/assets/BASIS.png";
+import CAB from "../LandingPages/assets/CAB.webp";
+import DBID from "../LandingPages/assets/DBID.webp";
+import pci from "../LandingPages/assets/pci.png";
+import pay from "../LandingPages/assets/pay.png";
 
 const Footer = () => {
   return (

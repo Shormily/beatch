@@ -1,19 +1,19 @@
-// src/components/Navbar.jsx
 import { useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { FaBars, FaTimes } from "react-icons/fa";
+import { FaBars } from "react-icons/fa";
 import { FaBoxesPacking } from "react-icons/fa6";
 import { BsSearch } from "react-icons/bs";
 import { CgProfile } from "react-icons/cg";
 import { LuMessageSquareText } from "react-icons/lu";
 import { RxCross1 } from "react-icons/rx";
 
-import navlogo from "../../assets/navlogo.png";
-import Noti from "../../assets/Noti.png";
-import Flight from "../../assets/Flight.png";
-import Hotel from "../../assets/Hotel.png";
-import Business from "../../assets/Business.png";
-import Promotions from "../../assets/Promotions.png";
+import navlogo from "../LandingPages/assets/navlogo.png";
+import Noti from "../LandingPages/assets/Noti.png";
+import Flight from "../LandingPages/assets/Flight.png";
+import Hotel from "../LandingPages/assets/Hotel.png";
+import Business from "../LandingPages/assets/Business.png";
+import Promotions from "../LandingPages/assets/Promotions.png";
+
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -28,43 +28,28 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Top Navbar */}
-      <nav className="bg-white shadow shadow-lg sticky top-0 z-50 py-0 sm:py-2 md:py-2 lg:py-2 text-[14px] font-murecho">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 text-[14px] font-murecho">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="flex justify-between items-center h-14 md:h-16">
-            {/* Left side (Toggle + Logo) -- Only Small Screen */}
+            {/* Left side (Toggle + Logo for mobile) */}
             <div className="flex items-center gap-3 md:hidden">
-              {/* Mobile Toggle Button */}
               <button
                 className="text-2xl flex items-center"
                 onClick={() => setOpen(!open)}
               >
                 <FaBars />
               </button>
-
-              {/* Logo */}
               <Link to={"/"} className="flex items-center">
-                <img
-                  className="h-10 w-auto mb-2"  // ছোট height মোবাইলের জন্য
-                  src={navlogo}
-                  alt="logo"
-                />
+                <img className="h-10 w-auto mb-2" src={navlogo} alt="logo" />
               </Link>
             </div>
 
-            {/* Left side (Only Medium & Large Screen) */}
+            {/* Logo for desktop */}
             <div className="hidden md:flex items-center gap-3">
               <Link to={"/"}>
-                <img
-                  className="h-12 w-auto"  // আগের মতো থাকবে
-                  src={navlogo}
-                  alt="logo"
-                />
+                <img className="h-12 w-auto" src={navlogo} alt="logo" />
               </Link>
             </div>
-
-
-
 
             {/* Menu Items (Desktop) */}
             <div className="hidden md:flex space-x-8">
@@ -74,13 +59,13 @@ export default function Navbar() {
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    className={`relative flex flex-col items-center group ${isActive
-                      ? "text-gray-800 font-semibold"
-                      : "text-black"
-                      }`}
+                    className={`relative flex flex-col items-center group ${
+                      isActive
+                        ? "text-gray-800 font-semibold"
+                        : "text-black"
+                    }`}
                   >
                     <img className="h-7 w-auto mb-1" src={item.icon} alt="" />
-                    {/* Gradient only for Business Class */}
                     {item.label === "Business Class" ? (
                       <span className="bg-gradient-to-r from-teal-900 to-teal-400 bg-clip-text text-transparent font-semibold">
                         {item.label}
@@ -88,15 +73,10 @@ export default function Navbar() {
                     ) : (
                       item.label
                     )}
-
-                    {/* Animated underline */}
                     <span
-                      className={`absolute -bottom-1 left-1/2 h-[2px] bg-red-500 transition-all duration-300 transform -translate-x-1/2
-                        ${isActive
-                          ? "w-full"
-                          : "w-0 group-hover:w-full"
-                        }
-                      `}
+                      className={`absolute -bottom-1 left-1/2 h-[2px] bg-red-500 transition-all duration-300 transform -translate-x-1/2 ${
+                        isActive ? "w-full" : "w-0 group-hover:w-full"
+                      }`}
                     />
                   </NavLink>
                 );
@@ -105,10 +85,9 @@ export default function Navbar() {
 
             {/* Right Side */}
             <div className="flex items-center gap-3">
-              {/* Desktop: Sign In / Sign Up */}
               <div className="hidden md:flex items-center gap-3">
                 <Link
-                  to="/signin"
+                  to="/sign"
                   className="px-5 py-2 border border-red-500 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all duration-300"
                 >
                   Sign In
@@ -119,9 +98,15 @@ export default function Navbar() {
                 >
                   Sign Up
                 </Link>
+
+                {/* ✅ Google Translate Button */}
+               <div
+  id="google_translate_element"
+  className="ml-3 border border-gray-300 rounded-md px-2 py-1 bg-white text-sm"
+></div>
               </div>
 
-              {/* Mobile: Noti image */}
+              {/* Mobile Noti */}
               <div className="md:hidden">
                 <img className="h-6 w-auto" src={Noti} alt="noti" />
               </div>
@@ -131,11 +116,12 @@ export default function Navbar() {
 
         {/* Mobile Drawer */}
         <div
-          className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 z-50 ${open ? "translate-x-0" : "-translate-x-full"
-            }`}
+          className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 z-50 ${
+            open ? "translate-x-0" : "-translate-x-full"
+          }`}
         >
-          <div className="flex justify-between items-center p-4 ">
-            <img className="h-10 " src={navlogo} alt="logo" />
+          <div className="flex justify-between items-center p-4">
+            <img className="h-10" src={navlogo} alt="logo" />
             <button onClick={() => setOpen(false)}>
               <RxCross1 className="text-xl" />
             </button>
@@ -148,9 +134,10 @@ export default function Navbar() {
                 to={item.to}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 ${item.label === "Business Class"
-                    ? "bg-gradient-to-r from-teal-900 to-teal-400 bg-clip-text text-transparent font-semibold"
-                    : isActive
+                  `flex items-center gap-3 ${
+                    item.label === "Business Class"
+                      ? "bg-gradient-to-r from-teal-900 to-teal-400 bg-clip-text text-transparent font-semibold"
+                      : isActive
                       ? "text-red-500 font-semibold"
                       : "text-black"
                   }`
@@ -180,15 +167,16 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Bottom Navigation for Mobile */}
+      {/* Mobile Bottom Nav */}
       <div className="fixed bottom-0 left-0 right-0 md:hidden z-50 bg-[#2B2D31] shadow-[0_-6px_16px_rgba(0,0,0,0.25)] p-2">
         <div className="grid grid-cols-4 gap-2 items-stretch">
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${isActive
-                ? "bg-[#7A1C1C] text-white"
-                : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${
+                isActive
+                  ? "bg-[#7A1C1C] text-white"
+                  : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Flight"
@@ -199,9 +187,10 @@ export default function Navbar() {
           <NavLink
             to="/hotel"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${isActive
-                ? "bg-[#7A1C1C] text-white"
-                : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${
+                isActive
+                  ? "bg-[#7A1C1C] text-white"
+                  : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Hotel"
@@ -212,9 +201,10 @@ export default function Navbar() {
           <NavLink
             to="/promotions"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${isActive
-                ? "bg-[#7A1C1C] text-white"
-                : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${
+                isActive
+                  ? "bg-[#7A1C1C] text-white"
+                  : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Promotions"
@@ -225,9 +215,10 @@ export default function Navbar() {
           <NavLink
             to="/business"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${isActive
-                ? "bg-[#7A1C1C] text-white"
-                : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${
+                isActive
+                  ? "bg-[#7A1C1C] text-white"
+                  : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Business"

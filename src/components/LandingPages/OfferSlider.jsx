@@ -5,10 +5,10 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { HiOutlineArrowRight } from "react-icons/hi";
-import book from "../../../assets/book.png";
-import book1 from "../../../assets/book1.png";
-import book2 from "../../../assets/book2.png";
-import book3 from "../../../assets/book3.png";
+import book from "./assets/book.png";
+import book1 from "./assets/book1.png";
+import book2 from "./assets/book2.png";
+import book3 from "./assets/book3.png";
 import { GoArrowUpRight } from "react-icons/go";
 
 

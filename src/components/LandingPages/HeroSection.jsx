@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import video2 from "../../../assets/video2.mp4";
+import video2 from "./assets/video2.mp4";
 import Tabs from "./Tabs";
 import FlightForm from "./FlightForm";
 import HotelForm from "./HotelForm";
