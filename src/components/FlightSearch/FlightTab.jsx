@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import { FaRegClock } from "react-icons/fa";
+import cheapest from "../LandingPages/assets/cheapest.png";
+
 
 // Reusable Button
 function FlightOptionButton({ active, title, time, onClick }) {
@@ -15,7 +16,7 @@ function FlightOptionButton({ active, title, time, onClick }) {
         className={`p-3 rounded-lg flex items-center justify-center
           ${active ? "bg-red-600 text-white" : "bg-slate-100 text-black"}`}
       >
-        <FaRegClock size={20} />
+         <img src={cheapest} alt="next" className="h-4" />
       </div>
 
       {/* Text Section */}
