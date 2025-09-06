@@ -22,7 +22,7 @@ export default function Navbar() {
   const navItems = [
     { to: "/", label: "Flight", icon: Flight },
     { to: "/hotel", label: "Hotel", icon: Hotel },
-    { to: "/promotions", label: "Promotions", icon: Promotions },
+    { to: "/searchresult", label: "Promotions", icon: Promotions },
     { to: "/business", label: "Business Class", icon: Business },
   ];
 

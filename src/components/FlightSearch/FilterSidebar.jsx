@@ -7,6 +7,7 @@ import next from "../LandingPages/assets/next.png";
 import prev from "../LandingPages/assets/prev.png";
 import { FaRegClock } from "react-icons/fa";
 import FlightTabs from "./FlightTab";
+import Dropdownmenu from "./Dropdownmenu";
 
 // Mock Airlines & Flights
 const MOCK_FLIGHTS = [
@@ -126,7 +127,7 @@ export default function FlightSearchPage() {
                 <img src={next} alt="prev" className="h-4" />
               </button>
             </div>
-
+<Dropdownmenu/>
           </aside>
 
           {/* Right Section */}

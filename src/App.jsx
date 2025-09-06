@@ -30,10 +30,6 @@ function App() {
 
   return (
     <>
-      {/* <div className="mt-12 text-center">
-        <h1>My google account</h1>
-        <div id="google_translate_element"></div>
-      </div> */}
 
       <Navbar />
       <Routes>
