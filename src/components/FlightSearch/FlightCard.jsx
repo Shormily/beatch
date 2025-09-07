@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import BS from "../LandingPages/assets/BS.png";
 import plane from "../LandingPages/assets/plane.png";
-import exm from "../LandingPages/assets/exm.png";
+
 import CustomTabs from "./CustomTabs";
 
 export default function FlightCard() {
@@ -103,12 +103,8 @@ export default function FlightCard() {
 
           {/* Dropdown Details */}
           {open && (
-            <div className="bg-gray-50 mt-3 rounded-md border border-gray-200 p-4">
+            <div className="mt-3 ">
               <CustomTabs />
-              <div className="flex items-center gap-2 mt-3 text-xs text-gray-600">
-                <img src={exm} alt="icon" className="w-5 h-5" />
-                <p>Every metric is counted per traveller.</p>
-              </div>
             </div>
           )}
         </div>
