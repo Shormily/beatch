@@ -8,38 +8,9 @@ import prev from "../LandingPages/assets/prev.png";
 import { FaRegClock } from "react-icons/fa";
 import FlightTabs from "./FlightTab";
 import Dropdownmenu from "./Dropdownmenu";
+import FlightCard from "./FlightCard";
 
-// Mock Airlines & Flights
-const MOCK_FLIGHTS = [
-  {
-    id: 1,
-    airline: "US Bangla Airlines",
-    logo: "🛫",
-    departTime: "07:30",
-    departAirport: "DAC",
-    arriveTime: "08:35",
-    arriveAirport: "CXB",
-    duration: "1h 5m",
-    stops: "Non-stop",
-    refundable: true,
-    seats: 5,
-    price: 9770,
-  },
-  {
-    id: 2,
-    airline: "Air Astra",
-    logo: "🛫",
-    departTime: "17:00",
-    departAirport: "DAC",
-    arriveTime: "18:05",
-    arriveAirport: "CXB",
-    duration: "1h 5m",
-    stops: "Non-stop",
-    refundable: true,
-    seats: 3,
-    price: 9770,
-  },
-];
+
 
 export default function FlightSearchPage() {
   const totalTime = 30 * 60; // 30 minutes
@@ -144,58 +115,8 @@ export default function FlightSearchPage() {
 
             {/* Flight Cards */}
             <div className="space-y-4">
-              {MOCK_FLIGHTS.map((flight) => (
-                <div
-                  key={flight.id}
-                  className="bg-white border rounded-lg shadow p-4 flex flex-col md:flex-row justify-between items-start md:items-center"
-                >
-                  {/* Left Section */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">{flight.logo}</span>
-                      <h4 className="font-semibold">{flight.airline}</h4>
-                    </div>
-                    <div className="flex items-center gap-6 text-sm">
-                      <div>
-                        <p className="font-bold">{flight.departTime}</p>
-                        <p className="text-gray-500">{flight.departAirport}</p>
-                      </div>
-                      <div className="flex flex-col items-center text-gray-500">
-                        <IoAirplaneOutline className="text-xl" />
-                        <span className="text-xs">{flight.duration}</span>
-                      </div>
-                      <div>
-                        <p className="font-bold">{flight.arriveTime}</p>
-                        <p className="text-gray-500">{flight.arriveAirport}</p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">{flight.stops}</p>
-                  </div>
-
-                  {/* Right Section */}
-                  <div className="text-right mt-3 md:mt-0">
-                    {flight.refundable && (
-                      <p className="text-xs text-orange-500 font-medium">
-                        Partially Refundable
-                      </p>
-                    )}
-                    <p className="text-xs text-red-600">
-                      {flight.seats} seat(s) left
-                    </p>
-                    <p className="text-xl font-bold text-red-600">
-                      BDT {flight.price}
-                    </p>
-                    <div className="flex gap-2 justify-end mt-2">
-                      <button className="px-3 py-1 text-sm border rounded-lg">
-                        View Prices
-                      </button>
-                      <button className="px-3 py-1 text-sm bg-red-600 text-white rounded-lg">
-                        Select
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            
+              <FlightCard/>
             </div>
           </main>
         </div>
