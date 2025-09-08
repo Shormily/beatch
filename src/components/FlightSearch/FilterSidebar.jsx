@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { FcAlarmClock } from "react-icons/fc";
 import { IoAirplaneOutline } from "react-icons/io5";
-// import next from "./assets/next.png";
 import next from "../LandingPages/assets/next.png";
 import prev from "../LandingPages/assets/prev.png";
 import { FaRegClock } from "react-icons/fa";
@@ -51,7 +50,6 @@ export default function FlightSearchPage() {
                 {formatTime(timeLeft)}
               </span>
             </div>
-
             {/* Progress Bar */}
             <div className="w-full h-1.5 bg-red-200 rounded-full overflow-hidden mb-3">
               <div
@@ -59,9 +57,6 @@ export default function FlightSearchPage() {
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
-
-
-
             {/* Departure */}
             <div className="bg-white rounded-full px-1.5 py-1.5 mb-3 flex items-center justify-between shadow">
               {/* Left Arrow */}
@@ -74,7 +69,6 @@ export default function FlightSearchPage() {
                 <p className="text-xs ">Departure</p>
                 <p className="text-gray-500 text-center text-[14px]">07 Sep, Sunday</p>
               </div>
-
               {/* Right Arrow */}
               <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-md hover:bg-gray-200">
                 <img src={next} alt="prev" className="h-4" />
@@ -98,7 +92,7 @@ export default function FlightSearchPage() {
                 <img src={next} alt="prev" className="h-4" />
               </button>
             </div>
-<Dropdownmenu/>
+          <Dropdownmenu/>
           </aside>
 
           {/* Right Section */}
