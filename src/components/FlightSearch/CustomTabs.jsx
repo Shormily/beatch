@@ -15,9 +15,9 @@ export default function CustomTabs() {
   ];
 
   return (
-    <div className="w-full bg-white  ">
+    <div className="w-full bg-white pt-3 ">
       {/* Tabs Header */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200 ">
         {tabs.map((tab) => (
           <button
             key={tab.id}

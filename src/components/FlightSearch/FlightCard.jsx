@@ -91,7 +91,7 @@ export default function FlightCard() {
               </div>
             </div>
           </div>
-
+          <div className="border-t border-gray-200 my-3 mb-5" />
           {/* CONTROL BAR (closed state) */}
           {!open && (
             <div className="mt-3 relative flex items-center">
@@ -112,12 +112,12 @@ export default function FlightCard() {
 
           {/* DROPDOWN (open) */}
           <div
-            className={`transition-all duration-700 ease-in-out overflow-hidden ${
+            className={`transition-all duration-700 ease-in-out overflow-hidden  ${
               open ? "max-h-[2000px] mt-3" : "max-h-0"
             }`}
           >
             <CustomTabs />
-
+<div className="border-t border-gray-200 my-6 mb-5" />
             {/* CONTROL BAR (open state) */}
             <div className="mt-3 relative flex items-center pb-2">
               <button className="text-sky-900 flex gap-1 px-2 bg-blue-50 p-1 rounded-full">
@@ -133,7 +133,8 @@ export default function FlightCard() {
                 <ChevronUp size={18} />
               </button>
             </div>
-          </div>
+                  </div>
+                  
         </div>
 
         {/* RIGHT SIDE – Fare Summary */}
