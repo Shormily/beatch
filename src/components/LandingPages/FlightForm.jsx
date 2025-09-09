@@ -4,6 +4,7 @@ import { AiOutlineSwap } from "react-icons/ai";
 import FirsttripCalendarClone from "./calender";
 import AirportSelect from "./AirportSelect";
 import TravellerSelect from "../../pages/Traveller/TravellerSelect";
+import { useNavigate } from "react-router-dom";
 
 export default function FlightForm() {
   const [from, setFrom] = useState("");
@@ -12,6 +13,19 @@ export default function FlightForm() {
   const swap = () => {
     setFrom(to);
     setTo(from);
+  };
+   const navigate = useNavigate();
+
+  const handleSearch = () => {
+    // এখানে চাইলে API কল করুন
+    // তারপর result পেজে navigate করুন
+    navigate("/searchresult", {
+      state: {
+        from: from,
+        to: to,
+        // data: flightResults, // API response চাইলে এখানে দিন
+      },
+    });
   };
 
   return (
@@ -83,6 +97,7 @@ export default function FlightForm() {
         
         <div className="w-full lg:w-auto flex justify-center lg:justify-end flex-shrink-0 mt-4 lg:mt-0">
           <button
+             onClick={handleSearch}
             className="w-32 sm:w-36 md:w-40 lg:w-24 sm:h-18 md:h-18 py-1 lg:h-20 rounded-md bg-red-700 hover:bg-red-500 text-white flex items-center justify-center gap-2"
             title="Search"
           >

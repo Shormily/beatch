@@ -9,28 +9,37 @@ import { useEffect } from 'react'
 function App() {
 
   useEffect(() => {
-    // define the callback function globally so Google can find it
-    window.googleTranslateElementInit = () => {
-      new window.google.translate.TranslateElement(
-        {
-          pageLanguage: "en",
-          includedLanguages: "en,bn,hi,hr,es,fr,de,zh",
-          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
-        },
-        "google_translate_element"
-      );
+    // 🟢 প্রথমবার অ্যাপ লোড হলে টোকেন ফেচ করে localStorage এ সেভ করবে
+    const loadToken = async () => {
+      try {
+        const res = await fetch("https://ota-api.a4aero.com/api/auth/app/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            appSecrate: import.meta.env.VITE_APP_SECRET // ⚠️ Vercel এ env var সেট করুন
+          })
+        });
+
+        const data = await res.json();
+        if (data?.token) {
+          localStorage.setItem("auth_token", data.token);
+          if (data?.expire) {
+            localStorage.setItem("auth_token_expire", data.expire);
+          }
+          console.log("✅ Token saved:", data.token);
+        } else {
+          console.error("❌ Token fetch failed:", data);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching token:", err);
+      }
     };
 
-    // load the script
-    const script = document.createElement("script");
-    script.src =
-      "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
-    document.body.appendChild(script);
+    loadToken();
   }, []);
 
   return (
     <>
-
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
