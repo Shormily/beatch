@@ -11,10 +11,10 @@ export const fetchToken = createAsyncThunk(
         throw new Error("Missing VITE_APP_SECRATE in .env");
       }
 
-      const res = await fetch(`/api/ota/auth/app/token`, {
+      const res = await fetch(`${API_BASE}/api/auth/app/token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ appSecrate: import.meta.env.VITE_APP_SECRATE }),
+        body: JSON.stringify({ appSecrate: APP_SECRATE }),
       });
 
       if (!res.ok) {

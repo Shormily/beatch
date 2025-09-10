@@ -85,7 +85,7 @@ export const searchFlights = createAsyncThunk(
         apiId: Number(apiId ?? DEFAULT_API_ID),
       };
 
-      const res = await fetch(`/api/ota/flights/search`, {
+      const res = await fetch(`${API_BASE}/api/flights/search`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

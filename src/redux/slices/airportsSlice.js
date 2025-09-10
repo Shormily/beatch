@@ -3,7 +3,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 const API_BASE = import.meta.env.VITE_API_URL;
 
 export const loadAirports = createAsyncThunk("airports/load", async () => {
-  const res = await fetch(`/api/ota/settings/airports`);
+  const res = await fetch(`${API_BASE}/api/settings/airports`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
 
