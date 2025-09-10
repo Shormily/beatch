@@ -58,7 +58,9 @@ const Footer = () => {
             Useful Links
           </h3>
           <ul className="space-y-3 text-[14px] text-white font-murecho">
-            <li className="hover:text-red-700 cursor-pointer" >About Us</li>
+            <Link to="/aboutus" className="block hover:text-red-700 cursor-pointer">
+    About Us
+  </Link>
             <li className="hover:text-red-700 cursor-pointer" >Contact Us</li>
             <li className="hover:text-red-700 cursor-pointer" >Visa Guide & Application</li>
             <li className="hover:text-red-700 cursor-pointer" >Terms & Conditions</li>
