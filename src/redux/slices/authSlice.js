@@ -7,14 +7,31 @@ export const fetchToken = createAsyncThunk(
   "auth/fetchToken",
   async (_, { rejectWithValue }) => {
     try {
+      if (!APP_SECRATE) {
+        throw new Error("Missing VITE_APP_SECRATE in .env");
+      }
+
       const res = await fetch(`${API_BASE}/api/auth/app/token`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" }, // simple headers = simpler preflight
-        body: JSON.stringify({ appSecrate: import.meta.env.VITE_APP_SECRATE }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appSecrate: APP_SECRATE }),
       });
-      if (!res.ok) throw new Error(`Token fetch failed (${res.status})`);
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Token fetch failed (${res.status}) ${text}`);
+      }
+
       const data = await res.json();
-      return data?.token;
+
+      const token =
+        data?.token || data?.access_token || data?.data?.token || null;
+
+      if (!token) {
+        throw new Error("No token found in response payload");
+      }
+
+      return token;
     } catch (err) {
       return rejectWithValue(err.message || "Failed to fetch token");
     }
