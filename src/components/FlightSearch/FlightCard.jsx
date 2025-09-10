@@ -136,7 +136,9 @@ export default function FlightCard({ flight }) {
                 <img src={airlineLogo} alt={airlineCode} className="w-8 h-8" />
               ) : ( */}
               <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold">
-                {airlineCode || "??"}
+                <img
+                  src={`https://airlines.a4aero.com/images/${airlineCode}.png`}
+                />
               </div>
               {/* )} */}
               <p className="text-[14px] font-medium leading-4">{airlineName}</p>
