@@ -1,131 +1,246 @@
-import React, { useState } from "react";
+// src/LandingPages/FlightForm.jsx
+import React, { useEffect, useMemo, useState } from "react";
 import { CiSearch } from "react-icons/ci";
 import { AiOutlineSwap } from "react-icons/ai";
 import FirsttripCalendarClone from "./calender";
 import AirportSelect from "./AirportSelect";
 import TravellerSelect from "../../pages/Traveller/TravellerSelect";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { searchFlights } from "../../redux/slices/flightsSlice";
+import { setForm } from "../../redux/slices/searchFormSlice";
 
-export default function FlightForm() {
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+// Extract IATA helper (unchanged)
+function extractIata(text = "") {
+  const t = text.trim().toUpperCase();
+  const paren = t.match(/\(([A-Z]{3})\)/);
+  if (paren) return paren[1];
+  const plain = t.match(/\b[A-Z]{3}\b/);
+  if (plain) return plain[0];
+  return "";
+}
 
+export default function FlightForm({
+  showMissingHint = true,
+  onFocus,
+  onBlur,
+}) {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const saved = useSelector((s) => s.searchForm);
+
+  // --- Local state (hydrated from Redux once) ---
+  const [tripType, setTripType] = useState(saved.tripType || "ONE_WAY");
+  const isOneWay = tripType === "ONE_WAY";
+
+  const [fromText, setFromText] = useState(saved.fromText || "");
+  const [toText, setToText] = useState(saved.toText || "");
+  const [fromAirport, setFromAirport] = useState(saved.fromAirport || null);
+  const [toAirport, setToAirport] = useState(saved.toAirport || null);
+
+  const [departureDate, setDepartureDate] = useState(saved.departureDate || "");
+  const [returnDate, setReturnDate] = useState(saved.returnDate || "");
+
+  const [trav, setTrav] = useState(
+    saved.travellers || {
+      adults: 1,
+      children: 0,
+      infants: 0,
+      travelClass: "Economy",
+      childAges: [],
+    }
+  );
+
+  const [preferredAirline] = useState(saved.preferredAirline || "");
+  const [apiId] = useState(saved.apiId || 1001);
+
+  // keep Redux copy in sync on every relevant change
+  useEffect(() => {
+    dispatch(
+      setForm({
+        tripType,
+        fromText,
+        toText,
+        fromAirport,
+        toAirport,
+        departureDate,
+        returnDate,
+        travellers: trav,
+        preferredAirline,
+        apiId,
+      })
+    );
+  }, [
+    tripType,
+    fromText,
+    toText,
+    fromAirport,
+    toAirport,
+    departureDate,
+    returnDate,
+    trav,
+    preferredAirline,
+    apiId,
+    dispatch,
+  ]);
+
+  // Swap
   const swap = () => {
-    setFrom(to);
-    setTo(from);
+    setFromText(toText);
+    setToText(fromText);
+    setFromAirport(toAirport);
+    setToAirport(fromAirport);
   };
-   const navigate = useNavigate();
+
+  // Determine IATA codes
+  const fromCode = useMemo(
+    () => (fromAirport?.code || extractIata(fromText)).toUpperCase(),
+    [fromAirport, fromText]
+  );
+  const toCode = useMemo(
+    () => (toAirport?.code || extractIata(toText)).toUpperCase(),
+    [toAirport, toText]
+  );
+
+  // Button enablement
+  const canSearch = useMemo(() => {
+    const hasFrom = fromCode && fromCode.length === 3;
+    const hasTo = toCode && toCode.length === 3;
+    const hasDep = !!departureDate;
+    const hasRet = isOneWay ? true : !!returnDate;
+    return hasFrom && hasTo && hasDep && hasRet;
+  }, [fromCode, toCode, departureDate, returnDate, isOneWay]);
 
   const handleSearch = () => {
-    // এখানে চাইলে API কল করুন
-    // তারপর result পেজে navigate করুন
-    navigate("/searchresult", {
-      state: {
-        from: from,
-        to: to,
-        // data: flightResults, // API response চাইলে এখানে দিন
-      },
-    });
+    if (!canSearch) return;
+
+    // (Redux already has the form values due to the useEffect above)
+    dispatch(
+      searchFlights({
+        tripType,
+        fromCode,
+        toCode,
+        departureDate,
+        returnDate: isOneWay ? undefined : returnDate,
+        travellers: {
+          adults: trav.adults,
+          children: trav.children,
+          infants: trav.infants,
+        },
+        travelClassLabel: trav.travelClass,
+        preferredAirline,
+        apiId,
+      })
+    );
+
+    navigate("/searchresult");
+  };
+
+  // Missing hint (hidden on Searchresult by passing showMissingHint={false})
+  const MissingHint = () => {
+    if (!showMissingHint) return null;
+    const missing = [];
+    if (!(fromCode && fromCode.length === 3)) missing.push("From (IATA)");
+    if (!(toCode && toCode.length === 3)) missing.push("To (IATA)");
+    if (!departureDate) missing.push("Departure date");
+    if (!isOneWay && !returnDate) missing.push("Return date");
+    if (missing.length === 0) return null;
+    return (
+      <div className="text-xs text-gray-500 mt-1">
+        Missing: {missing.join(", ")}
+      </div>
+    );
   };
 
   return (
-    <div className="px-3 sm:px-6 lg:px-6 pt-7 pb-2 relative">
+    <div
+      className="px-3 sm:px-6 lg:px-6 pt-7 pb-2 relative"
+      onFocus={onFocus}
+      onBlur={onBlur}
+    >
       {/* Trip type */}
       <div className="flex gap-2 mb-5">
-        {["One Way", "Round Trip", "Multi City"].map((trip, i) => (
+        {[
+          { key: "ONE_WAY", label: "One Way" },
+          { key: "ROUND_TRIP", label: "Round Trip" },
+          { key: "MULTI_CITY", label: "Multi City" },
+        ].map((t) => (
           <label
-            key={i}
-            className="flex items-center gap-1 cursor-pointer font-normal text-[10px] sm:text-[14px] lg:text-[14x] md:text-[14] whitespace-nowrap"
+            key={t.key}
+            className="flex items-center gap-1 cursor-pointer text-[10px] sm:text-[14px]"
           >
             <input
               type="radio"
               name="trip"
-              defaultChecked={i === 0}
-              className="w-4 h-4  sm:w-3 sm:h-3 lg:w-4 lg:h-4 accent-red-600 font-bold"
+              checked={tripType === t.key}
+              onChange={() => setTripType(t.key)}
+              className="w-4 h-4 accent-red-600"
             />
-            {trip}
+            {t.label}
           </label>
         ))}
       </div>
+
       {/* Inputs */}
       <div className="flex flex-col lg:flex-row gap-4">
-        {/* From + To */}
+        {/* From/To */}
         <div className="lg:basis-[35%] grid grid-cols-1 sm:grid-cols-2 gap-4 relative min-w-[250px]">
-          <AirportSelect label="From" value={from} onChange={setFrom} />
-          <AirportSelect label="To" value={to} onChange={setTo} />
+          <AirportSelect
+            label="From"
+            value={fromText}
+            onChange={setFromText}
+            onSelect={setFromAirport}
+          />
+          <AirportSelect
+            label="To"
+            value={toText}
+            onChange={setToText}
+            onSelect={setToAirport}
+          />
           <button
             type="button"
             onClick={swap}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 
-            flex w-10 h-10 rounded-full bg-red-700 text-white items-center justify-center shadow-lg z-20"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex w-10 h-10 rounded-full bg-red-700 text-white items-center justify-center shadow-lg z-20"
             title="Swap"
           >
             <AiOutlineSwap className="text-xl" />
           </button>
         </div>
 
-        {/* Departure + Return */}
+        {/* Dates */}
         <div className="flex-1 min-w-[250px]">
-          <FirsttripCalendarClone />
+          <FirsttripCalendarClone
+            disableReturn={isOneWay}
+            // hydrate the calendar from saved Redux values
+            initialDeparture={saved.departureDate || ""}
+            initialReturn={saved.returnDate || ""}
+            onChange={({ departureDate: d, returnDate: r }) => {
+              setDepartureDate(d || "");
+              setReturnDate(isOneWay ? "" : r || "");
+            }}
+          />
         </div>
 
-        {/* Traveller */}
-        <TravellerSelect/>
+        {/* Travellers */}
+        <TravellerSelect onChange={setTrav} initialValue={saved.travellers} />
 
-        {/* SMALL SCREEN Fare Type (Above Search Button) */}
-        <div className="flex flex-wrap text-[14px] gap-6 mt-4 cursor-pointer font-normal lg:hidden">
-          <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              name="fare"
-              defaultChecked
-              className="w-4 h-4 accent-red-600"
-            />
-            Regular Fare
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              name="fare"
-              className="w-4 h-4 accent-red-600"
-            />
-            Student Fare
-          </label>
-        </div>
-
-        {/* Search button */}
-        
-        <div className="w-full lg:w-auto flex justify-center lg:justify-end flex-shrink-0 mt-4 lg:mt-0">
+        {/* Search */}
+        <div className="w-full lg:w-auto flex flex-col items-center lg:items-end flex-shrink-0 mt-4 lg:mt-0">
           <button
-             onClick={handleSearch}
-            className="w-32 sm:w-36 md:w-40 lg:w-24 sm:h-18 md:h-18 py-1 lg:h-20 rounded-md bg-red-700 hover:bg-red-500 text-white flex items-center justify-center gap-2"
-            title="Search"
+            onClick={handleSearch}
+            disabled={!canSearch}
+            className={`w-32 sm:w-36 md:w-40 lg:w-24 py-1 lg:h-20 rounded-md text-white flex items-center justify-center gap-2 ${
+              canSearch
+                ? "bg-red-700 hover:bg-red-500"
+                : "bg-gray-300 cursor-not-allowed"
+            }`}
+            title={canSearch ? "Search" : "Fill required fields"}
           >
-            <CiSearch className="inline-block " size={36} />
+            <CiSearch size={36} />
             <span className="lg:hidden font-semibold text-sm">Search</span>
           </button>
+          <MissingHint />
         </div>
-      </div>
-
-      {/* LARGE SCREEN Fare Type (Stays below on large screens) */}
-      <div className="hidden lg:flex flex-wrap text-[14px] gap-6 mt-5 cursor-pointer font-normal">
-        <label className="flex items-center gap-2">
-          <input
-            type="radio"
-            name="fare"
-            defaultChecked
-            className="w-4 h-4 accent-red-600"
-          />
-          Regular Fare
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="radio"
-            name="fare"
-            className="w-4 h-4 accent-red-600"
-          />
-          Student Fare
-        </label>
       </div>
     </div>
   );
