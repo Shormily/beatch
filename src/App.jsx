@@ -7,6 +7,7 @@ import SearchDesign from "./pages/FlightSearch/SearchDesign";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { fetchToken } from "./redux/slices/authSlice";
+import AboutUs from "./pages/LandingPages/AboutUS/AboutUs";
 
 function App() {
   const dispatch = useDispatch();
