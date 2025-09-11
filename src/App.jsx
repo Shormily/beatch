@@ -8,6 +8,8 @@ import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { fetchToken } from "./redux/slices/authSlice";
 import AboutUs from "./pages/LandingPages/AboutUS/AboutUs";
+import Sign from "./components/Auth/sign";
+import SignUp from "./components/Auth/signup";
 
 function App() {
   const dispatch = useDispatch();
@@ -21,6 +23,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/searchresult" element={<SearchDesign />} />
         <Route path="/aboutus" element={<AboutUs />} />
+        <Route path="/sign" element={<Sign />} />
+        <Route path="/signup" element={<SignUp />} />
       </Routes>
       <Footer />
     </>
