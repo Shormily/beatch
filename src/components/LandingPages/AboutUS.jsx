@@ -1,4 +1,4 @@
-import heroImage from "../LandingPages/assets/des5.png";
+import heroImage from "../LandingPages/assets/Des2.png";
 
 const AboutUS = () => {
     return (
