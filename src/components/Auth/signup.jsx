@@ -12,11 +12,11 @@ const SignUp = () => {
       
     >
       <div
-      className="relative min-h-screen flex items-center justify-center font-murecho bg-cover bg-center"
+      className="relative min-h-screen  flex items-center justify-center font-murecho bg-cover bg-center"
       style={{ backgroundImage: `url(${login})` }}
       >
  {/* Card */}
-      <div className="w-[380px] max-w-md rounded-2xl bg-white shadow-2xl p-8 mx-4 md:mr-24">
+      <div className="w-[380px] mx-4 max-w-md rounded-2xl bg-white shadow-2xl p-8 mx-4 md:mr-24">
         <h2 className="text-2xl font-bold text-center text-gray-900">Sign up</h2>
         <p className="text-sm text-center text-gray-600 mt-1 mb-6">Create an account</p>
 
