@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import login from "../LandingPages/assets/login.svg";
 import email from "../LandingPages/assets/email.png";
-import call from "../LandingPages/assets/call.png";
 import lock from "../LandingPages/assets/lock.png";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaApple, FaLock, FaChevronLeft } from "react-icons/fa";
@@ -40,7 +39,9 @@ const Sign = () => {
               onClick={() => setMode("mobile")}
               className="w-full cursor-pointer flex items-center justify-center gap-2 border border-gray-300 rounded-md py-2 px-4 hover:bg-gray-50 transition"
             >
-              <img src={call} alt="mobile" className="w-4 h-4" />
+              <img src="/asset/Call.png"
+              
+              className="w-4 h-4" />
               <span>Mobile Number</span>
             </button>
           </>
