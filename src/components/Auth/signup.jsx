@@ -4,14 +4,18 @@ import login from "../LandingPages/assets/login.svg";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaApple } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import Explore from "../LandingPages/Explore";
 
 const SignUp = () => {
   return (
     <section
+      
+    >
+      <div
       className="relative min-h-screen flex items-center justify-center font-murecho bg-cover bg-center"
       style={{ backgroundImage: `url(${login})` }}
-    >
-      {/* Card */}
+      >
+ {/* Card */}
       <div className="w-[380px] max-w-md rounded-2xl bg-white shadow-2xl p-8 mx-4 md:mr-24">
         <h2 className="text-2xl font-bold text-center text-gray-900">Sign up</h2>
         <p className="text-sm text-center text-gray-600 mt-1 mb-6">Create an account</p>
@@ -90,6 +94,9 @@ const SignUp = () => {
           </a>.
         </p>
       </div>
+      </div>
+      <Explore/>
+     
     </section>
   );
 };

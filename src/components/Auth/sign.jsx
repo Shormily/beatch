@@ -6,16 +6,18 @@ import lock from "../LandingPages/assets/lock.png";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaApple, FaLock, FaChevronLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import Explore from "../LandingPages/Explore";
 
 const Sign = () => {
   const [mode, setMode] = useState("choose"); // "choose" | "email" | "mobile"
 
   return (
     <section
-      className="relative flex min-h-screen items-center justify-center bg-cover bg-center font-murecho"
-      style={{ backgroundImage: `url(${login})` }}
+     
     >
-      {/* Login card */}
+      <div  className="relative flex min-h-screen items-center justify-center bg-cover bg-center font-murecho"
+      style={{ backgroundImage: `url(${login})` }}>
+{/* Login card */}
       <div className="w-[350px] max-w-md rounded-2xl bg-white shadow-2xl p-8 mx-4">
         <h2 className="text-2xl font-bold text-gray-800 text-center mb-2">
           Sign In
@@ -145,6 +147,11 @@ const Sign = () => {
           </Link>
         </p>
       </div>
+      </div>
+    <Explore/>
+
+
+      
     </section>
   );
 };
