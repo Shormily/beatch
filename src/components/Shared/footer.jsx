@@ -97,7 +97,7 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="flex flex-col items-center md:items-start">
               <h2 className="text-[14px] text-white mb-2">Authorized by</h2>
-              <img src={TATA} alt="iata" className="h-12 p-2 rounded-md" />
+              <img src={TATA} alt="iata" className="h-12 p-2 rounded-md cursor-pointer" />
             </div>
 
             <div className="hidden md:block w-px bg-white h-20"></div>
@@ -105,10 +105,10 @@ const Footer = () => {
             <div className="flex flex-col items-center md:items-start">
               <h2 className="text-[14px] text-white mb-2">Verified by</h2>
               <div className="flex gap-3 flex-wrap justify-center md:justify-start">
-                <img src={BASIS} alt="basis" className="h-10 bg-[#1E293B] p-2 rounded-md" />
-                <img src={CAB} alt="cab" className="h-10 bg-[#1E293B] p-2 rounded-md" />
-                <img src={DBID} alt="dbid" className="h-10 bg-[#1E293B] p-2 rounded-md" />
-                <img src={pci} alt="pci" className="h-10 bg-[#1E293B] p-2 rounded-md" />
+                <img src={BASIS} alt="basis" className="h-10 bg-[#1E293B] p-2 rounded-md cursor-pointer" />
+                <img src={CAB} alt="cab" className="h-10 bg-[#1E293B] p-2 rounded-md cursor-pointer" />
+                <img src={DBID} alt="dbid" className="h-10 bg-[#1E293B] p-2 rounded-md cursor-pointer" />
+                <img src={pci} alt="pci" className="h-10 bg-[#1E293B] p-2 rounded-md cursor-pointer" />
               </div>
             </div>
           </div>
