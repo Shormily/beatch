@@ -1,0 +1,62 @@
+/* Stepper wrapper */
+.ft-steps {
+  display: flex;
+  align-items: center;
+  background-color: #4b5563;
+  padding: 4px;
+}
+
+/* Base pill */
+.ft-step {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;           /* gray-200 */
+  background: #ffffff;
+  color: #374151;                       /* gray-700 */
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 9999px;
+  line-height: 1;
+}
+
+/* First pill looks like a button (active tab) */
+.ft-step.ft-active.ft-first {
+  background: #fee2e2;                 /* red-100 */
+  border-color: #fca5a5;                /* red-300 */
+  color: #ef4444;                       /* red-500 */
+  box-shadow: 0 1px 0 rgba(0,0,0,.02) inset;
+}
+
+/* General active state (non-first) */
+.ft-step.ft-active:not(.ft-first) {
+  background: #f9fafb;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+/* “Add-ons” right rounded only; left side flat */
+.ft-step.ft-right-only {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 9999px;
+  border-bottom-right-radius: 9999px;
+}
+
+/* Preview as linky/neutral */
+.ft-step.ft-link {
+  background: #f3f4f6;                 /* gray-100 */
+  color: #4b5563;                       /* gray-600 */
+}
+
+/* Hourglass icon inside active pill */
+.ft-hg {
+  color: #ef4444;
+  font-size: 16px;
+}
+
+/* small number + label */
+.ft-num { opacity: .9; }
+.ft-text { letter-spacing: .1px; }

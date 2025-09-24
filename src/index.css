@@ -4,24 +4,9 @@
 @layer utilities {
   .font-murecho {
     font-family: 'Murecho', sans-serif;
-   
   }
 }
 
-.swiper-pagination-bullet {
-  background-color: #ef4444; /* ভেতরে লাল (red-500) */
-  border: 2px solid #fca5a5; /* border red-300 */
-  opacity: 0.7;
-  width: 12px;
-  height: 12px;
-}
-
-/* active bullet */
-.swiper-pagination-bullet-active {
-  background-color: #ef4444; /* ভেতরে গাঢ় লাল */
-  border: 2px solid #fca5a5; /* border red-300 */
-  opacity: 1;
-}
 
 
 /* Custom calendar styling */
@@ -127,6 +112,4 @@ input[type="range"]::-moz-range-thumb {
   border: 2px solid white;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
-
-
 

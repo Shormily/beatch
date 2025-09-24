@@ -7,6 +7,7 @@ import { BiLike } from "react-icons/bi";
 import { RiMoneyRupeeCircleFill } from "react-icons/ri";
 import { MdAirlineSeatReclineNormal } from "react-icons/md";
 import CustomTabs from "./CustomTabs";
+import { Link } from "react-router-dom";
 
 // Optional: if you have logos per airline code, map them here
 // import MH from "../LandingPages/assets/MH.png";
@@ -320,14 +321,20 @@ export default function FlightCard({ flight }) {
           )}
 
           {/* Buttons */}
-          <div className="mt-3 flex gap-2">
-            <button className="w-full bg-gray-100 text-[14px] p-2 font-medium rounded-full hover:bg-gray-200">
-              View Prices
-            </button>
-            <button className="w-full bg-red-600 text-[14px] text-white font-semibold rounded-full hover:bg-red-500">
-              Select
-            </button>
-          </div>
+        <div className="mt-3 flex gap-2">
+  <button className="w-full bg-gray-100 text-[14px] p-2 font-medium rounded-full hover:bg-gray-200">
+    View Prices
+  </button>
+
+  <Link
+    to="/fare"
+    className="w-full bg-red-600 text-[14px] text-white font-semibold rounded-full hover:bg-red-500 flex items-center justify-center"
+  >
+    Select
+  </Link>
+</div>
+
+
         </aside>
       </div>
     </div>

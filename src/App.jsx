@@ -2,7 +2,7 @@ import "./App.css";
 import Navbar from "./components/Shared/navbar";
 import Footer from "./components/Shared/footer";
 import { Route, Routes } from "react-router-dom";
-import Home from "./pages/LandingPages/HomePage/Home";
+import Home from "./pages/LandingPages/HomePage/index";
 import SearchDesign from "./pages/FlightSearch/SearchDesign";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
@@ -10,6 +10,7 @@ import { fetchToken } from "./redux/slices/authSlice";
 import AboutUs from "./pages/LandingPages/AboutUS/AboutUs";
 import Sign from "./components/Auth/sign";
 import SignUp from "./components/Auth/signup";
+import FlightBooking from "./components/Bookings/FlightBooking";
 
 function App() {
   const dispatch = useDispatch();
@@ -25,6 +26,7 @@ function App() {
         <Route path="/aboutus" element={<AboutUs />} />
         <Route path="/sign" element={<Sign />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/fare" element={<FlightBooking />} />
       </Routes>
       <Footer />
     </>
