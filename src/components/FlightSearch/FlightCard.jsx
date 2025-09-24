@@ -7,6 +7,7 @@ import { BiLike } from "react-icons/bi";
 import { RiMoneyRupeeCircleFill } from "react-icons/ri";
 import { MdAirlineSeatReclineNormal } from "react-icons/md";
 import CustomTabs from "./CustomTabs";
+import FareModalDemo from "./FareModal";
 import { Link } from "react-router-dom";
 
 // Optional: if you have logos per airline code, map them here
@@ -16,8 +17,8 @@ import { Link } from "react-router-dom";
 const fmtTime = (t) =>
   t
     ? String(t)
-        .padStart(4, "0")
-        .replace(/(\d{2})(\d{2})/, "$1:$2")
+      .padStart(4, "0")
+      .replace(/(\d{2})(\d{2})/, "$1:$2")
     : "";
 const safe = (v, d = "") => (v === undefined || v === null || v === "" ? d : v);
 
@@ -63,9 +64,9 @@ export default function FlightCard({ flight }) {
 
   const stops = Number(
     flight?.stops ??
-      flight?.raw?.stops ??
-      flight?.raw?.flights?.[0]?.totalStops ??
-      0
+    flight?.raw?.stops ??
+    flight?.raw?.flights?.[0]?.totalStops ??
+    0
   );
   const duration =
     flight?.duration || flight?.raw?.flights?.[0]?.totalElapsedTime || "";
@@ -206,9 +207,8 @@ export default function FlightCard({ flight }) {
 
           {/* DROPDOWN (open) */}
           <div
-            className={`transition-all duration-700 ease-in-out overflow-hidden ${
-              open ? "max-h-[2000px] mt-3" : "max-h-0"
-            }`}
+            className={`transition-all duration-700 ease-in-out overflow-hidden ${open ? "max-h-[2000px] mt-3" : "max-h-0"
+              }`}
           >
             {/* Tabs can consume 'flight' and 'segments' if you pass them in */}
             {/* Example: <CustomTabs flight={flight} segments={segments} /> */}
@@ -321,18 +321,9 @@ export default function FlightCard({ flight }) {
           )}
 
           {/* Buttons */}
-        <div className="mt-3 flex gap-2">
-  <button className="w-full bg-gray-100 text-[14px] p-2 font-medium rounded-full hover:bg-gray-200">
-    View Prices
-  </button>
-
-  <Link
-    to="/fare"
-    className="w-full bg-red-600 text-[14px] text-white font-semibold rounded-full hover:bg-red-500 flex items-center justify-center"
-  >
-    Select
-  </Link>
-</div>
+          <div className="mt-3">
+             <FareModalDemo/>
+          </div>
 
 
         </aside>

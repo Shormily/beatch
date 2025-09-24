@@ -95,7 +95,7 @@ export default function FlightBooking() {
     ],
     []
   );
-  const [step, setStep] = useState(1);
+  const [ setStep] = useState(1);
   const steps = [
     { label: "Traveller Info", active: true },
     { label: "Add-ons" },

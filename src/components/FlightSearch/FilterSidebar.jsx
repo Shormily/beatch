@@ -9,6 +9,7 @@ import FlightTabs from "./FlightTab";
 import FlightCard from "./FlightCard";
 import { searchFlights } from "../../redux/slices/flightsSlice";
 
+
 // ---------- tiny utils ----------
 const safe = (v, d = "") => (v === undefined || v === null ? d : v);
 
@@ -379,14 +380,12 @@ function FiltersSidebar({
           <button
             type="button"
             onClick={() => setSchedTab("dep")}
-            className={`text-xs px-3 py-1.5 rounded-full border ${
-              schedTab === "dep" ? "bg-white" : "bg-white"
-            }`}
+            className="text-xs px-3 py-1.5 rounded-full  bg-white"
           >
             <span
               className={`${
                 schedTab === "dep"
-                  ? "font-semibold text-red-600 border-b-2 border-red-600 pb-0.5"
+                  ? "font-semibold text-red-600 bg-red-50 px-4 pt-2 border-b-2 border-red-600 pb-0.5"
                   : "text-gray-500"
               }`}
             >
@@ -396,12 +395,14 @@ function FiltersSidebar({
           <button
             type="button"
             onClick={() => setSchedTab("arr")}
-            className="text-xs px-3 py-1.5 rounded-full border bg-white"
+            className="text-xs px-3 py-1.5 rounded-full  bg-white"
+            
+            
           >
             <span
               className={
                 schedTab === "arr"
-                  ? "font-semibold text-red-600 border-b-2 border-red-600 pb-0.5"
+                  ? "font-semibold text-red-600 bg-red-50 px-4 pt-2 border-b-2 border-red-600 pb-0.5"
                   : "text-gray-500"
               }
             >
@@ -411,7 +412,7 @@ function FiltersSidebar({
         </div>
 
         {/* Time-of-day chips */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 ">
           {["EARLY_MORNING", "MORNING", "AFTERNOON", "EVENING"].map((k) => {
             const setName = schedTab === "dep" ? "depSlots" : "arrSlots";
             const isActive = value[setName].has(k);
@@ -421,14 +422,14 @@ function FiltersSidebar({
                 active={isActive}
                 onClick={() => toggleSet(setName, k)}
                 icon={
-                  <span className="text-xl">
+                  <span className="">
                     {k === "EARLY_MORNING"
-                      ? "🌅"
+                      ? ""
                       : k === "MORNING"
-                      ? "🌤️"
+                      ? ""
                       : k === "AFTERNOON"
-                      ? "🌞"
-                      : "🌙"}
+                      ? ""
+                      : ""}
                   </span>
                 }
                 title={slotLabel[k].title}
