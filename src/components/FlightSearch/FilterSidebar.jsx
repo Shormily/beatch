@@ -6,7 +6,6 @@ import { FcAlarmClock } from "react-icons/fc";
 import next from "../LandingPages/assets/next.png";
 import prev from "../LandingPages/assets/prev.png";
 import FlightTabs from "./FlightTab";
-import Dropdownmenu from "./Dropdownmenu";
 import FlightCard from "./FlightCard";
 import { searchFlights } from "../../redux/slices/flightsSlice";
 
@@ -23,7 +22,7 @@ const toShortDate = (isoOrLabel) => {
       weekday: "short",
     });
   }
-  return isoOrLabel; // already like "15 Sep, 2025"
+  return isoOrLabel;
 };
 
 const toISO = (d) => {
@@ -36,7 +35,7 @@ const normalizeToISO = (dateLike) => {
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateLike)) return dateLike;
   const dt = new Date(dateLike);
   if (!isNaN(dt)) return toISO(dt);
-  return ""; // give up
+  return "";
 };
 
 const addDaysISO = (iso, delta) => {
@@ -114,6 +113,38 @@ const getAirlinesCount = (results = []) => {
 };
 const formatCount = (n, thing) => `${n} ${thing}${n === 1 ? "" : "s"}`;
 
+// minutes -> "Xd Yh Zm"
+const minutesToLabel = (mins) => {
+  if (!Number.isFinite(mins) || mins <= 0) return "—";
+  const d = Math.floor(mins / 1440);
+  const h = Math.floor((mins % 1440) / 60);
+  const m = Math.floor(mins % 60);
+  const parts = [];
+  if (d) parts.push(`${d}d`);
+  if (h) parts.push(`${h}h`);
+  if (m || parts.length === 0) parts.push(`${m}m`);
+  return parts.join(" ");
+};
+
+// "HH:mm" -> minutes since midnight
+const parseHHMMToMinutes = (hhmm) => {
+  if (typeof hhmm !== "string") return null;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
+  if (!m) return null;
+  const hh = Number(m[1]),
+    mm = Number(m[2]);
+  if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
+  return hh * 60 + mm;
+};
+
+// minutes since midnight -> "HH:mm"
+const minutesToHHMM = (mins) => {
+  if (!Number.isFinite(mins)) return "—";
+  const hh = String(Math.floor(mins / 60)).padStart(2, "0");
+  const mm = String(mins % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+};
+
 // map API cabinClasse back to the label used in your FlightForm
 const cabinToLabel = (c) => {
   switch ((c || "").toUpperCase()) {
@@ -128,6 +159,374 @@ const cabinToLabel = (c) => {
   }
 };
 
+const formatBDT = (v) => {
+  if (!Number.isFinite(v)) return "—";
+  try {
+    return `৳ ${v.toLocaleString("en-BD")}`;
+  } catch {
+    return `৳ ${v}`;
+  }
+};
+
+// slots for “Flight Schedules”
+const timeToSlot = (mins) => {
+  if (!Number.isFinite(mins)) return null;
+  if (mins < 360) return "EARLY_MORNING"; // 00:00–05:59
+  if (mins < 720) return "MORNING"; // 06:00–11:59
+  if (mins < 1080) return "AFTERNOON"; // 12:00–17:59
+  return "EVENING"; // 18:00–23:59
+};
+const slotLabel = {
+  EARLY_MORNING: { title: "Early Morning", range: "00:00–05:59" },
+  MORNING: { title: "Morning", range: "06:00–11:59" },
+  AFTERNOON: { title: "Afternoon", range: "12:00–17:59" },
+  EVENING: { title: "Evening", range: "18:00–23:59" },
+};
+
+// ---------- Filter UI bits ----------
+function Section({ title, open, onToggle, children }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 mb-3">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 py-3"
+      >
+        <span className="text-[14px] font-semibold text-gray-800">{title}</span>
+        <span className={`transition-transform ${open ? "rotate-180" : ""}`}>
+          ▾
+        </span>
+      </button>
+      {open && <div className="px-4 pb-4">{children}</div>}
+    </div>
+  );
+}
+
+function Chip({ active, onClick, icon, title, sub }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full text-left rounded-xl border px-3 py-3 mb-2 transition
+        ${
+          active
+            ? "bg-red-50 border-red-300"
+            : "bg-white hover:border-gray-300 border-gray-200"
+        }`}
+    >
+      <div className="flex items-center gap-2">
+        {icon}
+        <div>
+          <div className="text-sm font-semibold">{title}</div>
+          <div className="text-xs text-gray-500">{sub}</div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function DualRange({
+  min,
+  max,
+  value,
+  onChange,
+  format = (v) => v,
+  step = 1,
+  minLabel,
+  maxLabel,
+}) {
+  const [a, b] = value;
+  const lo = Math.min(a, b),
+    hi = Math.max(a, b);
+  const handleA = (e) => onChange([Number(e.target.value), hi]);
+  const handleB = (e) => onChange([lo, Number(e.target.value)]);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+        <span>{format(lo)}</span>
+        <span>{format(hi)}</span>
+      </div>
+      <div className="relative h-2 mb-3">
+        <div className="absolute inset-0 rounded-full bg-gray-200" />
+        <div
+          className="absolute h-2 rounded-full bg-red-600"
+          style={{
+            left: `${((lo - min) / (max - min)) * 100}%`,
+            right: `${(1 - (hi - min) / (max - min)) * 100}%`,
+          }}
+        />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={lo}
+          onChange={handleA}
+          className="absolute w-full h-2 bg-transparent appearance-none pointer-events-auto"
+        />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={hi}
+          onChange={handleB}
+          className="absolute w-full h-2 bg-transparent appearance-none pointer-events-auto"
+        />
+      </div>
+      {(minLabel || maxLabel) && (
+        <div className="flex items-center justify-between text-[11px] text-gray-400">
+          <span>{minLabel}</span>
+          <span>{maxLabel}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FiltersSidebar({
+  bounds,
+  value,
+  onChange,
+  airlineList,
+  aircraftList,
+}) {
+  const [open, setOpen] = useState({
+    price: true,
+    stops: true,
+    airlines: true,
+    schedules: true,
+    baggage: true,
+    refundable: true,
+    layover: true,
+    aircraft: true,
+  });
+  const [schedTab, setSchedTab] = useState("dep"); // "dep" | "arr"
+
+  const toggle = (k) => setOpen((o) => ({ ...o, [k]: !o[k] }));
+  const setField = (patch) => onChange({ ...value, ...patch });
+  const toggleSet = (setName, key) => {
+    const next = new Set(value[setName]);
+    next.has(key) ? next.delete(key) : next.add(key);
+    onChange({ ...value, [setName]: next });
+  };
+
+  return (
+    <aside>
+      {/* Price Range */}
+      <Section
+        title="Price Range"
+        open={open.price}
+        onToggle={() => toggle("price")}
+      >
+        <DualRange
+          min={bounds.priceMin}
+          max={bounds.priceMax}
+          value={value.price}
+          onChange={(v) => setField({ price: v })}
+          format={formatBDT}
+        />
+      </Section>
+
+      {/* Stops */}
+      <Section title="Stops" open={open.stops} onToggle={() => toggle("stops")}>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={value.stops.nonstop}
+            onChange={(e) =>
+              setField({ stops: { ...value.stops, nonstop: e.target.checked } })
+            }
+          />
+          <span>Non-stop</span>
+        </label>
+      </Section>
+
+      {/* Airlines */}
+      <Section
+        title="Airlines"
+        open={open.airlines}
+        onToggle={() => toggle("airlines")}
+      >
+        <div className="space-y-2">
+          {airlineList.map(({ code, price }) => (
+            <label
+              key={code}
+              className="flex items-center justify-between text-sm"
+            >
+              <span className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={value.airlines.has(code)}
+                  onChange={() => toggleSet("airlines", code)}
+                />
+                <span className="truncate max-w-[9rem]" title={code}>
+                  {code}
+                </span>
+              </span>
+              <span className="text-gray-600">{formatBDT(price)}</span>
+            </label>
+          ))}
+        </div>
+      </Section>
+
+      {/* Flight Schedules (now with tabs) */}
+      <Section
+        title="Flight Schedules"
+        open={open.schedules}
+        onToggle={() => toggle("schedules")}
+      >
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => setSchedTab("dep")}
+            className={`text-xs px-3 py-1.5 rounded-full border ${
+              schedTab === "dep" ? "bg-white" : "bg-white"
+            }`}
+          >
+            <span
+              className={`${
+                schedTab === "dep"
+                  ? "font-semibold text-red-600 border-b-2 border-red-600 pb-0.5"
+                  : "text-gray-500"
+              }`}
+            >
+              Departure
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSchedTab("arr")}
+            className="text-xs px-3 py-1.5 rounded-full border bg-white"
+          >
+            <span
+              className={
+                schedTab === "arr"
+                  ? "font-semibold text-red-600 border-b-2 border-red-600 pb-0.5"
+                  : "text-gray-500"
+              }
+            >
+              Arrival
+            </span>
+          </button>
+        </div>
+
+        {/* Time-of-day chips */}
+        <div className="grid grid-cols-2 gap-2">
+          {["EARLY_MORNING", "MORNING", "AFTERNOON", "EVENING"].map((k) => {
+            const setName = schedTab === "dep" ? "depSlots" : "arrSlots";
+            const isActive = value[setName].has(k);
+            return (
+              <Chip
+                key={k}
+                active={isActive}
+                onClick={() => toggleSet(setName, k)}
+                icon={
+                  <span className="text-xl">
+                    {k === "EARLY_MORNING"
+                      ? "🌅"
+                      : k === "MORNING"
+                      ? "🌤️"
+                      : k === "AFTERNOON"
+                      ? "🌞"
+                      : "🌙"}
+                  </span>
+                }
+                title={slotLabel[k].title}
+                sub={slotLabel[k].range}
+              />
+            );
+          })}
+        </div>
+
+        <div className="mt-3 text-xs text-gray-500">
+          {schedTab === "dep" ? "Departure Dhaka: Anytime" : "Arrival: Anytime"}
+        </div>
+      </Section>
+
+      {/* Baggage Policy */}
+      <Section
+        title="Baggage Policy"
+        open={open.baggage}
+        onToggle={() => toggle("baggage")}
+      >
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={value.baggage20kg}
+            onChange={(e) => setField({ baggage20kg: e.target.checked })}
+          />
+          <span>20 Kg</span>
+        </label>
+      </Section>
+
+      {/* Refundability */}
+      <Section
+        title="Refundability"
+        open={open.refundable}
+        onToggle={() => toggle("refundable")}
+      >
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={value.refundable}
+            onChange={(e) => setField({ refundable: e.target.checked })}
+          />
+          <span>Partially Refundable</span>
+        </label>
+      </Section>
+
+      {/* Layover Time */}
+      <Section
+        title="Layover Time"
+        open={open.layover}
+        onToggle={() => toggle("layover")}
+      >
+        <DualRange
+          min={0}
+          max={Math.max(15, bounds.layMax)}
+          value={value.layoverHours}
+          onChange={(v) => setField({ layoverHours: v })}
+          step={1}
+          format={(v) => `${v} hrs`}
+          minLabel="0 hrs"
+          maxLabel="15+ hrs"
+        />
+      </Section>
+
+      {/* Aircraft */}
+      <Section
+        title="Aircraft"
+        open={open.aircraft}
+        onToggle={() => toggle("aircraft")}
+      >
+        <div className="space-y-2">
+          {aircraftList.length
+            ? aircraftList.map((ac) => (
+                <label key={ac} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={value.aircraft.has(ac)}
+                    onChange={() => toggleSet("aircraft", ac)}
+                  />
+                  <span>{ac}</span>
+                </label>
+              ))
+            : ["ATR72", "ATR72-600", "ATR72S", "DH8D"].map((ac) => (
+                <label key={ac} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={value.aircraft.has(ac)}
+                    onChange={() => toggleSet("aircraft", ac)}
+                  />
+                  <span>{ac}</span>
+                </label>
+              ))}
+        </div>
+      </Section>
+    </aside>
+  );
+}
+
 // ---------- component ----------
 export default function FlightSearchPage() {
   const dispatch = useDispatch();
@@ -140,10 +539,9 @@ export default function FlightSearchPage() {
   const retOD = criteria?.originDestinationOptions?.[1];
 
   // sorting tab
-  const [sortKey, setSortKey] = useState("best"); // best | cheapest | fastest
+  const [sortKey, setSortKey] = useState("best"); // 'best' | 'cheapest' | 'fastest'
 
   // ====== SHIFT DATE & RE-SEARCH ======
-  // Build a re-search payload from current criteria (keep airports, pax, cabin)
   const buildSearchArgs = (override = {}) => {
     const fromCode = depOD?.departureAirport || "";
     const toCode = depOD?.arrivalAirport || "";
@@ -151,7 +549,6 @@ export default function FlightSearchPage() {
     const isRound = !!retOD;
     const returnDateISO = isRound ? normalizeToISO(retOD?.flyDate) : undefined;
 
-    // passengers back to counts
     const pax = Array.isArray(criteria?.passengers) ? criteria.passengers : [];
     const qty = (t) => pax.find((p) => p?.passengerType === t)?.quantity || 0;
     const travellers = {
@@ -172,11 +569,10 @@ export default function FlightSearchPage() {
       travelClassLabel,
       preferredAirline: criteria?.preferredAirline ?? undefined,
       apiId: criteria?.apiId ?? undefined,
-      ...override, // allow override of dates
+      ...override,
     };
   };
 
-  // Click handlers for date arrows
   const shiftDepartureBy = (delta) => {
     if (!depOD) return;
     const depISO = normalizeToISO(depOD.flyDate);
@@ -186,93 +582,166 @@ export default function FlightSearchPage() {
   };
 
   const shiftReturnBy = (delta) => {
-    if (!retOD) return; // only round-trip
+    if (!retOD) return;
     const retISO = normalizeToISO(retOD.flyDate);
     const newRet = addDaysISO(retISO, delta);
     const args = buildSearchArgs({ returnDate: newRet });
     dispatch(searchFlights(args));
   };
 
-  // ====== ENRICH FOR FILTERING/SORTING ======
+  // ====== ENRICH FOR FILTERING/SORTING (also used for sidebar) ======
   const enriched = useMemo(() => {
     return itineraries.map((it) => {
       const price = pickBDTPrice(it);
       const minutes = getDurationMinutes(it);
       const stops = getStops(it);
       const layMin = totalLayoverMinutes(it);
-      const codes = new Set();
-      if (it?.validatingCarrierCode) codes.add(it.validatingCarrierCode);
+
+      const firstSeg = it?.flights?.[0]?.flightSegments?.[0];
+      const lastSeg = it?.flights?.[0]?.flightSegments?.slice(-1)?.[0];
+
+      const depHHmm =
+        firstSeg?.departure?.depTime ||
+        firstSeg?.departure?.time ||
+        firstSeg?.departure?.scheduledTime ||
+        firstSeg?.departure?.localTime ||
+        "";
+      const arrHHmm =
+        lastSeg?.arrival?.arrTime ||
+        lastSeg?.arrival?.time ||
+        lastSeg?.arrival?.scheduledTime ||
+        lastSeg?.arrival?.localTime ||
+        "";
+
+      const depMins = parseHHMMToMinutes(depHHmm);
+      const arrMins = parseHHMMToMinutes(arrHHmm);
+
+      const airlineCodes = new Set();
+      if (it?.validatingCarrierCode) airlineCodes.add(it.validatingCarrierCode);
       it?.flights?.[0]?.flightSegments?.forEach((s) => {
-        if (s?.airline?.code) codes.add(s.airline.code);
-        if (s?.airline?.optAirlineCode) codes.add(s.airline.optAirlineCode);
+        if (s?.airline?.code) airlineCodes.add(s.airline.code);
+        if (s?.airline?.optAirlineCode)
+          airlineCodes.add(s.airline.optAirlineCode);
       });
+
+      const aircraft = new Set(
+        (it?.flights?.[0]?.flightSegments || [])
+          .map((s) => s?.equipment?.code || s?.aircraft || s?.equipment || null)
+          .filter(Boolean)
+      );
+
       return {
         it,
         price,
         minutes,
         stops,
         layMin,
-        airlineCodes: Array.from(codes),
+        airlineCodes: Array.from(airlineCodes),
+        aircraft: Array.from(aircraft),
+        depMins,
+        arrMins,
+        depSlot: timeToSlot(depMins),
+        arrSlot: timeToSlot(arrMins),
       };
     });
   }, [itineraries]);
 
-  // global bounds (price & layover)
-  const { priceMin, priceMax, layMin, layMax, airlineList } = useMemo(() => {
-    let pMin = Infinity,
-      pMax = -Infinity,
-      lMax = 0;
-    const airlinePriceMap = new Map();
+  // metrics for tabs
+  const metrics = useMemo(() => {
+    let cheapest = Infinity,
+      fastest = Infinity,
+      earliestMins = null;
+    for (const { it } of enriched) {
+      const { total } = pickBDTPrice(it);
+      if (Number.isFinite(total) && total < cheapest) cheapest = total;
 
-    enriched.forEach(({ price, layMin, airlineCodes }) => {
-      if (Number.isFinite(price.total)) {
-        pMin = Math.min(pMin, price.total);
-        pMax = Math.max(pMax, price.total);
+      const mins = getDurationMinutes(it);
+      if (Number.isFinite(mins) && mins < fastest) fastest = mins;
+
+      const firstSeg = it?.flights?.[0]?.flightSegments?.[0];
+      if (firstSeg?.departure) {
+        const t =
+          firstSeg.departure.depTime ||
+          firstSeg.departure.time ||
+          firstSeg.departure.scheduledTime ||
+          firstSeg.departure.localTime ||
+          "";
+        const mm = parseHHMMToMinutes(t);
+        if (mm !== null && (earliestMins === null || mm < earliestMins))
+          earliestMins = mm;
       }
-      lMax = Math.max(lMax, Math.ceil(layMin / 60));
-      airlineCodes.forEach((c) => {
-        const prev = airlinePriceMap.get(c);
-        if (!prev || (Number.isFinite(price.total) && price.total < prev)) {
-          airlinePriceMap.set(c, price.total);
-        }
-      });
-    });
-
-    if (!Number.isFinite(pMin)) pMin = 0;
-    if (!Number.isFinite(pMax) || pMax < pMin) pMax = pMin + 1;
-    if (pMax === pMin) pMax = pMin + 1;
-
-    if (!Number.isFinite(lMax)) lMax = 1;
-    if (lMax < 1) lMax = 1;
-
-    const list = Array.from(airlinePriceMap.entries())
-      .map(([code, price]) => ({ code, price }))
-      .sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
-
+    }
     return {
-      priceMin: Math.floor(pMin),
-      priceMax: Math.ceil(pMax),
-      layMin: 0,
-      layMax: Math.max(lMax, 1),
-      airlineList: list,
+      cheapestPrice: Number.isFinite(cheapest) ? cheapest : undefined,
+      fastestDuration: Number.isFinite(fastest)
+        ? minutesToLabel(fastest)
+        : undefined,
+      earliestTime:
+        earliestMins !== null ? minutesToHHMM(earliestMins) : undefined,
     };
   }, [enriched]);
 
-  // FILTER STATE (controlled; defaults from bounds)
+  // global bounds
+  const { priceMin, priceMax, layMin, layMax, airlineList, aircraftList } =
+    useMemo(() => {
+      let pMin = Infinity,
+        pMax = -Infinity,
+        lMax = 0;
+      const airlinePriceMap = new Map();
+      const aircraftSet = new Set();
+
+      enriched.forEach(({ price, layMin, airlineCodes, aircraft }) => {
+        if (Number.isFinite(price.total)) {
+          pMin = Math.min(pMin, price.total);
+          pMax = Math.max(pMax, price.total);
+        }
+        lMax = Math.max(lMax, Math.ceil((layMin || 0) / 60));
+        airlineCodes.forEach((c) => {
+          const prev = airlinePriceMap.get(c);
+          if (!prev || (Number.isFinite(price.total) && price.total < prev)) {
+            airlinePriceMap.set(c, price.total);
+          }
+        });
+        (aircraft || []).forEach((a) => aircraftSet.add(a));
+      });
+
+      if (!Number.isFinite(pMin)) pMin = 0;
+      if (!Number.isFinite(pMax) || pMax < pMin) pMax = pMin + 1;
+      if (pMax === pMin) pMax = pMin + 1;
+      if (!Number.isFinite(lMax) || lMax < 1) lMax = 1;
+
+      const list = Array.from(airlinePriceMap.entries())
+        .map(([code, price]) => ({ code, price }))
+        .sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+
+      return {
+        priceMin: Math.floor(pMin),
+        priceMax: Math.ceil(pMax),
+        layMin: 0,
+        layMax: Math.max(lMax, 1),
+        airlineList: list,
+        aircraftList: Array.from(aircraftSet).sort(),
+      };
+    }, [enriched]);
+
+  // FILTER STATE (matches screenshot)
   const [filters, setFilters] = useState({
     price: [priceMin, priceMax],
     layoverHours: [layMin, layMax],
-    stops: { nonstop: true, one: true, twoPlus: true },
+    stops: { nonstop: true },
     airlines: new Set(),
+    depSlots: new Set(),
+    arrSlots: new Set(),
+    baggage20kg: false,
+    refundable: false,
+    aircraft: new Set(),
   });
 
-  // keep filters in sync when bounds change (new search)
   useEffect(() => {
     setFilters((f) => ({
+      ...f,
       price: [priceMin, priceMax],
       layoverHours: [layMin, layMax],
-      stops: f.stops || { nonstop: true, one: true, twoPlus: true },
-      airlines: new Set(),
     }));
   }, [priceMin, priceMax, layMin, layMax]);
 
@@ -302,35 +771,92 @@ export default function FlightSearchPage() {
   const view = useMemo(() => {
     const [pMin, pMax] = filters.price;
     const [loMinH, loMaxH] = filters.layoverHours;
-    const selectedAirlines = filters.airlines;
 
-    const keep = ({ price, stops, layMin, airlineCodes }) => {
-      if (!Number.isFinite(price.total)) return false;
-      if (price.total < pMin || price.total > pMax) return false;
+    const keep = (row) => {
+      const { price, stops, layMin, airlineCodes, depSlot, arrSlot, aircraft } =
+        row;
 
-      if (stops === 0 && !filters.stops.nonstop) return false;
-      if (stops === 1 && !filters.stops.one) return false;
-      if (stops >= 2 && !filters.stops.twoPlus) return false;
+      if (
+        !Number.isFinite(price.total) ||
+        price.total < pMin ||
+        price.total > pMax
+      )
+        return false;
 
-      const layH = Math.ceil(layMin / 60);
+      // Stops
+      if (stops === 0) {
+        if (!filters.stops.nonstop) return false;
+      }
+
+      // Layover
+      const layH = Math.ceil((layMin || 0) / 60);
       if (layH < loMinH || layH > loMaxH) return false;
 
-      if (selectedAirlines.size > 0) {
-        const has = airlineCodes.some((c) => selectedAirlines.has(c));
-        if (!has) return false;
+      // Airlines
+      if (filters.airlines.size > 0) {
+        const hasAirline = airlineCodes?.some((c) => filters.airlines.has(c));
+        if (!hasAirline) return false;
       }
+
+      // Departure slots
+      if (
+        filters.depSlots.size > 0 &&
+        depSlot &&
+        !filters.depSlots.has(depSlot)
+      )
+        return false;
+
+      // Arrival slots (not shown active in UI but supported)
+      if (
+        filters.arrSlots.size > 0 &&
+        arrSlot &&
+        !filters.arrSlots.has(arrSlot)
+      )
+        return false;
+
+      // Aircraft
+      if (filters.aircraft.size > 0) {
+        const hasAircraft =
+          Array.isArray(aircraft) &&
+          aircraft.some((a) => filters.aircraft.has(a));
+        if (!hasAircraft) return false;
+      }
+
+      // Baggage 20kg
+      if (filters.baggage20kg) {
+        const brands = row?.it?.fares?.[0]?.brands || [];
+        const allowOk = brands.some((b) => {
+          const kg = Number(b?.baggageAllowanceKg ?? b?.baggageAllowance ?? 0);
+          return Number.isFinite(kg) && kg >= 20;
+        });
+        if (!allowOk && brands.length) return false;
+      }
+
+      // Refundable
+      if (filters.refundable) {
+        const brands = row?.it?.fares?.[0]?.brands || [];
+        const refOk = brands.some((b) => {
+          const tag = String(
+            b?.refundability || b?.refundable || ""
+          ).toLowerCase();
+          return (
+            tag.includes("partial") ||
+            tag.includes("refundable") ||
+            b?.refundable === true
+          );
+        });
+        if (!refOk && brands.length) return false;
+      }
+
       return true;
     };
 
     let arr = enriched.filter(keep);
 
-    if (sortKey === "cheapest") {
+    if (sortKey === "cheapest")
       arr.sort((a, b) => a.price.total - b.price.total);
-    } else if (sortKey === "fastest") {
-      arr.sort((a, b) => a.minutes - b.minutes);
-    } else {
-      arr.sort((a, b) => bestScore(a.it) - bestScore(b.it));
-    }
+    else if (sortKey === "fastest") arr.sort((a, b) => a.minutes - b.minutes);
+    else arr.sort((a, b) => bestScore(a.it) - bestScore(b.it));
 
     return arr;
   }, [enriched, filters, sortKey]);
@@ -427,17 +953,13 @@ export default function FlightSearchPage() {
               </div>
             )}
 
-            {/* Filters (controlled) */}
-            <Dropdownmenu
-              bounds={{
-                priceMin,
-                priceMax,
-                layMin,
-                layMax,
-                airlines: airlineList,
-              }}
+            {/* Redesigned Filters (like screenshot) */}
+            <FiltersSidebar
+              bounds={{ priceMin, priceMax, layMin, layMax }}
               value={filters}
               onChange={setFilters}
+              airlineList={airlineList}
+              aircraftList={aircraftList}
             />
           </aside>
 
@@ -461,6 +983,7 @@ export default function FlightSearchPage() {
                 sortKey={sortKey}
                 onChange={setSortKey}
                 counts={{ total: view.length }}
+                metrics={metrics}
               />
             </div>
 

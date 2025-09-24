@@ -45,9 +45,7 @@ const airportsSlice = createSlice({
       })
       .addCase(loadAirports.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.items = (action.payload || []).filter(
-          (a) => (a.countryCode || "").toUpperCase() === "BD"
-        );
+        state.items = action.payload;
         state.lastFetched = Date.now();
       })
       .addCase(loadAirports.rejected, (state, action) => {

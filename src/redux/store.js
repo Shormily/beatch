@@ -28,7 +28,7 @@ const persistConfig = {
   key: "root",
   storage,
   // Persist only what you truly need. Keeping `flights` can be large; safe to remove if you prefer.
-  whitelist: ["auth", "searchForm", "airports", "flights"],
+  whitelist: ["auth"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

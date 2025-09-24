@@ -22,7 +22,7 @@ export default function Searchresult() {
         <div className="bg-white pt-14 pb-4">
           {activeTab === "flight" && (
             <FlightForm
-              showMissingHint={false} // 👈 hide the “Missing: …” helper on this page
+              showMissingHint={true} // 👈 hide the “Missing: …” helper on this page
               PopperContainer={PopperContainer}
               onFocus={() => setFormZ(50)}
               onBlur={() => setFormZ(20)}

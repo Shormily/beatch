@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import Tabs from "./Tabs";
 import FlightForm from "./FlightForm";
 import HotelForm from "./HotelForm";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 export default function HeroSection() {
@@ -32,12 +31,12 @@ export default function HeroSection() {
 
   return (
     <section className="relative">
-
       {/* Background video */}
-      <div className={`relative w-full flex items-start justify-center overflow-hidden
-        h-[39vh] sm:h-[20vh] md:h-[26vh] lg:h-[26vh] xl:h-[39vh]
+      <div
+        className={`relative w-full flex items-start justify-center overflow-hidden
+        h-[20vh] sm:h-[20vh] md:h-[26vh] lg:h-[26vh] xl:h-[15vh]
         min-h-[300px] sm:min-h-[200px] md:min-h-[250px] lg:min-h-[200px] xl:min-h-[300px]
-        sm:block hidden
+        sm:block 
         [@media(min-width:1024px)_and_(max-width:1366px)]:h-[0vh]
         [@media(min-width:1024px)_and_(max-width:1366px)]:min-h-[200px]`}
       >
@@ -62,7 +61,8 @@ export default function HeroSection() {
       {/* Tabs wrapper */}
       <div className="bg-gradient-to-b from-red-50 to-gray-100 pt-4">
         <div className="max-w-[1200px] mx-auto px-8 pt-0 lg:pt-8">
-          <div className="bg-white rounded-xl shadow-lg max-w-[360px] mx-auto relative z-30
+          <div
+            className="bg-white rounded-xl shadow-lg max-w-[360px] mx-auto relative z-30
             -mt-20 sm:-mt-20 md:-mt-20 lg:-mt-24 xl:-mt-28 mt-6 sm:mt-0 transition-all
             lg:-mt-2 xl:-mt-2"
           >
@@ -83,8 +83,8 @@ export default function HeroSection() {
               range={range}
               setRange={setRange}
               PopperContainer={PopperContainer}
-              onFocus={() => setFormZ(50)}    // Input focus -> z-index 50
-              onBlur={() => setFormZ(20)}     // Input blur -> z-index 20
+              onFocus={() => setFormZ(50)} // Input focus -> z-index 50
+              onBlur={() => setFormZ(20)} // Input blur -> z-index 20
             />
           )}
           {activeTab === "hotel" && (

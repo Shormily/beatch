@@ -21,12 +21,12 @@ export default function AirportSelect({
   maxResults = 20,
   minChars = 0,
   debounceMs = 300,
-  clearOnFocus = true, // 👈 new: clear the field when focusing/clicking
+  clearOnFocus = true, // clear the field when focusing/clicking
 }) {
   const dispatch = useDispatch();
   const { items: airports, status, error } = useSelector((s) => s.airports);
 
-  // Only Bangladesh airports
+  // Bangladesh airports
   const bdAirports = useMemo(
     () => airports.filter((a) => (a.countryCode || "").toUpperCase() === "BD"),
     [airports]
@@ -81,17 +81,29 @@ export default function AirportSelect({
     return () => clearTimeout(t);
   }, [q, debounceMs]);
 
+  // Decide base pool: BD-only when not typing/threshold not met; ALL when typing
+  const usingAllAirports = useMemo(() => {
+    const len = (debouncedQ || "").length;
+    if (!debouncedQ) return false; // no typing -> BD only
+    if (minChars > 0 && len < minChars) return false; // below threshold -> BD only
+    return true; // typing & threshold met -> ALL
+  }, [debouncedQ, minChars]);
+
   // Filter (startsWith priority, then includes)
   const filtered = useMemo(() => {
-    if (minChars > 0 && (debouncedQ || "").length < minChars) {
-      return bdAirports.slice(0, maxResults);
-    }
+    const pool = usingAllAirports ? airports : bdAirports;
+
     const needle = (debouncedQ || "").toLowerCase();
-    if (!needle) return bdAirports.slice(0, maxResults);
+    if (
+      !needle ||
+      (!usingAllAirports && minChars > 0 && needle.length < minChars)
+    ) {
+      return pool.slice(0, maxResults);
+    }
 
     const starts = [];
     const includes = [];
-    for (const a of bdAirports) {
+    for (const a of pool) {
       const fCode = (a.code || "").toLowerCase();
       const fName = (a.name || "").toLowerCase();
       const fCity = (a.cityName || "").toLowerCase();
@@ -115,7 +127,14 @@ export default function AirportSelect({
       if (starts.length + includes.length >= maxResults) break;
     }
     return [...starts, ...includes].slice(0, maxResults);
-  }, [debouncedQ, bdAirports, maxResults, minChars]);
+  }, [
+    debouncedQ,
+    airports,
+    bdAirports,
+    maxResults,
+    minChars,
+    usingAllAirports,
+  ]);
 
   // Keep highlight in bounds
   useEffect(() => {
@@ -124,15 +143,15 @@ export default function AirportSelect({
     );
   }, [filtered.length]);
 
-  // figure out selected airport from full label
+  // figure out selected airport from full label (consider ALL airports)
   const selectedAirport = useMemo(() => {
-    const cand = bdAirports.find(
+    const cand = airports.find(
       (a) =>
         `${a.cityName}, ${a.countryName}`.toLowerCase() ===
         (q || "").trim().toLowerCase()
     );
     return cand || null;
-  }, [bdAirports, q]);
+  }, [airports, q]);
 
   const selectAirport = useCallback(
     (a) => {
@@ -183,11 +202,10 @@ export default function AirportSelect({
   const isLoading = status === "loading";
   const hasError = !!error;
 
-  // Focus handler: clear field for fresh typing
+  // Focus handler: show dropdown & optionally clear for fresh typing
   const handleFocus = () => {
     setOpen(true);
     if (clearOnFocus && q) {
-      // only clear when the current q equals committed value (avoid clearing partial typing)
       const committed = (lastCommittedRef.current || "").trim();
       if (q.trim() === committed) {
         setQ("");
