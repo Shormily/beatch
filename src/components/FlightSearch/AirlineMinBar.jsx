@@ -30,15 +30,15 @@ export default function AirlineMinBar({ items = [], selected, onToggle }) {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-white rounded-2xl">
       <div className="relative">
         <button
           type="button"
           onClick={() => scrollBy(-280)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-white shadow border border-gray-200 grid place-items-center hover:bg-gray-50"
+          className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 z-10 h-8 w-8 grid place-items-center hover:bg-gray-50"
           aria-label="Scroll left"
         >
-          <LuChevronLeft />
+          <LuChevronLeft size={36}/>
         </button>
 
         <div
@@ -53,11 +53,11 @@ export default function AirlineMinBar({ items = [], selected, onToggle }) {
                 <button
                   key={code}
                   onClick={() => onToggle(code)}
-                  className={`inline-flex items-center gap-3 rounded-2xl border px-3 py-2 shadow-sm transition
+                  className={`inline-flex items-center gap-3 rounded-lg cursor-pointer  hover:border-red-600 hover:bg-red-50 text-gray-500  px-3 py-2  transition
                     ${
                       isActive
-                        ? "bg-red-600 border-red-600 text-white"
-                        : "bg-white border-gray-200 hover:border-gray-300 text-gray-800"
+                        ? "bg-red-50 border border-red-600 text-red-600 " 
+                        : "bg-white hover:border-red-500 "
                     }`}
                 >
                   <AirlineLogo code={code} />
@@ -72,7 +72,7 @@ export default function AirlineMinBar({ items = [], selected, onToggle }) {
                     </div>
                     <div
                       className={`text-sm font-bold ${
-                        isActive ? "text-white" : "text-gray-900"
+                        isActive ? "text-red-600" : "text-gray-900"
                       }`}
                     >
                       {formatBDT(price)}
@@ -87,10 +87,10 @@ export default function AirlineMinBar({ items = [], selected, onToggle }) {
         <button
           type="button"
           onClick={() => scrollBy(280)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-white shadow border border-gray-200 grid place-items-center hover:bg-gray-50"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 text-gray-500   grid place-items-center hover:bg-gray-50"
           aria-label="Scroll right"
         >
-          <LuChevronRight />
+          <LuChevronRight size={36} />
         </button>
       </div>
     </div>

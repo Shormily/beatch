@@ -8,11 +8,14 @@ import {
   LuChevronDown,
   LuChevronUp,
 } from "react-icons/lu";
+import fastest from "../LandingPages/assets/fastest.png"
+import cheapest from "../LandingPages/assets/cheapest.png"
+import earliest from "../LandingPages/assets/earliest.png"
 
 export default function FlightSortBar({
   sortKey,
   onChange,
-  counts,
+ 
   metrics,
   className = "",
 }) {
@@ -70,38 +73,38 @@ export default function FlightSortBar({
   };
 
   const pillBase =
-    "flex items-center gap-3 rounded-2xl border px-4 py-3 min-w-[150px] shadow-sm transition";
+    "flex items-center gap-3 rounded-lg  border-b-2 px-1 h-17 min-w-[200px]  transition";
   const inactive =
     "bg-white border-gray-200 hover:border-gray-300 text-gray-800";
-  const active = "bg-red-600 border-red-600 text-white";
+  const active = "bg-red-50 border-red-600 text-red-600";
 
   const Sub = ({ children, active }) => (
-    <span className={`text-xs ${active ? "text-red-50" : "text-gray-500"}`}>
+    <span className={`text-xs ${active ? "text-red-600 font-semibold" : "text-black font-semibold"}`}>
       {children}
     </span>
   );
 
   return (
-    <div className={`flex items-start gap-3 flex-wrap ${className}`}>
+    <div className={`flex items-start gap-2 flex-wrap ${className}`}>
       {/* Cheapest */}
       <button
         onClick={() => onChange("cheapest")}
         className={`${pillBase} ${sortKey === "cheapest" ? active : inactive}`}
       >
         <span
-          className={`grid place-items-center h-7 w-7 rounded-full ${
+          className={`grid place-items-center mx-1  rounded-full ${
             sortKey === "cheapest" ? "bg-white/15" : "bg-gray-100"
           }`}
         >
-          <LuBadgeDollarSign
-            size={18}
+          <img
+            src={cheapest}
             className={`${
-              sortKey === "cheapest" ? "text-white" : "text-gray-700"
+              sortKey === "cheapest" ? "bg-red-600 w-12 h-13 p-3 rounded-md" : "text-gray-700 bg-slate-100 rounded-md w-12 h-13 p-3"
             }`}
           />
         </span>
-        <div className="flex flex-col leading-4">
-          <span className="text-sm font-semibold">Cheapest</span>
+        <div className="flex flex-col ">
+          <span className="text- font-medium ">Cheapest</span>
           <Sub active={sortKey === "cheapest"}>
             {formatBDT(metrics?.cheapestPrice)}
           </Sub>
@@ -114,14 +117,14 @@ export default function FlightSortBar({
         className={`${pillBase} ${sortKey === "fastest" ? active : inactive}`}
       >
         <span
-          className={`grid place-items-center h-7 w-7 rounded-full ${
+          className={`grid place-items-center mx-1 rounded-full ${
             sortKey === "fastest" ? "bg-white/15" : "bg-gray-100"
           }`}
         >
-          <LuClock
-            size={18}
+          <img
+            src={fastest}
             className={`${
-              sortKey === "fastest" ? "text-white" : "text-gray-700"
+              sortKey === "fastest" ? "bg-red-600 w-12 h-13 p-3 rounded-md" : "text-gray-700 bg-slate-100 rounded-md w-12 h-13 p-3"
             }`}
           />
         </span>
@@ -139,14 +142,14 @@ export default function FlightSortBar({
         className={`${pillBase} ${sortKey === "earliest" ? active : inactive}`}
       >
         <span
-          className={`grid place-items-center h-7 w-7 rounded-full ${
+          className={`grid place-items-center mx-1 rounded-full ${
             sortKey === "earliest" ? "bg-white/15" : "bg-gray-100"
           }`}
         >
-          <LuSun
-            size={18}
+          <img
+            src={earliest}
             className={`${
-              sortKey === "earliest" ? "text-white" : "text-gray-700"
+              sortKey === "earliest" ? "bg-red-600 w-12 h-13 p-3 rounded-md" : "text-gray-700 bg-slate-100 rounded-md w-12 h-13 p-3"
             }`}
           />
         </span>
@@ -159,19 +162,19 @@ export default function FlightSortBar({
       </button>
 
       {/* Spacer */}
-      <div className="flex-1" />
+      <div className="" />
 
       {/* More Sorts Dropdown */}
       <div className="relative">
         <button
           ref={btnRef}
           onClick={() => setOpen((v) => !v)}
-          className={`${pillBase} ${inactive} min-w-[160px] justify-between`}
+          className={`${pillBase} ${inactive} min-w-[200px] justify-between`}
           aria-haspopup="menu"
           aria-expanded={open}
         >
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">More Sorts</span>
+          <div className="flex items-center ">
+            <span className="text-sm font-semibold px-2">More Sorts</span>
           </div>
           {open ? <LuChevronUp /> : <LuChevronDown />}
         </button>
@@ -214,11 +217,11 @@ export default function FlightSortBar({
       </div>
 
       {/* Results count (optional) */}
-      {typeof counts?.total === "number" && (
+      {/* {typeof counts?.total === "number" && (
         <div className="self-center text-xs text-gray-500 ml-2">
           {counts.total} result{counts.total === 1 ? "" : "s"}
         </div>
-      )}
+      )} */}
     </div>
   );
 }
