@@ -5,10 +5,10 @@ import { useSelector, useDispatch } from "react-redux";
 import { FcAlarmClock } from "react-icons/fc";
 import next from "../LandingPages/assets/next.png";
 import prev from "../LandingPages/assets/prev.png";
-import FlightTabs from "./FlightTab";
 import FlightCard from "./FlightCard";
 import { searchFlights } from "../../redux/slices/flightsSlice";
-
+import FlightSortBar from "./FlightSortBar";
+import AirlineMinBar from "./AirlineMinBar";
 
 // ---------- tiny utils ----------
 const safe = (v, d = "") => (v === undefined || v === null ? d : v);
@@ -112,9 +112,9 @@ const getAirlinesCount = (results = []) => {
   });
   return s.size;
 };
+
 const formatCount = (n, thing) => `${n} ${thing}${n === 1 ? "" : "s"}`;
 
-// minutes -> "Xd Yh Zm"
 const minutesToLabel = (mins) => {
   if (!Number.isFinite(mins) || mins <= 0) return "—";
   const d = Math.floor(mins / 1440);
@@ -146,20 +146,6 @@ const minutesToHHMM = (mins) => {
   return `${hh}:${mm}`;
 };
 
-// map API cabinClasse back to the label used in your FlightForm
-const cabinToLabel = (c) => {
-  switch ((c || "").toUpperCase()) {
-    case "BUSINESS":
-      return "Business";
-    case "FIRST":
-      return "First Class";
-    case "PREMIUM_ECONOMY":
-      return "Premium Economy";
-    default:
-      return "Economy";
-  }
-};
-
 const formatBDT = (v) => {
   if (!Number.isFinite(v)) return "—";
   try {
@@ -169,13 +155,13 @@ const formatBDT = (v) => {
   }
 };
 
-// slots for “Flight Schedules”
+// slots
 const timeToSlot = (mins) => {
   if (!Number.isFinite(mins)) return null;
-  if (mins < 360) return "EARLY_MORNING"; // 00:00–05:59
-  if (mins < 720) return "MORNING"; // 06:00–11:59
-  if (mins < 1080) return "AFTERNOON"; // 12:00–17:59
-  return "EVENING"; // 18:00–23:59
+  if (mins < 360) return "EARLY_MORNING";
+  if (mins < 720) return "MORNING";
+  if (mins < 1080) return "AFTERNOON";
+  return "EVENING";
 };
 const slotLabel = {
   EARLY_MORNING: { title: "Early Morning", range: "00:00–05:59" },
@@ -370,7 +356,7 @@ function FiltersSidebar({
         </div>
       </Section>
 
-      {/* Flight Schedules (now with tabs) */}
+      {/* Flight Schedules */}
       <Section
         title="Flight Schedules"
         open={open.schedules}
@@ -380,7 +366,7 @@ function FiltersSidebar({
           <button
             type="button"
             onClick={() => setSchedTab("dep")}
-            className="text-xs px-3 py-1.5 rounded-full  bg-white"
+            className="text-xs px-3 py-1.5 rounded-full bg-white"
           >
             <span
               className={`${
@@ -395,9 +381,7 @@ function FiltersSidebar({
           <button
             type="button"
             onClick={() => setSchedTab("arr")}
-            className="text-xs px-3 py-1.5 rounded-full  bg-white"
-            
-            
+            className="text-xs px-3 py-1.5 rounded-full bg-white"
           >
             <span
               className={
@@ -411,7 +395,6 @@ function FiltersSidebar({
           </button>
         </div>
 
-        {/* Time-of-day chips */}
         <div className="grid grid-cols-2 gap-2 ">
           {["EARLY_MORNING", "MORNING", "AFTERNOON", "EVENING"].map((k) => {
             const setName = schedTab === "dep" ? "depSlots" : "arrSlots";
@@ -421,17 +404,7 @@ function FiltersSidebar({
                 key={k}
                 active={isActive}
                 onClick={() => toggleSet(setName, k)}
-                icon={
-                  <span className="">
-                    {k === "EARLY_MORNING"
-                      ? ""
-                      : k === "MORNING"
-                      ? ""
-                      : k === "AFTERNOON"
-                      ? ""
-                      : ""}
-                  </span>
-                }
+                icon={<span className="" />}
                 title={slotLabel[k].title}
                 sub={slotLabel[k].range}
               />
@@ -539,10 +512,23 @@ export default function FlightSearchPage() {
   const depOD = criteria?.originDestinationOptions?.[0];
   const retOD = criteria?.originDestinationOptions?.[1];
 
-  // sorting tab
-  const [sortKey, setSortKey] = useState("best"); // 'best' | 'cheapest' | 'fastest'
+  // sorting key supports all options shown in FlightSortBar
+  const [sortKey, setSortKey] = useState("best");
 
   // ====== SHIFT DATE & RE-SEARCH ======
+  const cabinToLabel = (c) => {
+    switch ((c || "").toUpperCase()) {
+      case "BUSINESS":
+        return "Business";
+      case "FIRST":
+        return "First Class";
+      case "PREMIUM_ECONOMY":
+        return "Premium Economy";
+      default:
+        return "Economy";
+    }
+  };
+
   const buildSearchArgs = (override = {}) => {
     const fromCode = depOD?.departureAirport || "";
     const toCode = depOD?.arrivalAirport || "";
@@ -590,7 +576,7 @@ export default function FlightSearchPage() {
     dispatch(searchFlights(args));
   };
 
-  // ====== ENRICH FOR FILTERING/SORTING (also used for sidebar) ======
+  // ====== ENRICH ======
   const enriched = useMemo(() => {
     return itineraries.map((it) => {
       const price = pickBDTPrice(it);
@@ -647,7 +633,35 @@ export default function FlightSearchPage() {
     });
   }, [itineraries]);
 
-  // metrics for tabs
+  const airlineAgg = useMemo(() => {
+    // Map { code -> { count, min } }
+    const map = new Map();
+    for (const row of enriched) {
+      const { price, airlineCodes } = row;
+      for (const code of airlineCodes || []) {
+        const cur = map.get(code) || { count: 0, min: Infinity };
+        cur.count += 1;
+        if (Number.isFinite(price?.total) && price.total < cur.min) {
+          cur.min = price.total;
+        }
+        map.set(code, cur);
+      }
+    }
+    return Array.from(map.entries())
+      .map(([code, { count, min }]) => ({ code, count, price: min }))
+      .sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+  }, [enriched]);
+
+  // helper toggle to pass into AirlineMinBar (inside component, before return)
+  const toggleAirlineFilter = (code) => {
+    setFilters((f) => {
+      const next = new Set(f.airlines);
+      next.has(code) ? next.delete(code) : next.add(code);
+      return { ...f, airlines: next };
+    });
+  };
+
+  // metrics for sort bar
   const metrics = useMemo(() => {
     let cheapest = Infinity,
       fastest = Infinity,
@@ -725,7 +739,7 @@ export default function FlightSearchPage() {
       };
     }, [enriched]);
 
-  // FILTER STATE (matches screenshot)
+  // FILTER STATE
   const [filters, setFilters] = useState({
     price: [priceMin, priceMax],
     layoverHours: [layMin, layMax],
@@ -773,6 +787,17 @@ export default function FlightSearchPage() {
     const [pMin, pMax] = filters.price;
     const [loMinH, loMaxH] = filters.layoverHours;
 
+    const cmpNumAsc = (a, b) => {
+      const A = Number.isFinite(a) ? a : Infinity;
+      const B = Number.isFinite(b) ? b : Infinity;
+      return A - B;
+    };
+    const cmpNumDesc = (a, b) => {
+      const A = Number.isFinite(a) ? a : -Infinity;
+      const B = Number.isFinite(b) ? b : -Infinity;
+      return B - A;
+    };
+
     const keep = (row) => {
       const { price, stops, layMin, airlineCodes, depSlot, arrSlot, aircraft } =
         row;
@@ -784,7 +809,7 @@ export default function FlightSearchPage() {
       )
         return false;
 
-      // Stops
+      // Stops (only show nonstop if checked)
       if (stops === 0) {
         if (!filters.stops.nonstop) return false;
       }
@@ -807,7 +832,7 @@ export default function FlightSearchPage() {
       )
         return false;
 
-      // Arrival slots (not shown active in UI but supported)
+      // Arrival slots
       if (
         filters.arrSlots.size > 0 &&
         arrSlot &&
@@ -854,10 +879,30 @@ export default function FlightSearchPage() {
 
     let arr = enriched.filter(keep);
 
-    if (sortKey === "cheapest")
-      arr.sort((a, b) => a.price.total - b.price.total);
-    else if (sortKey === "fastest") arr.sort((a, b) => a.minutes - b.minutes);
-    else arr.sort((a, b) => bestScore(a.it) - bestScore(b.it));
+    switch (sortKey) {
+      case "cheapest":
+        arr.sort((a, b) => cmpNumAsc(a.price.total, b.price.total));
+        break;
+      case "fastest":
+        arr.sort((a, b) => cmpNumAsc(a.minutes, b.minutes));
+        break;
+      case "earliest":
+      case "earlyDeparture":
+        arr.sort((a, b) => cmpNumAsc(a.depMins, b.depMins));
+        break;
+      case "lateDeparture":
+        arr.sort((a, b) => cmpNumDesc(a.depMins, b.depMins));
+        break;
+      case "earlyArrival":
+        arr.sort((a, b) => cmpNumAsc(a.arrMins, b.arrMins));
+        break;
+      case "lateArrival":
+        arr.sort((a, b) => cmpNumDesc(a.arrMins, b.arrMins));
+        break;
+      case "best":
+      default:
+        arr.sort((a, b) => bestScore(a.it) - bestScore(b.it));
+    }
 
     return arr;
   }, [enriched, filters, sortKey]);
@@ -920,7 +965,7 @@ export default function FlightSearchPage() {
               </button>
             </div>
 
-            {/* Return (only for round-trip) */}
+            {/* Return (round-trip only) */}
             {retOD && (
               <div className="bg-white rounded-full px-1.5 py-1.5 mb-3 flex items-center justify-between shadow">
                 <button
@@ -954,7 +999,7 @@ export default function FlightSearchPage() {
               </div>
             )}
 
-            {/* Redesigned Filters (like screenshot) */}
+            {/* Filters */}
             <FiltersSidebar
               bounds={{ priceMin, priceMax, layMin, layMax }}
               value={filters}
@@ -979,12 +1024,21 @@ export default function FlightSearchPage() {
               {status === "idle" && "Pick your filters to begin"}
             </p>
 
+            {/* SORT BAR */}
             <div className="mb-4">
-              <FlightTabs
+              <FlightSortBar
                 sortKey={sortKey}
                 onChange={setSortKey}
                 counts={{ total: view.length }}
                 metrics={metrics}
+              />
+            </div>
+
+            <div className="mb-3">
+              <AirlineMinBar
+                items={airlineAgg}
+                selected={filters.airlines}
+                onToggle={toggleAirlineFilter}
               />
             </div>
 

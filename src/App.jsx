@@ -29,11 +29,9 @@ function App() {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/fare" element={<FlightBooking />} />
         <Route path="/modal" element={<FareModalDemo />} />
-
       </Routes>
-        
-      <Footer />
 
+      <Footer />
     </>
   );
 }
