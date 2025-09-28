@@ -1,12 +1,56 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { AiOutlineQuestionCircle } from "react-icons/ai";
-import { FaLocationArrow, FaFlag } from "react-icons/fa";
-import exm from "../LandingPages/assets/exm.png";
 import { SlLocationPin } from "react-icons/sl";
 
-export default function CustomTabs() {
+const safe = (v, d = "—") =>
+  v === undefined || v === null || v === "" ? d : v;
+const pad4 = (t) => (t ? String(t).padStart(4, "0") : "");
+const fmtTime = (t) => (t ? pad4(t).replace(/(\d{2})(\d{2})/, "$1:$2") : "—");
+
+export default function CustomTabs({ flight }) {
   const [activeTab, setActiveTab] = useState("details");
-  const [activeRoute, setActiveRoute] = useState("depart");
+
+  const segs = useMemo(
+    () => flight?.raw?.flights?.[0]?.flightSegments || [],
+    [flight]
+  );
+  const first = segs[0] || {};
+  const last = segs[segs.length - 1] || {};
+
+  const depCity = first?.departure?.airport?.cityName;
+  const depCode = first?.departure?.airport?.airportCode;
+  const depName = first?.departure?.airport?.airportName;
+  const depTerm = first?.departure?.airport?.terminal;
+  const depDate = first?.departure?.depDate;
+  const depTime = first?.departure?.depTime;
+
+  const arrCity = last?.arrival?.airport?.cityName;
+  const arrCode = last?.arrival?.airport?.airportCode;
+  const arrName = last?.arrival?.airport?.airportName;
+  const arrDate = last?.arrival?.arrDate;
+  const arrTime = last?.arrival?.arrTime;
+
+  const hasArrival =
+    Boolean(arrCity) ||
+    Boolean(arrCode) ||
+    Boolean(arrName) ||
+    Boolean(arrTime);
+
+  const cabin = safe(first?.cabinType, "Economy");
+  const rbd = safe(first?.bookingClass);
+  const airline = safe(first?.airline?.name);
+  const airlineCode = first?.airline?.code || first?.airline?.optAirlineCode;
+  const flightNo = `${safe(first?.airline?.code)} ${safe(
+    first?.airline?.flightNo
+  )}`;
+  const aircraft = safe(
+    first?.airline?.aircraftTypeCode,
+    first?.airline?.aircraftType
+  );
+
+  const totalStops =
+    flight?.raw?.flights?.[0]?.totalStops ?? Math.max(0, segs.length - 1);
+  const duration = flight?.raw?.flights?.[0]?.totalElapsedTime;
 
   const tabs = [
     { id: "details", label: "Flight Details" },
@@ -15,242 +59,122 @@ export default function CustomTabs() {
   ];
 
   return (
-    <div className="w-full bg-white pt-3 ">
+    <div className="w-full bg-white">
       {/* Tabs Header */}
-      <div className="flex border-b border-gray-200 ">
-        {tabs.map((tab) => (
+      <div className="flex border-b border-gray-200">
+        {tabs.map((t) => (
           <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 text-sm font-medium py-2 text-center rounded-t-lg transition-all
-                 ${activeTab === tab.id
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            className={`flex-1 text-sm font-medium py-2 text-center rounded-t-lg transition-all ${
+              activeTab === t.id
                 ? "text-red-600 border-b-2 border-red-500 bg-red-50"
                 : "text-gray-600 hover:text-red-500"
-              }`}
+            }`}
           >
-            {tab.label}
+            {t.label}
           </button>
         ))}
       </div>
 
-      {/* Tabs Content */}
-      <div className="text-sm text-gray-700">
-        {/* -------- Flight Details -------- */}
-        {activeTab === "details" && (
-          <div>
-            {/* Radio Buttons */}
-            <div className="flex items-center gap-6 py-4 pb-3  ">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="route"
-                  value="depart"
-                  checked={activeRoute === "depart"}
-                  onChange={() => setActiveRoute("depart")}
-                  className="accent-red-500"
-                />
-                <span
-                  className={`${activeRoute === "depart" ? "text-red-700" : "text-black"
-                    } font-medium`}
-                >
-                  DAC - CXB (Depart)
-                </span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="route"
-                  value="return"
-                  checked={activeRoute === "return"}
-                  onChange={() => setActiveRoute("return")}
-                  className="accent-red-500"
-                />
-                <span
-                  className={`${activeRoute === "return" ? "text-red-700" : "text-black"
-                    } font-medium`}
-                >
-                  CXB - DAC (Return)
-                </span>
-              </label>
-            </div>
-
-            {/* Flight Info */}
-            <div className=" ">
-              <div className="flex gap-5 rounded-md p-2 bg-slate-100 items-center px-2">
-                <div>
-                  <p className="text-sm font-semibold justify-end flex">10:10</p>
-                  <p className="text-xs text-gray-600">10 Sep,Wednesday</p>
-                </div>
-
-                <div className="flex justify-center">
-                  <SlLocationPin size={20} className="text-gray-900" />
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold">
-                    Departure, Dhaka</p>
-                  <p className="text-xs text-gray-600">DAC - Hazrat Shahjalal International Airport, Bangladesh (TD)</p>
-                </div>
-              </div>
-              <div className="flex gap-5 rounded-md p-2 bg-white items-center ">
-                <div>
-                  <p className="text-sm font-semibold text-red-400 justify-end flex">Economy (I)</p>
-                  <p className="text-xs text-gray-600">BS 151</p>
-                </div>
-
-                <div className="flex justify-center border h-9 mx-6 my-4 border-red ">
-                 
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold">
-
-                    US Bangla Airlines</p>
-                  <p className="text-xs text-gray-600">ATR 72 - 600</p>
-                </div>
-              </div>
-              <div className="flex gap-5 rounded-md p-2 bg-slate-100 items-center ">
-                <div>
-                  <p className="text-sm font-semibold justify-end flex">10:10</p>
-                  <p className="text-xs text-gray-600">10 Sep,Wednesday</p>
-                </div>
-
-                <div className="flex justify-center">
-                  <SlLocationPin size={20} className="text-gray-900" />
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold">
-                    Arrival, Cox's Bazar</p>
-                  <p className="text-xs text-gray-600">CXB - Cox's Bazar, Bangladesh</p>
-                </div>
-              </div>
-
-              {/* Divider row */}
-
-            </div>
-
-
+      {/* -------- DETAILS TAB -------- */}
+      {activeTab === "details" && (
+        <div className="pt-3">
+          <div className="flex items-center gap-2 text-red-600 font-semibold text-sm mb-2">
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-red-600" />
+            <span>
+              {safe(depCode)} - {safe(arrCode)} (Depart)
+            </span>
           </div>
-        )}
 
-        {/* -------- Baggage -------- */}
-        {activeTab === "baggage" && (
-          <div>
-            {/* Radio Buttons */}
-            <div className="flex items-center gap-6 py-4 pb-3 ">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="route-bag"
-                  value="depart"
-                  checked={activeRoute === "depart"}
-                  onChange={() => setActiveRoute("depart")}
-                  className="accent-red-500"
-                />
-                <span
-                  className={`${activeRoute === "depart" ? "text-red-700" : "text-black"
-                    } font-medium`}
-                >
-                  DAC - CXB (Depart)
-                </span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="route-bag"
-                  value="return"
-                  checked={activeRoute === "return"}
-                  onChange={() => setActiveRoute("return")}
-                  className="accent-red-500"
-                />
-                <span
-                  className={`${activeRoute === "return" ? "text-red-700" : "text-black"
-                    } font-medium`}
-                >
-                  CXB - DAC (Return)
-                </span>
-              </label>
+          {/* Departure */}
+          <div className="flex items-center gap-4 bg-slate-50 rounded-xl p-3">
+            <div className="w-20 text-center">
+              <p className="text-base font-semibold">{fmtTime(depTime)}</p>
+              <p className="text-[11px] text-gray-500">{safe(depDate)}</p>
             </div>
 
-            {/* Main Baggage block (header + subrow) */}
-            <div className="bg-gray-100 rounded-md overflow-hidden">
-              {/* Header row */}
-              <div className="grid grid-cols-3 text-sm font-medium text-gray-600 pt-1">
-                <div className="flex items-center  justify-center border-r border-white ">
-                  Flight
-                </div>
-                <div className="flex items-center justify-center border-r border-white ">
-                  Cabin
-                </div>
-                <div className="flex items-center justify-center ">
-                  Checked-in
-                </div>
-              </div>
+            <SlLocationPin size={18} className="text-gray-700 shrink-0" />
 
-              {/* Sub-header row (e.g. Adult labels) */}
-              <div className="grid grid-cols-3 text-sm text-center">
-                <div className="flex items-center justify-center border-r border-white py-3"></div>
-                <div className="flex items-center justify-center border-r border-white ">
-                  Adult
-                </div>
-                <div className="flex items-center justify-center py-3">Adult</div>
-              </div>
-            </div>
-
-            {/* Economy block (header + values) */}
-            <div className="bg-slate-100 rounded-md overflow-hidden mt-4">
-              {/* Economy header row */}
-              <div className="grid grid-cols-3 text-sm font-medium text-gray-600">
-                <div className="flex items-center justify-center border-r border-gray-300 pt-1">
-                  Economy
-                </div>
-                <div className="flex items-center justify-center border-r border-gray-300 "></div>
-                <div className="flex items-center justify-center "></div>
-              </div>
-
-              {/* Economy values row */}
-              <div className="grid grid-cols-3 text-sm text-center">
-                <div className="flex items-center justify-center border-r border-gray-300  font-semibold">
-                  DAC - CXB
-                </div>
-                <div className="flex items-center justify-center border-r border-gray-300 ">
-                  7kg
-                </div>
-                <div className="flex items-center justify-center py-3">
-                  20kg
-                </div>
-              </div>
-            </div>
-
-            {/* Note / icon row */}
-            <div className="flex items-center gap-2 py-3 text-xs text-gray-600">
-              <img src={exm} alt="icon" className="w-4 h-4" />
-              <p>Every metric is counted per traveller.</p>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold">
+                Departure, {safe(depCity)}
+              </p>
+              <p className="text-[12px] text-gray-600 truncate">
+                {safe(depCode)} - {safe(depName)}
+                {depTerm ? `, (T${depTerm})` : ""}
+              </p>
             </div>
           </div>
-        )}
 
+          {/* Airline Row */}
+          <div className="flex items-stretch bg-white rounded-xl p-3 my-2">
+            <div className="w-40">
+              <p className="text-sm font-semibold text-red-500">
+                {cabin} {rbd ? `(${rbd})` : ""}
+              </p>
+              <p className="text-[12px] text-gray-600">{flightNo}</p>
+            </div>
 
-        {/* -------- Policy -------- */}
-        {activeTab === "policy" && (
-          <div>
-            <p className="pt-3">Refunds and Date Changes are done as per the following policies:</p>
-            <p className="py-2">Refund is calculated by deducting Airline’s fee and FT fee from the paid amount.</p>
-            <p>Date Change fee is calculated by adding Airline’s fee, fare difference and FT fee.</p>
-            <p className="py-2 font-bold ">*Fees are shown for all travellers.</p>
-            <p>*FT Convenience fee is non-refundable.</p>
-            <p className="py-2">*We cannot guarantee the accuracy of airline refund/date change fees as they are subject to change without prior notice</p>
+            <div className="mx-4 w-px bg-gray-200" />
 
-            <div className="flex gap-2 text-red-500 text-[14px] pb-4">
-              <AiOutlineQuestionCircle size={18} className="text-red-500" />
-              <p>Learn More</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                {airlineCode && (
+                  <img
+                    src={`https://airlines.a4aero.com/images/${airlineCode}.png`}
+                    className="w-5 h-5 object-contain"
+                    alt={airlineCode}
+                  />
+                )}
+                <p className="text-sm font-semibold">{airline}</p>
+              </div>
+              <p className="text-[12px] text-gray-600 mt-0.5">{aircraft}</p>
+              <p className="text-[11px] text-gray-500 mt-1">
+                {safe(duration, "—")} •{" "}
+                {totalStops === 0
+                  ? "Non-stop"
+                  : totalStops === 1
+                  ? "1 stop"
+                  : `${totalStops} stops`}
+              </p>
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Arrival (only if data exists) */}
+          {hasArrival && (
+            <div className="flex items-center gap-4 bg-slate-50 rounded-xl p-3">
+              <div className="w-20 text-center">
+                <p className="text-base font-semibold">{fmtTime(arrTime)}</p>
+                <p className="text-[11px] text-gray-500">{safe(arrDate)}</p>
+              </div>
+
+              <SlLocationPin size={18} className="text-gray-700 shrink-0" />
+
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">
+                  Arrival, {safe(arrCity)}
+                </p>
+                <p className="text-[12px] text-gray-600 truncate">
+                  {safe(arrCode)} - {safe(arrName)}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* -------- BAGGAGE TAB -------- */}
+      {activeTab === "baggage" && (
+        <div className="py-4 text-sm text-gray-600">Baggage info here…</div>
+      )}
+
+      {/* -------- POLICY TAB -------- */}
+      {activeTab === "policy" && (
+        <div className="py-4 text-sm text-gray-600 flex items-center gap-2">
+          <AiOutlineQuestionCircle className="text-red-500" /> Policies here…
+        </div>
+      )}
     </div>
   );
 }

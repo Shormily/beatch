@@ -209,7 +209,7 @@ export default function FlightCard({ flight }) {
               open ? "max-h-[2000px] mt-3" : "max-h-0"
             }`}
           >
-            <CustomTabs />
+            <CustomTabs flight={flight} />
             <div className="border-t border-gray-200 my-6 mb-5" />
             <div className="mt-3 relative flex items-center pb-2">
               <button className="text-sky-900 flex gap-1 px-2 bg-blue-50 p-1 rounded-full">
