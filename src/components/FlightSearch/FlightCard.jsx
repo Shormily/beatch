@@ -1,4 +1,4 @@
-// FlightCard.tsx / .jsx
+// FlightCard.tsx
 "use client";
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -9,11 +9,6 @@ import { RiMoneyRupeeCircleFill } from "react-icons/ri";
 import { MdAirlineSeatReclineNormal } from "react-icons/md";
 import CustomTabs from "./CustomTabs";
 import FareModalDemo from "./FareModal";
-// import { Link } from "react-router-dom"; // not used here
-
-// Optional: if you have logos per airline code, map them here
-// import MH from "../LandingPages/assets/MH.png";
-// const AIRLINE_LOGOS = { MH };
 
 const fmtTime = (t) =>
   t
@@ -21,8 +16,7 @@ const fmtTime = (t) =>
         .padStart(4, "0")
         .replace(/(\d{2})(\d{2})/, "$1:$2")
     : "";
-// eslint-disable-next-line no-undef
-const safe = (v = 0) => (v === undefined || v === null || v === "" ? d : v);
+const safe = (v, d = "") => (v === undefined || v === null || v === "" ? d : v);
 
 export default function FlightCard({ flight }) {
   const [open, setOpen] = useState(false);
@@ -85,7 +79,7 @@ export default function FlightCard({ flight }) {
   const paxFares = flight?.raw?.fares?.[0]?.passengerFares || [];
   const adt = paxFares.find((p) => p.passengerType === "ADT");
 
-  // --- Screenshot-style Fare Math from ADT in BDT ---
+  // --- Fare Math from ADT in BDT (to match screenshots) ---
   const baseBDT =
     adt?.referanceFares?.find((r) => r.currency === "BDT" && r.type === "FARE")
       ?.amount ?? 0;
@@ -98,41 +92,41 @@ export default function FlightCard({ flight }) {
 
   // Change these if your promo is dynamic
   const promoCode = "FTEBLDOM18";
-  const couponBDT = 1534;
+  const couponBDT = 1894; // use 1894 like your screenshot 2
   const totalBDT = Math.max(airFareBDT - couponBDT, 0);
 
   return (
     <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl border border-gray-200 overflow-hidden font-murecho shadow-sm relative">
-      {/* Top Chips */}
+      {/* Collapsed top chips row (left) */}
       <div className="pt-3 flex gap-3 px-4">
-        <button className="text-red-700 flex items-center gap-1 px-2 bg-red-50 rounded-full">
-          <RiMoneyRupeeCircleFill size={18} />
-          <span className="text-[12px] font-medium">
-            {refundable ? "Refundable" : "Non-refundable"}
-          </span>
-        </button>
+        <span className="text-red-700 flex items-center gap-1 px-2 bg-red-50 rounded-full text-[12px] font-medium">
+          <RiMoneyRupeeCircleFill size={16} className="opacity-70" />
+          {refundable ? "Partially Refundable" : "Non-refundable"}
+        </span>
 
         {seatsLeft ? (
-          <button className="text-red-700 flex items-center gap-1 px-2 bg-red-50 rounded-full">
-            <MdAirlineSeatReclineNormal size={18} />
-            <span className="text-[12px] font-medium">
-              {seatsLeft} seat(s) left
-            </span>
-          </button>
+          <span className="text-red-700 flex items-center gap-1 px-2 bg-red-50 rounded-full text-[12px] font-medium">
+            <MdAirlineSeatReclineNormal size={16} className="opacity-70" />
+            {seatsLeft} seat(s) left
+          </span>
         ) : null}
+
+        {/* right coupon chip in collapsed header */}
+        {!open && (
+          <span className="ml-auto bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-[11px] font-semibold inline-flex items-center gap-2">
+            <img src={coupon} alt="coupon" className="w-4 h-4" />
+            <span>{promoCode}</span>
+          </span>
+        )}
       </div>
 
       {/* Main Row */}
       <div className="flex flex-col lg:flex-row items-stretch relative">
         {/* LEFT SIDE */}
         <div className="flex-1 p-4">
-          {/* OUTBOUND */}
+          {/* === Collapsed summary bar (like pic 1) === */}
           <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-3">
-              {/* Airline logo or code bubble */}
-              {/* {AIRLINE_LOGOS[airlineCode] ? (
-                <img src={AIRLINE_LOGOS[airlineCode]} alt={airlineCode} className="w-8 h-8" />
-              ) : ( */}
               <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold overflow-hidden">
                 <img
                   src={`https://airlines.a4aero.com/images/${airlineCode}.png`}
@@ -140,26 +134,45 @@ export default function FlightCard({ flight }) {
                   className="w-full h-full object-contain"
                 />
               </div>
-              {/* )} */}
               <p className="text-[14px] font-medium leading-4">{airlineName}</p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div>
+            {/* timeline */}
+            <div className="flex items-center gap-6">
+              {/* left time */}
+              <div className="text-center">
                 <p className="text-xs">{safe(depDate)}</p>
-                <p className="font-semibold">{fmtTime(depTime)}</p>
+                <p className="font-semibold text-[18px] leading-none">
+                  {fmtTime(depTime)}
+                </p>
                 <p className="text-xs text-gray-500">{depCode}</p>
               </div>
 
+              {/* dashed route */}
               <div className="flex flex-col items-center">
-                <p className="text-sm">{safe(duration, "—")}</p>
-                <img src={planeImg} alt="air route" className="w-36 py-2" />
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-sky-600 opacity-70" />
+                  <div className="w-36 border-t border-dashed border-gray-400 relative">
+                    <img
+                      src={planeImg}
+                      alt="air route"
+                      className="w-5 absolute left-1/2 -translate-x-1/2 -top-2"
+                    />
+                  </div>
+                  <span className="h-2 w-2 rounded-full bg-sky-600 opacity-70" />
+                </div>
+                <p className="text-[11px] text-center mt-1">
+                  {safe(duration, "—")}
+                </p>
                 <p className="text-xs text-gray-500">{stopText}</p>
               </div>
 
-              <div>
+              {/* right time */}
+              <div className="text-center">
                 <p className="text-xs">{safe(arrDate)}</p>
-                <p className="font-semibold">{fmtTime(arrTime)}</p>
+                <p className="font-semibold text-[18px] leading-none">
+                  {fmtTime(arrTime)}
+                </p>
                 <p className="text-xs text-gray-500">{arrCode}</p>
               </div>
             </div>
@@ -167,29 +180,13 @@ export default function FlightCard({ flight }) {
 
           <div className="border-t border-gray-200 my-3" />
 
-          {/* Connecting cities (if any) */}
-          {stops > 0 && (
-            <div className="text-xs text-gray-600">
-              Via{" "}
-              {segments
-                .slice(0, -1)
-                .map(
-                  (s) =>
-                    s.arrival?.airport?.cityName ||
-                    s.arrival?.airport?.airportCode
-                )
-                .filter(Boolean)
-                .join(" · ")}
-            </div>
-          )}
-
-          {/* CONTROL BAR (closed) */}
-          {!open && (
-            <div className="mt-3 relative flex items-center">
-              <button className="text-sky-900 flex gap-1 px-2 bg-blue-50 p-1 rounded-full">
+          {/* CONTROL BAR (toggle) */}
+          {!open ? (
+            <div className="mt-2 relative flex items-center">
+              <span className="text-sky-900 flex gap-1 px-2 bg-blue-50 p-1 rounded-full">
                 <BiLike size={18} />
                 <span className="text-[12px] font-medium">Recommended</span>
-              </button>
+              </span>
 
               <button
                 onClick={() => setOpen(true)}
@@ -199,75 +196,38 @@ export default function FlightCard({ flight }) {
                 <ChevronDown size={18} />
               </button>
             </div>
+          ) : (
+            <>
+              {/* === Expanded content (like pic 2) === */}
+              <CustomTabs flight={flight} />
+              <div className="border-t border-gray-200 my-6 mb-5" />
+              <div className="mt-3 relative flex items-center pb-2">
+                <span className="text-sky-900 flex gap-1 px-2 bg-blue-50 p-1 rounded-full">
+                  <BiLike size={18} />
+                  <span className="text-[12px] font-medium">Recommended</span>
+                </span>
+
+                <button
+                  onClick={() => setOpen(false)}
+                  className="absolute left-1/2 -translate-x-1/2 text-red-800 text-[14px] font-medium flex items-center gap-1"
+                >
+                  <span>Hide Details</span>
+                  <ChevronUp size={18} />
+                </button>
+              </div>
+            </>
           )}
-
-          {/* DROPDOWN (open) */}
-          <div
-            className={`transition-all duration-700 ease-in-out overflow-hidden ${
-              open ? "max-h-[2000px] mt-3" : "max-h-0"
-            }`}
-          >
-            <CustomTabs flight={flight} />
-            <div className="border-t border-gray-200 my-6 mb-5" />
-            <div className="mt-3 relative flex items-center pb-2">
-              <button className="text-sky-900 flex gap-1 px-2 bg-blue-50 p-1 rounded-full">
-                <BiLike size={18} />
-                <span className="text-[12px] font-medium">Recommended</span>
-              </button>
-
-              <button
-                onClick={() => setOpen(false)}
-                className="absolute left-1/2 -translate-x-1/2 text-red-800 text-[14px] font-medium flex items-center gap-1"
-              >
-                <span>Hide Details</span>
-                <ChevronUp size={18} />
-              </button>
-            </div>
-          </div>
         </div>
 
-        {/* RIGHT SIDE – Fare Summary (screenshot style) */}
+        {/* RIGHT SIDE – Collapsed vs Expanded */}
         <aside className="lg:w-64 lg:self-stretch border-t lg:border-t-0 lg:border-l border-dashed border-gray-300 p-4 flex flex-col justify-between relative mb-6">
-          {/* Breakdown cards */}
-          <div className="space-y-2">
-            <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
-              <span className="text-gray-600">
-                Adult X {adt?.quantity ?? 1}
-              </span>
-            </div>
-
-            <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
-              <span className="text-gray-600">Base Fare</span>
-              <span className="font-medium">
-                BDT {baseBDT.toLocaleString()}
-              </span>
-            </div>
-
-            <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
-              <span className="text-gray-600">Tax</span>
-              <span className="font-medium">BDT {taxBDT.toLocaleString()}</span>
-            </div>
-
-            <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
-              <span className="text-gray-700 font-medium">Air Fare</span>
-              <span className="font-semibold">
-                BDT {airFareBDT.toLocaleString()}
-              </span>
-            </div>
-
-            <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
-              <span className="text-orange-600">Coupon</span>
-              <span className="font-semibold text-orange-600">
-                - BDT {couponBDT.toLocaleString()}
-              </span>
-            </div>
-
-            {/* Code chip + totals */}
-            <div className="flex flex-col items-end pt-2">
-              <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-[11px] font-semibold inline-flex items-center gap-2">
+          {!open ? (
+            // ===== Collapsed right (like pic 1) =====
+            <div className="flex flex-col items-end">
+              {/* <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-[11px] font-semibold inline-flex items-center gap-2">
                 <img src={coupon} alt="coupon" className="w-4 h-4" />
                 <span>{promoCode}</span>
-              </span>
+              </span> */}
 
               <p className="text-red-600 text-2xl font-extrabold mt-2 leading-none">
                 BDT {totalBDT.toLocaleString()}
@@ -275,13 +235,83 @@ export default function FlightCard({ flight }) {
               <p className="text-xs line-through text-gray-400 mt-1">
                 BDT {airFareBDT.toLocaleString()}
               </p>
-            </div>
-          </div>
 
-          {/* Optional modal trigger you already had */}
-          <div className="mt-3">
-            <FareModalDemo flight={flight} />
-          </div>
+              <div className="mt-4 flex items-center gap-3 w-full">
+                <button
+                  type="button"
+                  onClick={() => setOpen(true)}
+                  className="flex-1 h-10 rounded-full border border-red-300 text-red-600 text-sm font-medium hover:bg-red-50 transition"
+                >
+                  View Prices
+                </button>
+                <button
+                  type="button"
+                  className="flex-[1.2] h-10 rounded-full bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+                >
+                  Select
+                </button>
+              </div>
+            </div>
+          ) : (
+            // ===== Expanded right (like pic 2) =====
+            <>
+              <div className="space-y-2">
+                <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
+                  <span className="text-gray-600">
+                    Adult X {adt?.quantity ?? 1}
+                  </span>
+                </div>
+
+                <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
+                  <span className="text-gray-600">Base Fare</span>
+                  <span className="font-medium">
+                    BDT {baseBDT.toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
+                  <span className="text-gray-600">Tax</span>
+                  <span className="font-medium">
+                    BDT {taxBDT.toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
+                  <span className="text-gray-700 font-medium">Air Fare</span>
+                  <span className="font-semibold">
+                    BDT {airFareBDT.toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
+                  <span className="text-orange-600">Coupon</span>
+                  <span className="font-semibold text-orange-600">
+                    - BDT {couponBDT.toLocaleString()}
+                  </span>
+                </div>
+
+                {/* Code chip + totals */}
+                <div className="flex flex-col items-end pt-2">
+                  <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-[11px] font-semibold inline-flex items-center gap-2">
+                    <img src={coupon} alt="coupon" className="w-4 h-4" />
+                    <span>{promoCode}</span>
+                  </span>
+
+                  <p className="text-red-600 text-2xl font-extrabold mt-2 leading-none">
+                    BDT {totalBDT.toLocaleString()}
+                  </p>
+                  <p className="text-xs line-through text-gray-400 mt-1">
+                    BDT {airFareBDT.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Keep your modal trigger if desired */}
+              <div className="mt-3">
+                <FareModalDemo flight={flight} />
+              </div>
+            </>
+          )}
         </aside>
       </div>
     </div>
