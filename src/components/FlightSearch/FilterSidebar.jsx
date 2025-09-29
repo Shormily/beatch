@@ -319,6 +319,7 @@ function FiltersSidebar({
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
+            className="accent-red-500"
             checked={value.stops.nonstop}
             onChange={(e) =>
               setField({ stops: { ...value.stops, nonstop: e.target.checked } })
@@ -343,6 +344,7 @@ function FiltersSidebar({
               <span className="flex items-center gap-2">
                 <input
                   type="checkbox"
+                  className="accent-red-500"
                   checked={value.airlines.has(code)}
                   onChange={() => toggleSet("airlines", code)}
                 />
@@ -425,6 +427,7 @@ function FiltersSidebar({
       >
         <label className="flex items-center gap-2 text-sm">
           <input
+            className="accent-red-500"
             type="checkbox"
             checked={value.baggage20kg}
             onChange={(e) => setField({ baggage20kg: e.target.checked })}
@@ -442,6 +445,7 @@ function FiltersSidebar({
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
+            className="accent-red-500"
             checked={value.refundable}
             onChange={(e) => setField({ refundable: e.target.checked })}
           />
@@ -479,6 +483,7 @@ function FiltersSidebar({
                 <label key={ac} className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
+                    className="accent-red-500"
                     checked={value.aircraft.has(ac)}
                     onChange={() => toggleSet("aircraft", ac)}
                   />
@@ -489,6 +494,7 @@ function FiltersSidebar({
                 <label key={ac} className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
+                    className="accent-red-500"
                     checked={value.aircraft.has(ac)}
                     onChange={() => toggleSet("aircraft", ac)}
                   />

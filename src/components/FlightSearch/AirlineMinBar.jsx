@@ -13,10 +13,19 @@ const formatBDT = (v) => {
 
 // simple logo placeholder; replace with your real logos if you have them
 function AirlineLogo({ code }) {
+  if (!code) return null;
+
   return (
-    <div className="h-6 w-6 grid place-items-center rounded-md bg-gray-100 border border-gray-200 text-[10px] font-semibold text-gray-700">
-      {code?.slice(0, 2) || "??"}
-    </div>
+    <img
+      src={`https://airlines.a4aero.com/images/${code}.png`}
+      alt={code}
+      className="h-6 w-6 object-contain bg-white rounded-md border border-gray-200 p-0.5 shadow-sm"
+      onError={(e) => {
+        // fallback if image not found
+        e.target.onerror = null;
+        e.target.src = "https://via.placeholder.com/24x24.png?text=?"; // optional fallback
+      }}
+    />
   );
 }
 
@@ -38,7 +47,7 @@ export default function AirlineMinBar({ items = [], selected, onToggle }) {
           className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 z-10 h-8 w-8 grid place-items-center hover:bg-gray-50"
           aria-label="Scroll left"
         >
-          <LuChevronLeft size={36}/>
+          <LuChevronLeft size={36} />
         </button>
 
         <div
@@ -56,7 +65,7 @@ export default function AirlineMinBar({ items = [], selected, onToggle }) {
                   className={`inline-flex items-center gap-3 rounded-lg cursor-pointer  hover:border-red-600 hover:bg-red-50 text-gray-500  px-3 py-2  transition
                     ${
                       isActive
-                        ? "bg-red-50 border border-red-600 text-red-600 " 
+                        ? "bg-red-50 border border-red-600 text-red-600 "
                         : "bg-white hover:border-red-500 "
                     }`}
                 >

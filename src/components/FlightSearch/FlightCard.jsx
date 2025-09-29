@@ -183,8 +183,6 @@ export default function FlightCard({ flight }) {
             </div>
           )}
 
-          <div className="border-t border-gray-200 my-3 mb-5" />
-
           {/* CONTROL BAR (closed) */}
           {!open && (
             <div className="mt-3 relative flex items-center">
