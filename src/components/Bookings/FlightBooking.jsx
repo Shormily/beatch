@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { FiChevronDown, FiClock, FiUser } from "react-icons/fi";
-import { LuHourglass } from "react-icons/lu";
+import { FcAlarmClock } from "react-icons/fc";
 import next from "../LandingPages/assets/next.png";
 import prev from "../LandingPages/assets/prev.png";
 import mr from "../LandingPages/assets/mr.png";
@@ -84,7 +84,7 @@ const PhoneInput = () => (
 export default function FlightBooking() {
   const [collapsed, setCollapsed] = useState(false);
   const [title, setTitle] = useState("Mrs");
-  const { label, pct } = useCountdown(95);
+  const { label, pct } = useCountdown(360);
 
   const topBadges = useMemo(
     () => [
@@ -95,13 +95,6 @@ export default function FlightBooking() {
     ],
     []
   );
-  const [ setStep] = useState(1);
-  const steps = [
-    { label: "Traveller Info", active: true },
-    { label: "Add-ons" },
-    { label: "Payment Info" },
-    { label: "Preview", link: true },
-  ];
 
   return (
     <div className="min-h-screen bg-[#eaf0f5] font-murecho">
@@ -109,40 +102,49 @@ export default function FlightBooking() {
         {/* Top nav pills + time header */}
         <div className="grid grid-cols-[1fr_340px] items-start">
           {/* start the code */}
-          <div className="flex items-start justify-center ">
-            <div className="w-full max-w-3xl">
+          <div className="flex items-start  ">
+            <div className="w-full ">
               <nav aria-label="" className="">
-                <div className="flex  items-center rounded-full p-1 bg-white shadow-sm">
-                  {steps.map(s => {
-                    return (
-                      <button
-                        key={s.n}
-                        onClick={() => setStep(s.n)}
-                        className=
-                          "flex items-center rounded-full px-14 py-3 transition  border border-[#f6dede]" 
-                  
-                      >              
-                        <span className="">
-                          {s.label}
-                        </span>         
-                      </button>
-                    );
-                  })}
+                <div className="flex  rounded-full text-sm p-1  ">
+                  <button
+                    className=
+                    " bg-red-50 text-red-600 rounded-full z-10 font-semibold text-[14px] px-16 py-3.5 transition  border border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
+                  >
+                    1. Traveller Info
+                  </button>
+                  <button
+                    className=" rounded-r-full ml-[-15px] z-8  bg-slate-100 text-gray-400 font-semibold px-14 py-3.5 transition border-t border-r border-b border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
+                  >
+                    2. Add-ons
+                  </button>
+                  <button
+                    className="rounded-r-full ml-[-15px] z-5 px-14 py-3 bg-slate-100 text-gray-400 font-semibold transition border-t border-r border-b border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
+                  >
+                    3. Payment Info
+                  </button>
+
+                  <button
+                    className=" rounded-r-full  ml-[-15px] px-14 py-3 bg-slate-100 text-gray-400 font-semibold transition border-t border-r border-b border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
+                  >
+                    4. Preview
+                  </button>
+
+
                 </div>
               </nav>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <div className="rounded-2xl  ">
             <div className="mb-1 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-gray-700">
-                <FiClock className="text-red-500" />
-                <span className="text-sm font-semibold">Time Remaining</span>
+              <div className="flex items-center gap-2 text-gray-700 mb-1 mt-3">
+             <FcAlarmClock size={25} className="text-red-500  " />
+                <span className="text-md font-semibold">Time Remaining</span>
               </div>
-              <span className="text-sm font-semibold text-gray-800">{label}</span>
+              <span className="text-lg font-semibold text-gray-800 ">{label}</span>
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-              <div className="h-full bg-red-500" style={{ width: `${pct}%` }} />
+            <div className="h-1.5 w-full   overflow-hidden rounded-full bg-red-100">
+              <div className="h-full bg-red-700 " style={{ width: `${pct}%` }} />
             </div>
           </div>
         </div>
@@ -158,8 +160,8 @@ export default function FlightBooking() {
                   <button
                     key={b.k}
                     className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${b.primary
-                        ? "border-teal-500 bg-teal-600/10 text-teal-700"
-                        : "border-gray-300 text-gray-700"
+                      ? "border-teal-500 bg-teal-600/10 text-teal-700"
+                      : "border-gray-300 text-gray-700"
                       }`}
                     type="button"
                   >
