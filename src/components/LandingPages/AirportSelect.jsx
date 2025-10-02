@@ -1,4 +1,3 @@
-// src/components/AirportSelect.jsx
 "use client";
 import React, {
   useCallback,
@@ -21,7 +20,8 @@ export default function AirportSelect({
   maxResults = 20,
   minChars = 0,
   debounceMs = 300,
-  clearOnFocus = true, // clear the field when focusing/clicking
+  clearOnFocus = true,
+  excludeCode,
 }) {
   const dispatch = useDispatch();
   const { items: airports, status, error } = useSelector((s) => s.airports);
@@ -92,18 +92,22 @@ export default function AirportSelect({
   // Filter (startsWith priority, then includes)
   const filtered = useMemo(() => {
     const pool = usingAllAirports ? airports : bdAirports;
+    const exclude = (excludeCode || "").trim().toUpperCase();
+    const base = exclude
+      ? pool.filter((a) => (a.code || "").toUpperCase() !== exclude)
+      : pool;
 
     const needle = (debouncedQ || "").toLowerCase();
     if (
       !needle ||
       (!usingAllAirports && minChars > 0 && needle.length < minChars)
     ) {
-      return pool.slice(0, maxResults);
+      return base.slice(0, maxResults);
     }
 
     const starts = [];
     const includes = [];
-    for (const a of pool) {
+    for (const a of base) {
       const fCode = (a.code || "").toLowerCase();
       const fName = (a.name || "").toLowerCase();
       const fCity = (a.cityName || "").toLowerCase();

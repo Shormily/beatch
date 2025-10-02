@@ -190,12 +190,14 @@ export default function FlightForm({
             value={fromText}
             onChange={setFromText}
             onSelect={setFromAirport}
+            excludeCode={toAirport?.code}
           />
           <AirportSelect
             label="To"
             value={toText}
             onChange={setToText}
             onSelect={setToAirport}
+            excludeCode={fromAirport?.code}
           />
           <button
             type="button"
