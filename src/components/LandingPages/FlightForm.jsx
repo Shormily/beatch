@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { searchFlights } from "../../redux/slices/flightsSlice";
 import { setForm } from "../../redux/slices/searchFormSlice";
+import CalendarCompact from "./calender";
 
 // Extract IATA helper (unchanged)
 function extractIata(text = "") {
@@ -213,9 +214,9 @@ export default function FlightForm({
         <div className="flex-1 min-w-[250px]">
           <FirsttripCalendarClone
             disableReturn={isOneWay}
-            // hydrate the calendar from saved Redux values
-            initialDeparture={saved.departureDate || ""}
-            initialReturn={saved.returnDate || ""}
+            defaultDeparture={saved.departureDate || ""}
+            defaultReturn={saved.returnDate || ""}
+            minDepartureDate={new Date()}
             onChange={({ departureDate: d, returnDate: r }) => {
               setDepartureDate(d || "");
               setReturnDate(isOneWay ? "" : r || "");
