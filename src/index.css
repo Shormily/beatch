@@ -50,6 +50,21 @@
   color: #d1d5db;
 }
 
+.rdp-root {
+  display: flex;
+  justify-items: center;
+  justify-content: center;
+}
+.rdp-today > button {
+  color: red;
+}
+.rdp-selected > .rdp-day_button {
+  border: red 2px solid;
+}
+.rdp-chevron {
+  fill: #dc2626;
+}
+
 /* Mobile: single month full width */
 @media (max-width: 640px) {
   .rdp-months {

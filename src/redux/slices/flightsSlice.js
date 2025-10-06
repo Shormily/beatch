@@ -28,7 +28,7 @@ function mapClassToCabinClasse(label) {
  *   fromCode, toCode, departureDate, returnDate?,
  *   travellers: { adults, children, infants },
  *   travelClassLabel, preferredAirline, apiId?,
- *   token? // optional override; if omitted we read from state.auth.token
+ *   token?
  * }
  */
 export const searchFlights = createAsyncThunk(
@@ -36,9 +36,7 @@ export const searchFlights = createAsyncThunk(
   async (args, { getState, rejectWithValue }) => {
     try {
       const state = typeof getState === "function" ? getState() : undefined;
-      const token =
-        (args && args.token) || // allow passing token in args
-        state?.auth?.token; // or read from store at state.auth.token
+      const token = (args && args.token) || state?.auth?.token;
 
       if (!token) {
         throw new Error(
@@ -80,8 +78,8 @@ export const searchFlights = createAsyncThunk(
       const body = {
         originDestinationOptions,
         passengers: buildPassengers(travellers),
-        cabinClasse: mapClassToCabinClasse(travelClassLabel), // e.g. "BUSINESS" | "ECONOMY" | null
-        preferredAirline: preferredAirline ?? null, // keep key in payload
+        cabinClasse: mapClassToCabinClasse(travelClassLabel),
+        preferredAirline: preferredAirline ?? null,
         apiId: Number(apiId ?? DEFAULT_API_ID),
       };
 
@@ -130,14 +128,53 @@ const flightsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(searchFlights.pending, (state) => {
+      // ✅ update criteria immediately so UI date labels refresh on prev/next click
+      .addCase(searchFlights.pending, (state, action) => {
         state.status = "loading";
         state.error = null;
+
+        const a = action.meta?.arg || {};
+        const {
+          tripType = "ONE_WAY",
+          fromCode,
+          toCode,
+          departureDate,
+          returnDate,
+          travellers = { adults: 1, children: 0, infants: 0 },
+          travelClassLabel,
+          preferredAirline,
+          apiId,
+        } = a;
+
+        if (fromCode && toCode && departureDate) {
+          const originDestinationOptions = [
+            {
+              departureAirport: fromCode,
+              arrivalAirport: toCode,
+              flyDate: departureDate,
+            },
+          ];
+          if (tripType === "ROUND_TRIP" && returnDate) {
+            originDestinationOptions.push({
+              departureAirport: toCode,
+              arrivalAirport: fromCode,
+              flyDate: returnDate,
+            });
+          }
+
+          state.criteria = {
+            originDestinationOptions,
+            passengers: buildPassengers(travellers),
+            cabinClasse: mapClassToCabinClasse(travelClassLabel),
+            preferredAirline: preferredAirline ?? null,
+            apiId: Number(apiId ?? DEFAULT_API_ID),
+          };
+        }
       })
       .addCase(searchFlights.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.results = action.payload?.data ?? null;
-        state.criteria = action.payload?.criteria ?? null;
+        state.criteria = action.payload?.criteria ?? state.criteria; // keep pending value if API omits it
       })
       .addCase(searchFlights.rejected, (state, action) => {
         state.status = "failed";

@@ -11,7 +11,7 @@ import {
   isWithinInterval,
 } from "date-fns";
 
-// helpers
+// --- helpers ---
 const strip = (d) => {
   if (!(d instanceof Date) || !isValid(d)) return null;
   const x = new Date(d);
@@ -33,76 +33,134 @@ const parseIn = (v, fb) => {
 const monthsFor = (oneWay) =>
   typeof window !== "undefined" && window.innerWidth < 640 ? 1 : oneWay ? 1 : 2;
 
+// --- component ---
 export default function FirsttripCalendarClone({
-  disableReturn = false, // one-way if true
-  onChange, // ({ departureDate, returnDate })
-  defaultDeparture, // Date | "yyyy-MM-dd"
-  defaultReturn, // Date | "yyyy-MM-dd"
-  minDepartureDate, // Date
+  disableReturn = false,
+  departureISO,
+  returnISO,
+  onDatesChange,
+  defaultDeparture,
+  defaultReturn,
+  minDepartureDate,
 }) {
   const today = useMemo(() => startOfDay(new Date()), []);
   const minDate = useMemo(
-    () => strip(minDepartureDate) || today,
+    () => strip(minDepartureDate ?? null) || today,
     [minDepartureDate, today]
   );
 
-  // seed
-  const s0 = parseIn(defaultDeparture, today);
-  const e0 = disableReturn ? null : parseIn(defaultReturn, null);
+  const isControlled =
+    typeof departureISO === "string" || typeof returnISO === "string";
+
+  const s0 = isControlled
+    ? parseIn(departureISO, today)
+    : parseIn(defaultDeparture, today);
+  const e0 = disableReturn
+    ? null
+    : isControlled
+    ? parseIn(returnISO, null)
+    : parseIn(defaultReturn, null);
 
   const [startDate, setStartDate] = useState(s0);
   const [endDate, setEndDate] = useState(e0);
   const [open, setOpen] = useState(false);
   const [months, setMonths] = useState(monthsFor(disableReturn));
-  const [activeSide, setActiveSide] = useState("start"); // "start" | "end"
+  const [activeSide, setActiveSide] = useState("start");
+
+  const containerRef = useRef(null);
   const popRef = useRef(null);
 
-  // outside click closes
+  // NEW: shields the opening click so outside-click doesn't immediately close
+  const openingRef = useRef(false);
+
+  // Reset interaction state when switching modes (one-way <-> round-trip)
+  useEffect(() => {
+    setOpen(false);
+    setActiveSide("start");
+    openingRef.current = false;
+  }, [disableReturn]);
+
+  // sync controlled props
+  useEffect(() => {
+    if (!isControlled) return;
+    setStartDate(parseIn(departureISO, today));
+    setEndDate(disableReturn ? null : parseIn(returnISO, null));
+  }, [isControlled, departureISO, returnISO, disableReturn, today]);
+
+  // close on outside click or Esc (with open-click shield)
   useEffect(() => {
     if (!open) return;
+
     const onDoc = (e) => {
-      if (popRef.current && !popRef.current.contains(e.target)) setOpen(false);
+      // if this event is the same press that opened, ignore once
+      if (openingRef.current) {
+        openingRef.current = false;
+        return;
+      }
+      const root = containerRef.current;
+      if (!root) return;
+      if (e.target instanceof Node && !root.contains(e.target)) {
+        setOpen(false);
+      }
     };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
+    // Defer to avoid catching the opening click in the same tick
+    const id = setTimeout(() => {
+      document.addEventListener("mousedown", onDoc);
+      document.addEventListener("keydown", onKey);
+    }, 0);
+
+    return () => {
+      clearTimeout(id);
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   // responsive months
   useEffect(() => {
     const onResize = () => setMonths(monthsFor(disableReturn));
+    onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [disableReturn]);
 
-  // sync from props
+  // uncontrolled defaults
   useEffect(() => {
-    const s = parseIn(defaultDeparture, today);
-    const e = disableReturn ? null : parseIn(defaultReturn, null);
-    setStartDate(s);
-    setEndDate(e);
-  }, [defaultDeparture, defaultReturn, disableReturn, today]);
+    if (isControlled) return;
+    setStartDate(parseIn(defaultDeparture, today));
+    setEndDate(disableReturn ? null : parseIn(defaultReturn, null));
+  }, [isControlled, defaultDeparture, defaultReturn, disableReturn, today]);
 
   // ensure end >= start
   useEffect(() => {
-    if (startDate && endDate && isBefore(endDate, startDate))
+    if (startDate && endDate && isBefore(endDate, startDate)) {
       setEndDate(startDate);
+    }
   }, [startDate, endDate]);
 
   // bubble up
   useEffect(() => {
-    onChange?.({
-      departureDate: toIso(startDate),
-      returnDate: disableReturn ? "" : toIso(endDate),
-    });
-  }, [startDate, endDate, disableReturn, onChange]);
+    if (!onDatesChange) return;
+    const depISO = toIso(startDate);
+    const retISO = disableReturn ? "" : toIso(endDate);
+    onDatesChange({ departureISO: depISO, returnISO: retISO });
+  }, [startDate, endDate, disableReturn, onDatesChange]);
 
-  // ONE-WAY
+  // ===== ONE-WAY =====
   if (disableReturn) {
     const oneStr = startDate ? format(startDate, "d LLL, yyyy") : "";
+
     const Pill = ({ label, dateStr, muted }) => (
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onMouseDown={() => {
+          openingRef.current = true; // shield this click
+          setOpen(true);
+        }}
         className={`flex-1 border rounded-md px-3 py-2 text-left bg-white hover:bg-gray-50 transition ${
           muted ? "opacity-60" : ""
         }`}
@@ -118,7 +176,7 @@ export default function FirsttripCalendarClone({
     );
 
     return (
-      <div className="relative">
+      <div ref={containerRef} className="relative">
         <div className="flex gap-2">
           <Pill label="Departure" dateStr={oneStr} />
           <Pill label="Return" dateStr="" muted />
@@ -133,13 +191,15 @@ export default function FirsttripCalendarClone({
               mode="single"
               selected={startDate || undefined}
               onSelect={(d) => {
-                const s = strip(d);
+                const s = strip(d ?? null);
                 if (!s || isBefore(s, minDate)) return;
                 setStartDate(s);
                 setOpen(false);
+                if (onDatesChange)
+                  onDatesChange({ departureISO: toIso(s), returnISO: "" });
               }}
               fromDate={minDate}
-              numberOfMonths={months}
+              numberOfMonths={1}
               pagedNavigation
               fixedWeeks
               showOutsideDays
@@ -150,14 +210,18 @@ export default function FirsttripCalendarClone({
     );
   }
 
-  // ROUND-TRIP (manual, but with VISIBLE range)
+  // ===== ROUND-TRIP =====
   const depStr = startDate ? format(startDate, "d LLL, yyyy") : "";
   const retStr = endDate ? format(endDate, "d LLL, yyyy") : "";
 
   const Pill = ({ label, dateStr, active, onClick }) => (
     <button
       type="button"
-      onClick={onClick}
+      onMouseDown={() => {
+        openingRef.current = true; // shield this click
+        onClick();
+        setOpen(true);
+      }}
       className={`flex-1 rounded-md px-3 py-2 text-left bg-white transition border ${
         active
           ? "border-red-500 ring-1 ring-red-200"
@@ -174,35 +238,35 @@ export default function FirsttripCalendarClone({
     </button>
   );
 
-  // modifiers to DRAW the range
   const isMiddle = (day) =>
-    startDate &&
-    endDate &&
-    isWithinInterval(day, { start: startDate, end: endDate }) &&
-    !isEqual(day, startDate) &&
-    !isEqual(day, endDate);
+    !!(
+      startDate &&
+      endDate &&
+      isWithinInterval(day, { start: startDate, end: endDate }) &&
+      !isEqual(day, startDate) &&
+      !isEqual(day, endDate)
+    );
 
   const modifiers = {
     rangeMiddle: isMiddle,
-    rangeStart: (day) => startDate && isEqual(day, startDate),
-    rangeEnd: (day) => endDate && isEqual(day, endDate),
+    rangeStart: (day) => !!(startDate && isEqual(day, startDate)),
+    rangeEnd: (day) => !!(endDate && isEqual(day, endDate)),
   };
 
-  // give styles for those modifiers so they actually show
   const modifiersStyles = {
-    rangeMiddle: { backgroundColor: "#fee2e2", borderRadius: 8 }, // red-100
+    rangeMiddle: { backgroundColor: "#fee2e2", borderRadius: 8 },
     rangeStart: {
       backgroundColor: "#dc2626",
       color: "#fff",
       borderRadius: 9999,
       fontWeight: 700,
-    }, // red pill
+    },
     rangeEnd: {
       backgroundColor: "#dc2626",
       color: "#fff",
       borderRadius: 9999,
       fontWeight: 700,
-    }, // red pill
+    },
   };
 
   const disabledDays = [
@@ -210,46 +274,53 @@ export default function FirsttripCalendarClone({
     activeSide === "end" && startDate ? { before: startDate } : null,
   ].filter(Boolean);
 
+  const commit = (s, e) => {
+    setStartDate(s);
+    setEndDate(e);
+    if (onDatesChange) {
+      onDatesChange({
+        departureISO: toIso(s),
+        returnISO: disableReturn ? "" : toIso(e),
+      });
+    }
+  };
+
   const handlePick = (day) => {
-    const d = strip(day);
+    const d = strip(day ?? null);
     if (!d || isBefore(d, minDate)) return;
 
     if (activeSide === "start") {
-      setStartDate(d);
-      if (endDate && isBefore(endDate, d)) setEndDate(undefined);
+      if (endDate && isBefore(endDate, d)) {
+        commit(d, null);
+      } else {
+        commit(d, endDate);
+      }
       setActiveSide("end");
     } else {
       if (!startDate || isBefore(d, startDate)) {
-        setStartDate(d);
-        setEndDate(undefined);
+        commit(d, null);
         setActiveSide("end");
       } else {
-        setEndDate(d);
+        commit(startDate, d);
         setOpen(false);
       }
     }
   };
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <div className="flex gap-2">
         <Pill
           label="Departure"
           dateStr={depStr}
           active={activeSide === "start"}
-          onClick={() => {
-            setActiveSide("start");
-            setOpen(true);
-          }}
+          onClick={() => setActiveSide("start")}
         />
         <Pill
           label="Return"
           dateStr={retStr}
           active={activeSide === "end"}
-          onClick={() => {
-            setActiveSide("end");
-            setOpen(true);
-          }}
+          onClick={() => setActiveSide("end")}
         />
       </div>
 
@@ -259,14 +330,15 @@ export default function FirsttripCalendarClone({
           className="absolute z-50 mt-2 w-[90vw] sm:w-[680px] bg-white border border-gray-200 rounded-2xl shadow-xl p-3"
         >
           <DayPicker
-            mode="single" // we write start/end ourselves
+            mode="single"
             selected={[startDate, endDate].filter(Boolean)}
             onDayClick={handlePick}
             fromDate={minDate}
-            numberOfMonths={months} // 2 desktop, 1 mobile
+            numberOfMonths={months}
             pagedNavigation
             fixedWeeks
             showOutsideDays
+            disabled={disabledDays}
             modifiers={modifiers}
             modifiersStyles={modifiersStyles}
           />

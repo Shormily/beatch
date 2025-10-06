@@ -45,8 +45,8 @@ export default function FlightForm({
   const [trav, setTrav] = useState(
     saved.travellers || {
       adults: 1,
-      children: 0,
-      infants: 0,
+      children: 1,
+      infants: 1,
       travelClass: "Economy",
       childAges: [],
     }
