@@ -1,4 +1,4 @@
-// FlightCard.tsx
+// FlightCard.jsx
 "use client";
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -10,21 +10,185 @@ import { MdAirlineSeatReclineNormal } from "react-icons/md";
 import CustomTabs from "./CustomTabs";
 import FareModalDemo from "./FareModal";
 
+/* ================= helpers ================= */
+
 const fmtTime = (t) =>
   t
     ? String(t)
         .padStart(4, "0")
         .replace(/(\d{2})(\d{2})/, "$1:$2")
     : "";
+
 const safe = (v, d = "") => (v === undefined || v === null || v === "" ? d : v);
+
+// From a leg, get first + last segment defensively
+const firstLastSeg = (leg) => {
+  const segs = Array.isArray(leg?.flightSegments) ? leg.flightSegments : [];
+  const first = segs[0] || {};
+  const last = segs[segs.length - 1] || {};
+  return { segs, first, last };
+};
+
+// Prefer legs from top-level `flights`, fallback to `raw.flights`, else flatten
+const getLegs = (flight) => {
+  if (Array.isArray(flight?.flights) && flight.flights.length)
+    return flight.flights;
+  if (Array.isArray(flight?.raw?.flights) && flight.raw.flights.length)
+    return flight.raw.flights;
+  const segments =
+    flight?.segments || flight?.raw?.flights?.[0]?.flightSegments || [];
+  return segments.length ? [{ flightSegments: segments }] : [];
+};
+
+// Primary airline display (from first segment of first leg)
+const airlineFromFlight = (flight) => {
+  const legs = getLegs(flight);
+  const { first } = firstLastSeg(legs[0] || {});
+  const code =
+    first?.airline?.optAirlineCode ||
+    first?.airline?.code ||
+    flight?.raw?.validatingCarrierCode ||
+    "";
+  const validatingCarrier =
+    flight?.validatingCarrier || flight?.raw?.validatingCarrier || "";
+  const name =
+    first?.airline?.optAirline ||
+    first?.airline?.name ||
+    validatingCarrier ||
+    code;
+  return { code, name };
+};
+
+// Seats left — any segment with numberOfSeats > 0
+const seatsLeftFromFlight = (flight) => {
+  const legs = getLegs(flight);
+  for (const leg of legs) {
+    const { segs } = firstLastSeg(leg);
+    const found = segs.find((s) => Number(s?.numberOfSeats) > 0)?.numberOfSeats;
+    if (found) return found;
+  }
+  return null;
+};
+
+// Refundable? Prefer passenger fare info
+const isRefundable = (flight) =>
+  flight?.fares?.[0]?.passengerFares?.[0]?.refundable ??
+  flight?.raw?.fares?.[0]?.passengerFares?.[0]?.refundable ??
+  flight?.raw?.totalFare?.refundable ??
+  false;
+
+// Compact timeline header row renderer
+const HeaderMiniRow = ({ leg }) => {
+  if (!leg) return null;
+  const { first, last } = firstLastSeg(leg);
+
+  const duration = leg?.totalElapsedTime || first?.elapsedTime || "";
+
+  const stops =
+    typeof leg?.totalStops === "number"
+      ? leg.totalStops
+      : Math.max(0, (leg?.flightSegments || []).length - 1);
+  const stopText =
+    stops === 0 ? "Non-stop" : stops === 1 ? "1 stop" : `${stops} stops`;
+
+  return (
+    <div className="flex items-center gap-6">
+      {/* left time */}
+      <div className="text-center">
+        <p className="text-xs">{safe(first?.departure?.depDate)}</p>
+        <p className="font-semibold text-[18px] leading-none">
+          {fmtTime(first?.departure?.depTime)}
+        </p>
+        <p className="text-xs text-gray-500">
+          {safe(
+            first?.departure?.airport?.airportCode ||
+              first?.departure?.airport?.cityCode
+          )}
+        </p>
+      </div>
+
+      {/* dashed route */}
+      <div className="flex flex-col items-center">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-sky-600 opacity-70" />
+          <div className="w-36 border-t border-dashed border-gray-400 relative">
+            <img
+              src={planeImg}
+              alt="air route"
+              className="w-5 absolute left-1/2 -translate-x-1/2 -top-2"
+            />
+          </div>
+          <span className="h-2 w-2 rounded-full bg-sky-600 opacity-70" />
+        </div>
+        <p className="text-[11px] text-center mt-1">{safe(duration, "—")}</p>
+        <p className="text-xs text-gray-500">{stopText}</p>
+      </div>
+
+      {/* right time */}
+      <div className="text-center">
+        <p className="text-xs">{safe(last?.arrival?.arrDate)}</p>
+        <p className="font-semibold text-[18px] leading-none">
+          {fmtTime(last?.arrival?.arrTime)}
+        </p>
+        <p className="text-xs text-gray-500">
+          {safe(
+            last?.arrival?.airport?.airportCode ||
+              last?.arrival?.airport?.cityCode
+          )}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Build pax map (ADT/CHD/INF) from both shapes
+const getPassengerFares = (flight) =>
+  flight?.fares?.[0]?.passengerFares ||
+  flight?.raw?.fares?.[0]?.passengerFares ||
+  [];
+
+const bdtPart = (pf, type) =>
+  Number(
+    pf?.referanceFares?.find((r) => r.currency === "BDT" && r.type === type)
+      ?.amount ?? 0
+  );
+
+const buildPaxMap = (flight) => {
+  const list = getPassengerFares(flight);
+  const map = {};
+  list.forEach((pf) => {
+    const key = pf.passengerType; // ADT / CHD / INF
+    if (!map[key]) map[key] = { quantity: 0, base: 0, tax: 0 };
+    map[key].quantity += Number(pf.quantity || 0);
+    map[key].base += bdtPart(pf, "FARE");
+    map[key].tax += bdtPart(pf, "TAX");
+  });
+  return map;
+};
+
+const paxLabel = (t) =>
+  t === "ADT"
+    ? "Adult"
+    : t === "CHD"
+    ? "Child ≥ 5"
+    : t === "INF"
+    ? "Infant"
+    : t;
+
+/* ================= component ================= */
 
 export default function FlightCard({ flight }) {
   const [open, setOpen] = useState(false);
 
-  // Defensive parsing
-  const validatingCarrier =
-    flight?.validatingCarrier || flight?.raw?.validatingCarrier || "";
+  const legs = useMemo(() => getLegs(flight), [flight]);
+  const isRoundTrip = legs.length >= 2;
 
+  const { code: airlineCode, name: airlineName } = useMemo(
+    () => airlineFromFlight(flight),
+    [flight]
+  );
+
+  // Keep your original “top values” (used only in single-line timeline fallback)
   const segments = useMemo(
     () => flight?.segments || flight?.raw?.flights?.[0]?.flightSegments || [],
     [flight]
@@ -49,50 +213,25 @@ export default function FlightCard({ flight }) {
   const duration =
     flight?.duration || flight?.raw?.flights?.[0]?.totalElapsedTime || "";
 
-  // Seats left — try to derive from the first segment numberOfSeats
-  const seatsLeft =
-    segments.find((s) => Number(s?.numberOfSeats) > 0)?.numberOfSeats ?? null;
+  const seatsLeft = useMemo(() => seatsLeftFromFlight(flight), [flight]);
+  const refundable = useMemo(() => isRefundable(flight), [flight]);
 
-  // Refundability — derive from first passenger fare if available
-  const refundable =
-    flight?.raw?.fares?.[0]?.passengerFares?.[0]?.refundable ??
-    flight?.raw?.totalFare?.refundable ??
-    false;
+  // ===== Fare math (right panel) with ADT/CHD/INF rows =====
+  const paxMap = useMemo(() => buildPaxMap(flight), [flight]);
 
-  // Airline display
-  const airlineCode =
-    firstSeg?.airline?.optAirlineCode ||
-    firstSeg?.airline?.code ||
-    flight?.raw?.validatingCarrierCode ||
-    "";
-  const airlineName =
-    firstSeg?.airline?.optAirline ||
-    firstSeg?.airline?.name ||
-    validatingCarrier ||
-    airlineCode;
+  const airFareBDT =
+    (paxMap.ADT?.base || 0) +
+    (paxMap.ADT?.tax || 0) +
+    (paxMap.CHD?.base || 0) +
+    (paxMap.CHD?.tax || 0) +
+    (paxMap.INF?.base || 0) +
+    (paxMap.INF?.tax || 0);
 
-  // Stops label
-  const stopText =
-    stops === 0 ? "Non-stop" : stops === 1 ? "1 stop" : `${stops} stops`;
-
-  // Fare breakdown (raw)
-  const paxFares = flight?.raw?.fares?.[0]?.passengerFares || [];
-  const adt = paxFares.find((p) => p.passengerType === "ADT");
-
-  // --- Fare Math from ADT in BDT (to match screenshots) ---
-  const baseBDT =
-    adt?.referanceFares?.find((r) => r.currency === "BDT" && r.type === "FARE")
-      ?.amount ?? 0;
-
-  const taxBDT =
-    adt?.referanceFares?.find((r) => r.currency === "BDT" && r.type === "TAX")
-      ?.amount ?? 0;
-
-  const airFareBDT = baseBDT + taxBDT;
-
-  // Change these if your promo is dynamic
+  // Use your code, or set per-flight coupon if needed
   const promoCode = "FTEBLDOM18";
-  const couponBDT = 1894; // use 1894 like your screenshot 2
+  // Example: small party coupon vs large party coupon:
+  const defaultCoupon = isRoundTrip ? 3895 : 1894;
+  const couponBDT = defaultCoupon;
   const totalBDT = Math.max(airFareBDT - couponBDT, 0);
 
   return (
@@ -124,7 +263,7 @@ export default function FlightCard({ flight }) {
       <div className="flex flex-col lg:flex-row items-stretch relative">
         {/* LEFT SIDE */}
         <div className="flex-1 p-4">
-          {/* === Collapsed summary bar (like pic 1) === */}
+          {/* === Collapsed summary header (kept same) === */}
           <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold overflow-hidden">
@@ -137,45 +276,55 @@ export default function FlightCard({ flight }) {
               <p className="text-[14px] font-medium leading-4">{airlineName}</p>
             </div>
 
-            {/* timeline */}
-            <div className="flex items-center gap-6">
-              {/* left time */}
-              <div className="text-center">
-                <p className="text-xs">{safe(depDate)}</p>
-                <p className="font-semibold text-[18px] leading-none">
-                  {fmtTime(depTime)}
-                </p>
-                <p className="text-xs text-gray-500">{depCode}</p>
-              </div>
-
-              {/* dashed route */}
-              <div className="flex flex-col items-center">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-sky-600 opacity-70" />
-                  <div className="w-36 border-t border-dashed border-gray-400 relative">
-                    <img
-                      src={planeImg}
-                      alt="air route"
-                      className="w-5 absolute left-1/2 -translate-x-1/2 -top-2"
-                    />
-                  </div>
-                  <span className="h-2 w-2 rounded-full bg-sky-600 opacity-70" />
+            {/* timeline: for round-trip show two compact rows; else keep your original single row */}
+            {!isRoundTrip ? (
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <p className="text-xs">{safe(depDate)}</p>
+                  <p className="font-semibold text-[18px] leading-none">
+                    {fmtTime(depTime)}
+                  </p>
+                  <p className="text-xs text-gray-500">{depCode}</p>
                 </div>
-                <p className="text-[11px] text-center mt-1">
-                  {safe(duration, "—")}
-                </p>
-                <p className="text-xs text-gray-500">{stopText}</p>
-              </div>
 
-              {/* right time */}
-              <div className="text-center">
-                <p className="text-xs">{safe(arrDate)}</p>
-                <p className="font-semibold text-[18px] leading-none">
-                  {fmtTime(arrTime)}
-                </p>
-                <p className="text-xs text-gray-500">{arrCode}</p>
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-sky-600 opacity-70" />
+                    <div className="w-36 border-t border-dashed border-gray-400 relative">
+                      <img
+                        src={planeImg}
+                        alt="air route"
+                        className="w-5 absolute left-1/2 -translate-x-1/2 -top-2"
+                      />
+                    </div>
+                    <span className="h-2 w-2 rounded-full bg-sky-600 opacity-70" />
+                  </div>
+                  <p className="text-[11px] text-center mt-1">
+                    {safe(duration, "—")}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {stops === 0
+                      ? "Non-stop"
+                      : stops === 1
+                      ? "1 stop"
+                      : `${stops} stops`}
+                  </p>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-xs">{safe(arrDate)}</p>
+                  <p className="font-semibold text-[18px] leading-none">
+                    {fmtTime(arrTime)}
+                  </p>
+                  <p className="text-xs text-gray-500">{arrCode}</p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <HeaderMiniRow leg={legs[0]} />
+                <HeaderMiniRow leg={legs[1]} />
+              </div>
+            )}
           </div>
 
           <div className="border-t border-gray-200 my-3" />
@@ -198,7 +347,7 @@ export default function FlightCard({ flight }) {
             </div>
           ) : (
             <>
-              {/* === Expanded content (like pic 2) === */}
+              {/* === Expanded content (tabs) === */}
               <CustomTabs flight={flight} />
               <div className="border-t border-gray-200 my-6 mb-5" />
               <div className="mt-3 relative flex items-center pb-2">
@@ -222,13 +371,8 @@ export default function FlightCard({ flight }) {
         {/* RIGHT SIDE – Collapsed vs Expanded */}
         <aside className="lg:w-64 lg:self-stretch border-t lg:border-t-0 lg:border-l border-dashed border-gray-300 p-4 flex flex-col justify-between relative mb-6">
           {!open ? (
-            // ===== Collapsed right (like pic 1) =====
+            // ===== Collapsed right (same look) =====
             <div className="flex flex-col items-end">
-              {/* <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-[11px] font-semibold inline-flex items-center gap-2">
-                <img src={coupon} alt="coupon" className="w-4 h-4" />
-                <span>{promoCode}</span>
-              </span> */}
-
               <p className="text-red-600 text-2xl font-extrabold mt-2 leading-none">
                 BDT {totalBDT.toLocaleString()}
               </p>
@@ -253,28 +397,34 @@ export default function FlightCard({ flight }) {
               </div>
             </div>
           ) : (
-            // ===== Expanded right (like pic 2) =====
+            // ===== Expanded right with ADT/CHD/INF rows =====
             <>
               <div className="space-y-2">
-                <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
-                  <span className="text-gray-600">
-                    Adult X {adt?.quantity ?? 1}
-                  </span>
-                </div>
-
-                <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
-                  <span className="text-gray-600">Base Fare</span>
-                  <span className="font-medium">
-                    BDT {baseBDT.toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
-                  <span className="text-gray-600">Tax</span>
-                  <span className="font-medium">
-                    BDT {taxBDT.toLocaleString()}
-                  </span>
-                </div>
+                {["ADT", "CHD", "INF"].map((t) => {
+                  const row = paxMap[t];
+                  if (!row || row.quantity <= 0) return null;
+                  return (
+                    <div key={t} className="bg-gray-50 rounded-md p-3 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700">
+                          {paxLabel(t)} X {row.quantity}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-gray-600">
+                        <span>Base Fare</span>
+                        <span className="font-medium">
+                          BDT {row.base.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-gray-600">
+                        <span>Tax</span>
+                        <span className="font-medium">
+                          BDT {row.tax.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
 
                 <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
                   <span className="text-gray-700 font-medium">Air Fare</span>

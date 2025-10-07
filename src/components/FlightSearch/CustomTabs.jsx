@@ -1,23 +1,85 @@
 // CustomTabs.jsx
+"use client";
 import React, { useMemo, useState } from "react";
 import { AiOutlineQuestionCircle } from "react-icons/ai";
 import { SlLocationPin } from "react-icons/sl";
 
+/* ------------------- helpers ------------------- */
 const safe = (v, d = "—") =>
   v === undefined || v === null || v === "" ? d : v;
 const pad4 = (t) => (t ? String(t).padStart(4, "0") : "");
 const fmtTime = (t) => (t ? pad4(t).replace(/(\d{2})(\d{2})/, "$1:$2") : "—");
+const fmtKg = (s) => {
+  if (!s) return "0 kg";
+  const m = String(s).match(/(\d+)/);
+  const n = m ? Number(m[1]) : 0;
+  return `${n} kg`;
+};
 
+const getLegs = (flight) =>
+  Array.isArray(flight?.flights) && flight.flights.length
+    ? flight.flights
+    : Array.isArray(flight?.raw?.flights) && flight.raw.flights.length
+    ? flight.raw.flights
+    : [];
+
+const firstLastSeg = (leg) => {
+  const segs = Array.isArray(leg?.flightSegments) ? leg.flightSegments : [];
+  const first = segs[0] || {};
+  const last = segs.length ? segs[segs.length - 1] : {};
+  return { segs, first, last };
+};
+
+const getPassengerFares = (flight) =>
+  flight?.fares?.[0]?.passengerFares ??
+  flight?.raw?.fares?.[0]?.passengerFares ??
+  [];
+
+/** Build baggage index: { ADT: { 'DAC-ZYL': {carryOn,checkedIn}, ... }, CHD: {...}, INF: {...} } */
+const buildPaxBagIndex = (flight) => {
+  const fares = getPassengerFares(flight);
+  const idx = {};
+  fares.forEach((pf) => {
+    const t = pf.passengerType; // ADT/CHD/INF
+    if (!idx[t]) idx[t] = {};
+    (pf.baggages || []).forEach((b) => {
+      const legId = b?.flightInfoId;
+      if (!legId) return;
+      if (!idx[t][legId])
+        idx[t][legId] = { carryOn: "0 kg", checkedIn: "0 kg" };
+      const typ = (b?.type || "").toLowerCase();
+      if (typ === "carryon") idx[t][legId].carryOn = fmtKg(b?.description);
+      if (typ === "checkedin") idx[t][legId].checkedIn = fmtKg(b?.description);
+    });
+  });
+  return idx;
+};
+
+/* ------------------- component ------------------- */
 export default function CustomTabs({ flight }) {
-  const [activeTab, setActiveTab] = useState("details");
+  const tabs = [
+    { id: "details", label: "Flight Details" },
+    { id: "baggage", label: "Baggage" },
+    { id: "policy", label: "Policy" },
+  ];
 
-  // One-way (extend for return if you add it later)
-  const segs = useMemo(
+  const legs = useMemo(() => getLegs(flight), [flight]);
+  const oneWayFallbackSegs = useMemo(
     () => flight?.raw?.flights?.[0]?.flightSegments || [],
     [flight]
   );
-  const first = segs[0] || {};
-  const last = segs[segs.length - 1] || {};
+
+  // active leg & tab
+  const [activeTab, setActiveTab] = useState("details");
+  const [activeLeg, setActiveLeg] = useState(0);
+
+  // selected leg (works for one-way too)
+  const leg =
+    legs.length > 0
+      ? legs[Math.min(activeLeg, legs.length - 1)]
+      : { flightSegments: oneWayFallbackSegs };
+
+  const { segs, first, last } = firstLastSeg(leg);
 
   const depCity = first?.departure?.airport?.cityName;
   const depCode = first?.departure?.airport?.airportCode;
@@ -32,16 +94,11 @@ export default function CustomTabs({ flight }) {
   const arrDate = last?.arrival?.arrDate;
   const arrTime = last?.arrival?.arrTime;
 
-  const hasArrival =
-    Boolean(arrCity) ||
-    Boolean(arrCode) ||
-    Boolean(arrName) ||
-    Boolean(arrTime);
+  const hasArrival = Boolean(arrCity || arrCode || arrName || arrTime);
 
   const cabin = safe(first?.cabinType, "Economy");
   const rbd = safe(first?.bookingClass); // e.g. Y, G…
   const airline = safe(first?.airline?.name);
-  const airlineCode = first?.airline?.code || first?.airline?.optAirlineCode;
   const flightNo = `${safe(first?.airline?.code)} ${safe(
     first?.airline?.flightNo
   )}`;
@@ -51,18 +108,28 @@ export default function CustomTabs({ flight }) {
   );
 
   const totalStops =
-    flight?.raw?.flights?.[0]?.totalStops ?? Math.max(0, segs.length - 1);
-  const duration = flight?.raw?.flights?.[0]?.totalElapsedTime;
+    typeof leg?.totalStops === "number"
+      ? leg.totalStops
+      : Math.max(0, segs.length - 1);
+  const duration = leg?.totalElapsedTime;
 
-  const tabs = [
-    { id: "details", label: "Flight Details" },
-    { id: "baggage", label: "Baggage" },
-    { id: "policy", label: "Policy" },
-  ];
+  // baggage lookup
+  const paxBagIndex = useMemo(() => buildPaxBagIndex(flight), [flight]);
+  const legId = leg?.flightInfoId || ""; // e.g. "DAC-ZYL"
+  const bagCell = (pax) => {
+    const entry = paxBagIndex?.[pax]?.[legId];
+    return {
+      carryOn: entry ? entry.carryOn : "0 kg",
+      checkedIn: entry ? entry.checkedIn : "0 kg",
+    };
+  };
+  const adt = bagCell("ADT");
+  const chd = bagCell("CHD");
+  const inf = bagCell("INF");
 
   return (
     <div className="w-full bg-white">
-      {/* Tabs Header */}
+      {/* ===== Tabs Header ===== */}
       <div className="flex border-b border-gray-200">
         {tabs.map((t) => (
           <button
@@ -79,72 +146,86 @@ export default function CustomTabs({ flight }) {
         ))}
       </div>
 
-      {/* ===== DETAILS (dynamic) ===== */}
-      {activeTab === "details" && (
-        <div className="pt-3 space-y-2">
-          {/* Section label with radio */}
-          <div className="flex items-center gap-2 text-red-600 font-semibold text-sm">
-            <span className="relative inline-flex items-center justify-center w-4 h-4">
-              <input
-                type="radio"
-                checked
-                readOnly
-                className="accent-red-500 w-4 h-4"
-              />
-            </span>
+      {/* ===== Leg radio toggle (if round trip) ===== */}
+      {legs.length > 1 && (
+        <div className="flex items-center gap-4 py-3 text-sm">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="legSwitch"
+              className="accent-red-600"
+              checked={activeLeg === 0}
+              onChange={() => setActiveLeg(0)}
+            />
             <span>
-              {safe(depCode)} - {safe(arrCode)} (Depart)
+              {safe(legs[0]?.flightSegments?.[0]?.departure?.airport?.cityCode)}{" "}
+              -{" "}
+              {safe(
+                legs[0]?.flightSegments?.slice(-1)?.[0]?.arrival?.airport
+                  ?.cityCode
+              )}{" "}
+              (Depart)
             </span>
-          </div>
+          </label>
 
-          {/* ===== Departure row ===== */}
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="legSwitch"
+              className="accent-red-600"
+              checked={activeLeg === 1}
+              onChange={() => setActiveLeg(1)}
+              disabled={!legs[1]}
+            />
+            <span className={`${legs[1] ? "" : "opacity-50"}`}>
+              {legs[1]
+                ? `${safe(
+                    legs[1]?.flightSegments?.[0]?.departure?.airport?.cityCode
+                  )} - ${safe(
+                    legs[1]?.flightSegments?.slice(-1)?.[0]?.arrival?.airport
+                      ?.cityCode
+                  )} (Return)`
+                : "—"}
+            </span>
+          </label>
+        </div>
+      )}
+
+      {/* ===== DETAILS ===== */}
+      {activeTab === "details" && (
+        <div className="pt-1 space-y-2">
+          {/* Departure */}
           <div className="grid grid-cols-[96px_24px_1fr] items-center bg-slate-50 rounded-xl p-3">
-            {/* col 1: time/date */}
             <div className="text-center">
               <p className="text-base font-semibold">{fmtTime(depTime)}</p>
               <p className="text-[11px] text-gray-500">{safe(depDate)}</p>
             </div>
-
-            {/* col 2: center icon */}
             <div className="flex items-center justify-center">
               <SlLocationPin size={18} className="text-gray-700" />
             </div>
-
-            {/* col 3: content */}
             <div className="min-w-0">
               <p className="text-sm font-semibold">
                 Departure, {safe(depCity)}
               </p>
               <p className="text-[12px] text-gray-600 truncate">
                 {safe(depCode)} - {safe(depName)}
-                {depTerm ? `, (T${depTerm})` : ""}
+                {depTerm ? `, (${depTerm})` : ""}
               </p>
             </div>
           </div>
 
-          {/* ===== Airline row with vertical divider & logo ===== */}
+          {/* Airline row with vertical divider & logo placeholder (kept your style) */}
           <div className="grid grid-cols-[96px_24px_1fr] items-stretch bg-white rounded-xl p-3">
-            {/* col 1: cabin & flight no */}
             <div>
               <p className="text-sm font-semibold text-red-500">
                 {cabin} {rbd ? `(${rbd})` : ""}
               </p>
               <p className="text-[12px] text-gray-600">{flightNo}</p>
             </div>
-
-            {/* col 2: vertical divider + logo */}
             <div className="relative flex items-center justify-center">
               <span className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-gray-200" />
-              {airlineCode ? (
-                <img
-                  src={`https://airlines.a4aero.com/images/${airlineCode}.png`}
-                  className="relative z-10 w-5 h-5 bg-white rounded-full p-0.5 shadow-sm object-contain"
-                  alt={airlineCode}
-                />
-              ) : null}
+              {/* you can optionally render the airline logo here if needed */}
             </div>
-
-            {/* col 3: airline + aircraft + duration */}
             <div className="min-w-0">
               <p className="text-sm font-semibold">{airline}</p>
               <p className="text-[12px] text-gray-600 mt-0.5">{aircraft}</p>
@@ -159,21 +240,16 @@ export default function CustomTabs({ flight }) {
             </div>
           </div>
 
-          {/* ===== Arrival row (only if data exists) ===== */}
+          {/* Arrival — FIX: always read from selected leg's last segment */}
           {hasArrival && (
             <div className="grid grid-cols-[96px_24px_1fr] items-center bg-slate-50 rounded-xl p-3">
-              {/* col 1: time/date */}
               <div className="text-center">
                 <p className="text-base font-semibold">{fmtTime(arrTime)}</p>
                 <p className="text-[11px] text-gray-500">{safe(arrDate)}</p>
               </div>
-
-              {/* col 2: center icon */}
               <div className="flex items-center justify-center">
                 <SlLocationPin size={18} className="text-gray-700" />
               </div>
-
-              {/* col 3: content */}
               <div className="min-w-0">
                 <p className="text-sm font-semibold">
                   Arrival, {safe(arrCity)}
@@ -187,49 +263,58 @@ export default function CustomTabs({ flight }) {
         </div>
       )}
 
-      {/* ===== BAGGAGE (static block) ===== */}
+      {/* ===== BAGGAGE ===== */}
       {activeTab === "baggage" && (
         <div className="py-4">
-          {/* Table header */}
-          <div className="bg-gray-100 rounded-md overflow-hidden">
-            <div className="grid grid-cols-3 text-sm font-medium text-gray-600 pt-1">
-              <div className="flex items-center justify-center border-r border-white">
-                Flight
-              </div>
-              <div className="flex items-center justify-center border-r border-white">
-                Cabin
-              </div>
-              <div className="flex items-center justify-center">Checked-in</div>
+          {/* Route chip (matches details line) */}
+
+          {/* Table header (matches your screenshot with Adult/Child/Infant columns) */}
+          <div className="rounded-md overflow-hidden border border-gray-200">
+            <div className="grid grid-cols-7 bg-gray-100 text-xs font-medium text-gray-700">
+              <div className="col-span-2 px-3 py-2">Flight</div>
+              <div className="col-span-2 px-3 py-2">Cabin</div>
+              <div className="col-span-3 px-3 py-2">Checked-in</div>
             </div>
 
-            <div className="grid grid-cols-3 text-sm text-center">
-              <div className="flex items-center justify-center border-r border-white py-3" />
-              <div className="flex items-center justify-center border-r border-white">
-                Adult
+            <div className="grid grid-cols-7 bg-gray-50 text-[11px] text-gray-600">
+              <div className="col-span-2 px-3 py-2" />
+              <div className="col-span-2 px-3 py-2 grid grid-cols-3 text-center">
+                <div>Adult</div>
+                <div>Child ≥ 5</div>
+                <div>Infant</div>
               </div>
-              <div className="flex items-center justify-center py-3">Adult</div>
-            </div>
-          </div>
-
-          {/* Static values */}
-          <div className="bg-slate-100 rounded-md overflow-hidden mt-4">
-            <div className="grid grid-cols-3 text-sm font-medium text-gray-600">
-              <div className="flex items-center justify-center border-r border-gray-300 pt-1">
-                {safe(first?.cabinType, "Economy")}
+              <div className="col-span-3 px-3 py-2 grid grid-cols-3 text-center">
+                <div>Adult</div>
+                <div>Child ≥ 5</div>
+                <div>Infant</div>
               </div>
-              <div className="flex items-center justify-center border-r border-gray-300" />
-              <div className="flex items-center justify-center" />
             </div>
 
-            <div className="grid grid-cols-3 text-sm text-center">
-              <div className="flex items-center justify-center border-r border-gray-300 font-semibold">
-                {safe(first?.departure?.airport?.airportCode)} -{" "}
-                {safe(last?.arrival?.airport?.airportCode)}
+            {/* Data row */}
+            <div className="grid grid-cols-7 text-sm">
+              <div className="col-span-2 px-3 py-3 border-t">
+                <div className="font-medium">
+                  {safe(first?.cabinType, "Economy")}
+                </div>
+                <div className="text-xs text-gray-600">
+                  {safe(first?.departure?.airport?.cityCode)} -{" "}
+                  {safe(last?.arrival?.airport?.cityCode)}
+                </div>
               </div>
-              <div className="flex items-center justify-center border-r border-gray-300">
-                7kg
+
+              {/* Carry-on (Cabin) */}
+              <div className="col-span-2 px-3 py-3 border-t grid grid-cols-3 gap-2 text-center">
+                <div>{adt.carryOn}</div>
+                <div>{chd.carryOn}</div>
+                <div>{inf.carryOn}</div>
               </div>
-              <div className="flex items-center justify-center py-3">20kg</div>
+
+              {/* Checked-in */}
+              <div className="col-span-3 px-3 py-3 border-t grid grid-cols-3 gap-2 text-center">
+                <div>{adt.checkedIn}</div>
+                <div>{chd.checkedIn}</div>
+                <div>{inf.checkedIn}</div>
+              </div>
             </div>
           </div>
 
@@ -240,7 +325,7 @@ export default function CustomTabs({ flight }) {
         </div>
       )}
 
-      {/* ===== POLICY (static block) ===== */}
+      {/* ===== POLICY (static text retained) ===== */}
       {activeTab === "policy" && (
         <div className="py-4 text-sm text-gray-700">
           <p className="pt-1">

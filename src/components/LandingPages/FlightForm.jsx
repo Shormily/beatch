@@ -1,4 +1,6 @@
 // src/LandingPages/FlightForm.jsx
+"use client";
+
 import React, { useEffect, useMemo, useState } from "react";
 import { CiSearch } from "react-icons/ci";
 import { AiOutlineSwap } from "react-icons/ai";
@@ -9,17 +11,36 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { searchFlights } from "../../redux/slices/flightsSlice";
 import { setForm } from "../../redux/slices/searchFormSlice";
-import CalendarCompact from "./calender";
 
-// Extract IATA helper (unchanged)
+/* ---------------- helpers ---------------- */
+
+// Extract IATA code from "Dhaka (DAC)" or "DAC"
 function extractIata(text = "") {
-  const t = text.trim().toUpperCase();
+  const t = String(text || "")
+    .trim()
+    .toUpperCase();
   const paren = t.match(/\(([A-Z]{3})\)/);
   if (paren) return paren[1];
   const plain = t.match(/\b[A-Z]{3}\b/);
   if (plain) return plain[0];
   return "";
 }
+
+// Normalize cabin class to API style
+const normalizeCabin = (label = "Economy") => {
+  const v = String(label || "ECONOMY")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "_");
+  if (v === "PREMIUM" || v === "PREMIUM_ECO" || v === "PREMIUM_ECONOMY")
+    return "PREMIUM_ECONOMY";
+  if (v === "ECONOMY" || v === "Y") return "ECONOMY";
+  if (v === "BUSINESS" || v === "J" || v === "C") return "BUSINESS";
+  if (v === "FIRST" || v === "F") return "FIRST";
+  return v || "ECONOMY";
+};
+
+/* ---------------- component ---------------- */
 
 export default function FlightForm({
   showMissingHint = true,
@@ -30,7 +51,7 @@ export default function FlightForm({
   const dispatch = useDispatch();
   const saved = useSelector((s) => s.searchForm);
 
-  // --- Local state (hydrated from Redux once) ---
+  // --- Local state (hydrate from Redux once) ---
   const [tripType, setTripType] = useState(saved.tripType || "ONE_WAY");
   const isOneWay = tripType === "ONE_WAY";
 
@@ -55,7 +76,7 @@ export default function FlightForm({
   const [preferredAirline] = useState(saved.preferredAirline || "");
   const [apiId] = useState(saved.apiId || 1001);
 
-  // keep Redux copy in sync on every relevant change
+  // Keep Redux form in sync whenever inputs change
   useEffect(() => {
     dispatch(
       setForm({
@@ -85,7 +106,12 @@ export default function FlightForm({
     dispatch,
   ]);
 
-  // Swap
+  // When switching to ONE_WAY, clear any stale return date
+  useEffect(() => {
+    if (isOneWay && returnDate) setReturnDate("");
+  }, [isOneWay]); // eslint-disable-line
+
+  // Swap origin/destination
   const swap = () => {
     setFromText(toText);
     setToText(fromText);
@@ -93,31 +119,73 @@ export default function FlightForm({
     setToAirport(fromAirport);
   };
 
-  // Determine IATA codes
-  const fromCode = useMemo(
-    () => (fromAirport?.code || extractIata(fromText)).toUpperCase(),
-    [fromAirport, fromText]
-  );
-  const toCode = useMemo(
-    () => (toAirport?.code || extractIata(toText)).toUpperCase(),
-    [toAirport, toText]
-  );
+  // Derive IATA codes safely
+  const fromCode = useMemo(() => {
+    const code =
+      (fromAirport && fromAirport.code) || extractIata(fromText) || "";
+    return code.toUpperCase();
+  }, [fromAirport, fromText]);
 
-  // Button enablement
+  const toCode = useMemo(() => {
+    const code = (toAirport && toAirport.code) || extractIata(toText) || "";
+    return code.toUpperCase();
+  }, [toAirport, toText]);
+
+  // Prevent same origin/destination
+  const sameAirport = fromCode && toCode && fromCode === toCode;
+
+  // Enable Search button only when inputs are valid
   const canSearch = useMemo(() => {
     const hasFrom = fromCode && fromCode.length === 3;
     const hasTo = toCode && toCode.length === 3;
     const hasDep = !!departureDate;
     const hasRet = isOneWay ? true : !!returnDate;
-    return hasFrom && hasTo && hasDep && hasRet;
-  }, [fromCode, toCode, departureDate, returnDate, isOneWay]);
+    return hasFrom && hasTo && hasDep && hasRet && !sameAirport;
+  }, [fromCode, toCode, departureDate, returnDate, isOneWay, sameAirport]);
 
+  // Build API request body for roundtrip/oneway (useful if your thunk posts it)
+  const buildRequestBody = () => {
+    const originDestinationOptions = [
+      {
+        departureAirport: fromCode,
+        arrivalAirport: toCode,
+        flyDate: departureDate, // yyyy-MM-dd
+      },
+    ];
+
+    if (!isOneWay) {
+      originDestinationOptions.push({
+        departureAirport: toCode,
+        arrivalAirport: fromCode,
+        flyDate: returnDate, // yyyy-MM-dd
+      });
+    }
+
+    const passengers = [
+      { passengerType: "ADT", quantity: Number(trav.adults || 0) },
+      { passengerType: "CHD", quantity: Number(trav.children || 0) },
+      { passengerType: "INF", quantity: Number(trav.infants || 0) },
+    ].filter((p) => p.quantity > 0);
+
+    return {
+      originDestinationOptions,
+      passengers,
+      cabinClasse: normalizeCabin(trav.travelClass), // e.g., ECONOMY / BUSINESS / FIRST / PREMIUM_ECONOMY
+      preferredAirline: preferredAirline || undefined, // e.g., "BG", or "BG, EK"
+      apiId, // e.g., 1001 = Sabre BD
+    };
+  };
+
+  // Dispatch exactly like your original working version (flat payload),
+  // but we also attach the fully-formed request as __requestBody if you need it.
   const handleSearch = () => {
     if (!canSearch) return;
 
-    // (Redux already has the form values due to the useEffect above)
+    const requestBody = buildRequestBody();
+
     dispatch(
       searchFlights({
+        // flat fields your thunk expects
         tripType,
         fromCode,
         toCode,
@@ -131,18 +199,28 @@ export default function FlightForm({
         travelClassLabel: trav.travelClass,
         preferredAirline,
         apiId,
+
+        // optional: exact API body
+        __requestBody: requestBody,
       })
     );
 
     navigate("/searchresult");
   };
 
-  // Missing hint (hidden on Searchresult by passing showMissingHint={false})
+  // ✅ Wire to your calendar's onDatesChange({ departureISO, returnISO })
+  const handleCalendarDatesChange = ({ departureISO, returnISO }) => {
+    setDepartureDate(departureISO || "");
+    setReturnDate(returnISO || ""); // ONE_WAY clearing is handled by the effect
+  };
+
+  // Small inline helper to show what’s missing
   const MissingHint = () => {
     if (!showMissingHint) return null;
     const missing = [];
     if (!(fromCode && fromCode.length === 3)) missing.push("From (IATA)");
     if (!(toCode && toCode.length === 3)) missing.push("To (IATA)");
+    if (sameAirport) missing.push("Different From/To airports");
     if (!departureDate) missing.push("Departure date");
     if (!isOneWay && !returnDate) missing.push("Return date");
     if (missing.length === 0) return null;
@@ -184,7 +262,7 @@ export default function FlightForm({
 
       {/* Inputs */}
       <div className="flex flex-col lg:flex-row gap-4">
-        {/* From/To */}
+        {/* From / To */}
         <div className="lg:basis-[35%] grid grid-cols-1 sm:grid-cols-2 gap-4 relative min-w-[250px]">
           <AirportSelect
             label="From"
@@ -217,10 +295,8 @@ export default function FlightForm({
             defaultDeparture={saved.departureDate || ""}
             defaultReturn={saved.returnDate || ""}
             minDepartureDate={new Date()}
-            onChange={({ departureDate: d, returnDate: r }) => {
-              setDepartureDate(d || "");
-              setReturnDate(isOneWay ? "" : r || "");
-            }}
+            // 🔧 the correct prop name:
+            onDatesChange={handleCalendarDatesChange}
           />
         </div>
 
