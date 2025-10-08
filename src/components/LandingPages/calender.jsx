@@ -163,7 +163,7 @@ export default function FirsttripCalendarClone({
           openingRef.current = true;
           onClick?.();
         }}
-        className={`flex-1 border rounded-md px-3 py-2 text-left bg-white hover:bg-gray-50 transition ${
+        className={`flex-1 h-20 border border-gray-300 rounded-lg px-3 text-left bg-white hover:bg-gray-50 transition ${
           muted ? "opacity-60" : ""
         }`}
       >
@@ -179,12 +179,12 @@ export default function FirsttripCalendarClone({
 
     return (
       <div ref={containerRef} className="relative">
-        <div className="flex gap-2  ">
+        <div className="flex gap-2 ">
           <Pill
             label="Departure"
             dateStr={oneStr}
             onClick={() => setOpen(true)}
-             className="border border-gray-300 rounded-lg h-20 py-2"
+             
             
           />
           {/* NEW: clicking the muted Return pill promotes to round-trip */}
@@ -203,7 +203,7 @@ export default function FirsttripCalendarClone({
         {open && (
           <div
             ref={popRef}
-            className="absolute z-50 mt-2 w-[90vw] sm:w-[360px] bg-white border border-gray-200 rounded-2xl shadow-xl p-3"
+            className="absolute z-50 mt-2 w-[90vw] sm:w-[360px]  bg-white border border-gray-200 rounded-2xl shadow-xl p-3"
           >
             <DayPicker
               mode="single"
@@ -240,10 +240,10 @@ export default function FirsttripCalendarClone({
         onClick();
         setOpen(true);
       }}
-      className={`flex-1 rounded-md px-3 py-2 text-left bg-white transition border ${
+      className={`flex-1 h-20 border border-gray-300 rounded-lg px-3 py-2 text-left bg-white transition border ${
         active
-          ? "border-red-500 ring-1 ring-red-200"
-          : "border-gray-300 hover:bg-gray-50"
+          ? "border-gray-300 "
+          : "border-gray-300 "
       }`}
     >
       <div className="text-[11px] text-gray-500">{label}</div>

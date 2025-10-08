@@ -9,7 +9,7 @@ import {
   LuChevronUp,
 } from "react-icons/lu";
 import fastest from "../LandingPages/assets/fastest.png"
-import cheapest from "../LandingPages/assets/cheapest.png"
+import cheapest from "../LandingPages/assets/cheapestWhite.png"
 import earliest from "../LandingPages/assets/earliest.png"
 
 export default function FlightSortBar({
@@ -73,7 +73,7 @@ export default function FlightSortBar({
   };
 
   const pillBase =
-    "flex items-center gap-3 rounded-lg  border-b-2 px-1 h-17 min-w-[200px]  transition";
+    "flex items-center gap-3 rounded-lg  border-b-2 px-1 h-17 min-w-[208px]  transition";
   const inactive =
     "bg-white border-gray-200 hover:border-gray-300 text-gray-800";
   const active = "bg-red-50 border-red-600 text-red-600";
@@ -99,7 +99,7 @@ export default function FlightSortBar({
           <img
             src={cheapest}
             className={`${
-              sortKey === "cheapest" ? "bg-red-600 w-12 h-13 p-3 rounded-md" : "text-gray-700 bg-slate-100 rounded-md w-12 h-13 p-3"
+              sortKey === "cheapest" ? "bg-red-600 w-12 h-13 p-3 rounded-md" : "text-black bg-slate-100 rounded-md w-12 h-13 p-3"
             }`}
           />
         </span>

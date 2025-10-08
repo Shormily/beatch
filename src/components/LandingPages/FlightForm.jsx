@@ -309,7 +309,7 @@ export default function FlightForm({
         </div>
 
         {/* Dates */}
-        <div className="flex-1 min-w-[250px] ">
+        <div className="flex-1 min-w-[250px]  ">
           <FirsttripCalendarClone
             disableReturn={isOneWay}
             defaultDeparture={saved.departureDate || ""}
