@@ -846,9 +846,7 @@ export default function FlightSearchPage() {
         return false;
 
       // stops (only show nonstop if checked)
-      if (stops === 0) {
-        if (!filters.stops.nonstop) return false;
-      }
+      if (filters.stops.nonstop && stops !== 0) return false;
 
       // layover: convert minutes -> hours (rounded)
       const layH = Math.round((layMin || 0) / 60);
