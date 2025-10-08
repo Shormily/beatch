@@ -8,12 +8,12 @@ import {
   LuChevronDown,
   LuChevronUp,
 } from "react-icons/lu";
-import fastest from "../LandingPages/assets/fastest.png"
-import fastestWhite from "../LandingPages/assets/fastestWhite.png"
-import cheapest from "../LandingPages/assets/cheapest.png"
-import cheapestWhite from "../LandingPages/assets/cheapestWhite.png"
-import earliest from "../LandingPages/assets/earliest.png"
-import earliestWhitee from "../LandingPages/assets/earliestWhitee.png"
+import fastest from "../LandingPages/assets/fastest.png";
+import fastestWhite from "../LandingPages/assets/fastestWhite.png";
+import cheapest from "../LandingPages/assets/cheapest.png";
+import cheapestWhite from "../LandingPages/assets/cheapestWhite.png";
+import earliest from "../LandingPages/assets/earliest.png";
+import earliestWhitee from "../LandingPages/assets/earliestWhitee.png";
 
 export default function FlightSortBar({
   sortKey,
@@ -82,7 +82,11 @@ export default function FlightSortBar({
   const active = "bg-red-50 border-red-600 text-red-600";
 
   const Sub = ({ children, active }) => (
-    <span className={`text-xs ${active ? "text-red-600 font-semibold" : "text-black font-semibold"}`}>
+    <span
+      className={`text-xs ${
+        active ? "text-red-600 font-semibold" : "text-black font-semibold"
+      }`}
+    >
       {children}
     </span>
   );
@@ -95,16 +99,19 @@ export default function FlightSortBar({
         className={`${pillBase} ${sortKey === "cheapest" ? active : inactive}`}
       >
         <span
-          className={`grid place-items-center mx-1  rounded-full ${sortKey === "cheapest" ? "bg-white/15" : "bg-gray-100"
-            }`}
+          className={`grid place-items-center mx-1  rounded-full ${
+            sortKey === "cheapest" ? "bg-white/15" : "bg-gray-100"
+          }`}
         >
           <img
             src={sortKey === "cheapest" ? cheapestWhite : cheapest}
             alt="Cheapest"
-             className={`${sortKey === "cheapest" ? "bg-red-600 w-12 h-13 p-3 rounded-md" : "text-gray-700 bg-slate-100 rounded-md w-12 h-13 p-3"
-              }`}
+            className={`${
+              sortKey === "cheapest"
+                ? "bg-red-600 w-12 h-13 p-3 rounded-md"
+                : "text-gray-700 bg-slate-200 rounded-md w-12 h-13 p-3"
+            }`}
           />
-
         </span>
         <div className="flex flex-col ">
           <span className="text- font-medium ">Cheapest</span>
@@ -120,13 +127,17 @@ export default function FlightSortBar({
         className={`${pillBase} ${sortKey === "fastest" ? active : inactive}`}
       >
         <span
-          className={`grid place-items-center mx-1 rounded-full ${sortKey === "fastest" ? "bg-white/15" : "bg-gray-100"
-            }`}
+          className={`grid place-items-center mx-1 rounded-full ${
+            sortKey === "fastest" ? "bg-white/15" : "bg-gray-100"
+          }`}
         >
           <img
             src={sortKey === "fastest" ? fastestWhite : fastest}
-            className={`${sortKey === "fastest" ? "bg-red-600 w-12 h-13 p-3 rounded-md" : "text-gray-700 bg-slate-100 rounded-md w-12 h-13 p-3"
-              }`}
+            className={`${
+              sortKey === "fastest"
+                ? "bg-red-600 w-12 h-13 p-3 rounded-md"
+                : "text-gray-700 bg-slate-200 rounded-md w-12 h-13 p-3"
+            }`}
           />
         </span>
         <div className="flex flex-col leading-4">
@@ -143,13 +154,17 @@ export default function FlightSortBar({
         className={`${pillBase} ${sortKey === "earliest" ? active : inactive}`}
       >
         <span
-          className={`grid place-items-center mx-1 rounded-full ${sortKey === "earliest" ? "bg-white/15" : "bg-gray-100"
-            }`}
+          className={`grid place-items-center mx-1 rounded-full ${
+            sortKey === "earliest" ? "bg-white/15" : "bg-gray-100"
+          }`}
         >
           <img
             src={sortKey === "earliest" ? earliestWhitee : earliest}
-            className={`${sortKey === "earliest" ? "bg-red-600 w-12 h-13 p-3 rounded-md" : "text-gray-700 bg-slate-100 rounded-md w-12 h-13 p-3"
-              }`}
+            className={`${
+              sortKey === "earliest"
+                ? "bg-red-600 w-12 h-13 p-3 rounded-md"
+                : "text-gray-700 bg-slate-200 rounded-md w-12 h-13 p-3"
+            }`}
           />
         </span>
         <div className="flex flex-col leading-4">
@@ -175,8 +190,10 @@ export default function FlightSortBar({
           <div className="flex items-center ">
             <span className="text-sm font-semibold px-2">More Sorts</span>
           </div>
-          <div className="px-4"> {open ? <LuChevronUp /> : <LuChevronDown />}</div>
-         
+          <div className="px-4">
+            {" "}
+            {open ? <LuChevronUp /> : <LuChevronDown />}
+          </div>
         </button>
 
         {open && (
@@ -192,9 +209,10 @@ export default function FlightSortBar({
                   key={key}
                   role="menuitem"
                   className={`w-full text-left px-4 py-3 text-sm transition flex items-center justify-between
-                    ${isActive
-                      ? "bg-gray-50 text-gray-900"
-                      : "hover:bg-gray-50 text-gray-800"
+                    ${
+                      isActive
+                        ? "bg-gray-50 text-gray-900"
+                        : "hover:bg-gray-50 text-gray-800"
                     }`}
                   onClick={() => {
                     onChange(key);

@@ -132,12 +132,13 @@ export default function AirportSelect({
     }
     return [...starts, ...includes].slice(0, maxResults);
   }, [
-    debouncedQ,
+    usingAllAirports,
     airports,
     bdAirports,
-    maxResults,
+    excludeCode,
+    debouncedQ,
     minChars,
-    usingAllAirports,
+    maxResults,
   ]);
 
   // Keep highlight in bounds
@@ -220,11 +221,18 @@ export default function AirportSelect({
   return (
     <div className={`relative ${className}`} ref={boxRef}>
       <div
-        className="h-20 border border-gray-300 rounded-lg px-3 pt-2 pb-4 bg-white transition flex flex-col"
+        className="h-20 border cursor-pointer pointer-events-auto border-gray-300 rounded-lg px-3 pt-2 pb-4 bg-white transition flex flex-col"
         role="combobox"
         aria-expanded={open}
         aria-owns="airport-listbox"
         aria-haspopup="listbox"
+        onClick={(e) => {
+          // Prevent refocus loops or duplicate triggering
+          if (e.target.tagName !== "INPUT") {
+            setOpen(true);
+            inputRef.current?.focus();
+          }
+        }}
       >
         {/* Label */}
         <span className="text-[12px] text-gray-500">{label}</span>
@@ -236,13 +244,13 @@ export default function AirportSelect({
           }`}
         >
           <input
-            ref={inputRef}
             className="outline-none bg-transparent font-normal placeholder-gray-600 text-[14px] w-full"
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
               setOpen(true);
             }}
+            ref={inputRef}
             onFocus={handleFocus}
             onKeyDown={onKeyDown}
             placeholder={placeholder}

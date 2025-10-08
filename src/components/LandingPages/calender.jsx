@@ -47,7 +47,6 @@ export default function FirsttripCalendarClone({
   autoOpenAt = null, // 'start' | 'end' | null
   onPromoteRoundTrip, // () => void
   onRequestOneWayClear, // () => void
-   
 }) {
   const today = useMemo(() => startOfDay(new Date()), []);
   const minDate = useMemo(
@@ -156,14 +155,14 @@ export default function FirsttripCalendarClone({
   if (disableReturn) {
     const oneStr = startDate ? format(startDate, "d LLL, yyyy") : "";
 
-    const Pill = ({ label, dateStr, muted, onClick}) => (
+    const Pill = ({ label, dateStr, muted, onClick }) => (
       <button
         type="button"
         onMouseDown={() => {
           openingRef.current = true;
           onClick?.();
         }}
-        className={`flex-1 h-20 border border-gray-300 rounded-lg px-3 text-left bg-white hover:bg-gray-50 transition ${
+        className={`flex-1 h-20 border border-gray-300 rounded-lg px-3 text-left bg-white hover:bg-gray-50 cursor-pointer transition ${
           muted ? "opacity-60" : ""
         }`}
       >
@@ -184,8 +183,6 @@ export default function FirsttripCalendarClone({
             label="Departure"
             dateStr={oneStr}
             onClick={() => setOpen(true)}
-             
-            
           />
           {/* NEW: clicking the muted Return pill promotes to round-trip */}
           <Pill
@@ -196,7 +193,6 @@ export default function FirsttripCalendarClone({
               onPromoteRoundTrip && onPromoteRoundTrip();
               // parent will change props; the autoOpenAt='end' will open us in RT mode
             }}
-            
           />
         </div>
 
@@ -241,9 +237,7 @@ export default function FirsttripCalendarClone({
         setOpen(true);
       }}
       className={`flex-1 h-20 border border-gray-300 rounded-lg px-3 py-2 text-left bg-white transition border ${
-        active
-          ? "border-gray-300 "
-          : "border-gray-300 "
+        active ? "border-gray-300 " : "border-gray-300 "
       }`}
     >
       <div className="text-[11px] text-gray-500">{label}</div>

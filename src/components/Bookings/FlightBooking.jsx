@@ -24,7 +24,11 @@ const TitleChoice = ({ text, active, onClick }) => (
     type="button"
     onClick={onClick}
     className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-semibold transition-colors
-      ${active ? "border-red-500 bg-red-50 text-red-600" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
+      ${
+        active
+          ? "border-red-500 bg-red-50 text-red-600"
+          : "border-gray-300 text-gray-700 hover:bg-gray-50"
+      }`}
   >
     <img src={mr} className={active ? "text-red-500" : "text-gray-500"} />
     {text}
@@ -39,10 +43,15 @@ const FloatingInput = ({ label, type = "text", required, ...props }) => {
     <div className="relative w-full font-murecho">
       <label
         className={`absolute left-3 top-1/2 -translate-y-1/2  transition-all duration-200 pointer-events-none
-          ${focused || props.value ? "top-2 text-[12px] pt-2 text-gray-700 font-normal" : "text-[15px] text-gray-700 font-medium"}
+          ${
+            focused || props.value
+              ? "top-2 text-[12px] pt-2 text-gray-700 font-normal"
+              : "text-[15px] text-gray-700 font-medium"
+          }
         `}
       >
-        {label}{required && "*"}
+        {label}
+        {required && "*"}
       </label>
       <input
         type={type}
@@ -69,14 +78,24 @@ const Select = ({ children, ...props }) => (
 
 /* ------------------ Phone Input ------------------ */
 const PhoneInput = () => (
-  <div className="flex h-16 w-full items-center gap-2 rounded-md border border-gray-300 bg-white px-3 
-                  outline-none">
+  <div
+    className="flex h-16 w-full items-center gap-2 rounded-md border border-gray-300 bg-white px-3 
+                  outline-none"
+  >
     <div className="flex items-center gap-2 text-sm text-gray-700 bg-sky-50 font-medium pr-6 py-1.2 rounded-lg">
-      <img src="https://flagcdn.com/16x12/bd.png" alt="BD" className="h-3 w-4 rounded-sm" />
+      <img
+        src="https://flagcdn.com/16x12/bd.png"
+        alt="BD"
+        className="h-3 w-4 rounded-sm"
+      />
       <span>+880</span>
     </div>
     <span className="text-gray-300">|</span>
-    <input type="tel" placeholder="Mobile" className="h-16 w-full text-sm text-gray-800 focus:outline-none" />
+    <input
+      type="tel"
+      placeholder="Mobile"
+      className="h-16 w-full text-sm text-gray-800 focus:outline-none"
+    />
   </div>
 );
 
@@ -106,30 +125,19 @@ export default function FlightBooking() {
             <div className="w-full ">
               <nav aria-label="" className="">
                 <div className="flex  rounded-full text-sm p-1  ">
-                  <button
-                    className=
-                    " bg-red-50 text-red-600 rounded-full z-10 font-semibold text-[14px] px-16 py-3.5 transition  border border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
-                  >
+                  <button className=" bg-red-50 text-red-600 rounded-full z-10 font-semibold text-[14px] px-16 py-3.5 transition  border border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]">
                     1. Traveller Info
                   </button>
-                  <button
-                    className=" rounded-r-full ml-[-15px] z-8  bg-slate-100 text-gray-400 font-semibold px-14 py-3.5 transition border-t border-r border-b border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
-                  >
+                  <button className=" rounded-r-full ml-[-15px] z-8  bg-slate-200 text-gray-400 font-semibold px-14 py-3.5 transition border-t border-r border-b border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]">
                     2. Add-ons
                   </button>
-                  <button
-                    className="rounded-r-full ml-[-15px] z-5 px-14 py-3 bg-slate-100 text-gray-400 font-semibold transition border-t border-r border-b border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
-                  >
+                  <button className="rounded-r-full ml-[-15px] z-5 px-14 py-3 bg-slate-200 text-gray-400 font-semibold transition border-t border-r border-b border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]">
                     3. Payment Info
                   </button>
 
-                  <button
-                    className=" rounded-r-full  ml-[-15px] px-14 py-3 bg-slate-100 text-gray-400 font-semibold transition border-t border-r border-b border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
-                  >
+                  <button className=" rounded-r-full  ml-[-15px] px-14 py-3 bg-slate-200 text-gray-400 font-semibold transition border-t border-r border-b border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]">
                     4. Preview
                   </button>
-
-
                 </div>
               </nav>
             </div>
@@ -138,13 +146,18 @@ export default function FlightBooking() {
           <div className="rounded-2xl  ">
             <div className="mb-1 flex items-center justify-between">
               <div className="flex items-center gap-2 text-gray-700 mb-1 mt-3">
-             <FcAlarmClock size={25} className="text-red-500  " />
+                <FcAlarmClock size={25} className="text-red-500  " />
                 <span className="text-md font-semibold">Time Remaining</span>
               </div>
-              <span className="text-lg font-semibold text-gray-800 ">{label}</span>
+              <span className="text-lg font-semibold text-gray-800 ">
+                {label}
+              </span>
             </div>
             <div className="h-1.5 w-full   overflow-hidden rounded-full bg-red-100">
-              <div className="h-full bg-red-700 " style={{ width: `${pct}%` }} />
+              <div
+                className="h-full bg-red-700 "
+                style={{ width: `${pct}%` }}
+              />
             </div>
           </div>
         </div>
@@ -152,17 +165,22 @@ export default function FlightBooking() {
         {/* Main content */}
         <div className="mt-4 grid grid-cols-[1fr_340px] gap-6 items-start">
           {/* Left card */}
-          <div className={`rounded-2xl border border-gray-200 bg-white ${collapsed ? "p-4" : "p-5"} shadow-sm`}>
+          <div
+            className={`rounded-2xl border border-gray-200 bg-white ${
+              collapsed ? "p-4" : "p-5"
+            } shadow-sm`}
+          >
             {/* row badges */}
             <div className="mb-3 flex items-center justify-between">
               <div className="flex flex-wrap items-center gap-2">
                 {topBadges.map((b) => (
                   <button
                     key={b.k}
-                    className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${b.primary
-                      ? "border-teal-500 bg-teal-600/10 text-teal-700"
-                      : "border-gray-300 text-gray-700"
-                      }`}
+                    className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${
+                      b.primary
+                        ? "border-teal-500 bg-teal-600/10 text-teal-700"
+                        : "border-gray-300 text-gray-700"
+                    }`}
                     type="button"
                   >
                     {b.text}
@@ -178,7 +196,11 @@ export default function FlightBooking() {
                 aria-expanded={!collapsed}
                 aria-controls="traveller-form"
               >
-                {collapsed ? <img src={prev} alt="prev" className="h-4" /> : <img src={next} alt="next" className="h-4" />}
+                {collapsed ? (
+                  <img src={prev} alt="prev" className="h-4" />
+                ) : (
+                  <img src={next} alt="next" className="h-4" />
+                )}
               </button>
             </div>
 
@@ -186,7 +208,9 @@ export default function FlightBooking() {
               <div id="traveller-form" className="mt-2">
                 {/* Personal Info */}
                 <div className=" flex gap-2 pb-3">
-                  <div className="text-[18px] font-semibold text-gray-900">Personal Info</div>
+                  <div className="text-[18px] font-semibold text-gray-900">
+                    Personal Info
+                  </div>
                   <div className="text-[13px] text-gray-800 mt-1">
                     As mentioned on your passport or government approved IDs
                   </div>
@@ -195,7 +219,12 @@ export default function FlightBooking() {
                 {/* Title buttons */}
                 <div className="mb-4 flex flex-wrap gap-2">
                   {["Mr", "Mrs", "Ms"].map((t) => (
-                    <TitleChoice key={t} text={t} active={title === t} onClick={() => setTitle(t)} />
+                    <TitleChoice
+                      key={t}
+                      text={t}
+                      active={title === t}
+                      onClick={() => setTitle(t)}
+                    />
                   ))}
                 </div>
 
@@ -206,7 +235,7 @@ export default function FlightBooking() {
                   <FloatingInput label="Date of Birth" required />
 
                   <div className="relative">
-                    <Select >
+                    <Select>
                       <option>Bangladeshi</option>
                       <option>Indian</option>
                       <option>Pakistani</option>
@@ -221,8 +250,12 @@ export default function FlightBooking() {
 
                 {/* Contact Info */}
                 <div className="mt-5 flex gap-2">
-                  <div className="text-[15px] font-semibold text-gray-900">Contact Info</div>
-                  <div className="text-[12px] text-gray-500 mt-1">For booking confirmation & updates</div>
+                  <div className="text-[15px] font-semibold text-gray-900">
+                    Contact Info
+                  </div>
+                  <div className="text-[12px] text-gray-500 mt-1">
+                    For booking confirmation & updates
+                  </div>
                 </div>
                 <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <PhoneInput />
@@ -232,7 +265,10 @@ export default function FlightBooking() {
                 {/* Frequent Flyer */}
                 <div className="mt-5">
                   <div className="text-[13px] font-semibold text-gray-900">
-                    Frequent Flyer Program <span className="text-gray-400 font-normal">(Optional)</span>
+                    Frequent Flyer Program{" "}
+                    <span className="text-gray-400 font-normal">
+                      (Optional)
+                    </span>
                   </div>
                 </div>
                 <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -254,7 +290,9 @@ export default function FlightBooking() {
 
           {/* Right summary card */}
           <aside className="self-start rounded-2xl border border-gray-200 bg-white p-4 shadow-sm max-h-[360px] overflow-hidden">
-            <div className="mb-3 text-sm font-semibold text-gray-800">Fare Summary</div>
+            <div className="mb-3 text-sm font-semibold text-gray-800">
+              Fare Summary
+            </div>
 
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2 text-gray-700">
@@ -265,7 +303,9 @@ export default function FlightBooking() {
                 />
                 <span className="text-sm font-medium">US Bangla Airlines</span>
               </div>
-              <button className="text-xs font-medium text-blue-600 hover:underline">Details</button>
+              <button className="text-xs font-medium text-blue-600 hover:underline">
+                Details
+              </button>
             </div>
 
             <div className="mb-2 text-sm text-gray-700">

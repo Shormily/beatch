@@ -19,6 +19,21 @@ const fmtTime = (t) =>
     : "";
 const safe = (v, d = "") => (v === undefined || v === null || v === "" ? d : v);
 
+// map cabin code/label -> nice label
+const cabinLabel = (raw) => {
+  const v = String(raw || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "_");
+  if (!v) return "Economy";
+  if (["Y", "ECONOMY"].includes(v)) return "Economy";
+  if (["PREMIUM_ECONOMY", "PREMIUM", "PREMIUM_ECO"].includes(v))
+    return "Premium Economy";
+  if (["BUSINESS", "C", "J"].includes(v)) return "Business";
+  if (["FIRST", "F"].includes(v)) return "First Class";
+  return raw; // fallback to whatever came
+};
+
 // pick legs (outbound/return)
 const getLegs = (flight) => {
   if (Array.isArray(flight?.flights) && flight.flights.length)
@@ -37,24 +52,6 @@ const firstLastSeg = (leg) => {
   return { segs, first, last };
 };
 
-const airlineFromFlight = (flight) => {
-  const legs = getLegs(flight);
-  const { first } = firstLastSeg(legs[0] || {});
-  const code =
-    first?.airline?.optAirlineCode ||
-    first?.airline?.code ||
-    flight?.raw?.validatingCarrierCode ||
-    "";
-  const validatingCarrier =
-    flight?.validatingCarrier || flight?.raw?.validatingCarrier || "";
-  const name =
-    first?.airline?.optAirline ||
-    first?.airline?.name ||
-    validatingCarrier ||
-    code;
-  return { code, name };
-};
-
 const seatsLeftFromFlight = (flight) => {
   const legs = getLegs(flight);
   for (const leg of legs) {
@@ -71,7 +68,7 @@ const isRefundable = (flight) =>
   flight?.raw?.totalFare?.refundable ??
   false;
 
-// build pax map for right panel
+// pax helpers
 const getPassengerFares = (flight) =>
   flight?.fares?.[0]?.passengerFares ||
   flight?.raw?.fares?.[0]?.passengerFares ||
@@ -102,7 +99,7 @@ const paxLabel = (t) =>
     ? "Infant"
     : t;
 
-/* =============== row component to match screenshot =============== */
+/* =============== row component =============== */
 function TimelineRow({ leg }) {
   const { first, last } = firstLastSeg(leg);
   const airlineCode =
@@ -135,9 +132,8 @@ function TimelineRow({ leg }) {
   return (
     <div className="w-full">
       <div className="grid grid-cols-[auto_1fr] items-center gap-1">
-        {/* left: single airline badge + stacked name (like screenshot) */}
-        <div className="flex items-center gap-3 min-w-[170px]">
-          <div className="w-14 h-14 p-2 rounded-full bg-gray-100 overflow-hidden">
+        <div className="flex w-fit items-center gap-3 ">
+          <div className="aspect-square rounded-full bg-gray-100 overflow-hidden">
             <img
               src={`https://airlines.a4aero.com/images/${airlineCode}.png`}
               alt={airlineCode}
@@ -149,18 +145,15 @@ function TimelineRow({ leg }) {
           </div>
         </div>
 
-        {/* center: date/time blocks at edges + dashed route in middle */}
-        <div className="flex items-center justify-between">
-          {/* left time */}
+        <div className="flex w-2/3 items-center justify-between">
           <div className="text-left ">
-            <p className="text-[12px] text-gray-500 font-semibold">{depDate}</p>
-            <p className="font-semibold text-[20px] ">
-              {fmtTime(depTime)}
+            <p className="text-sm text-gray-500 whitespace-nowrap font-semibold">
+              {depDate}
             </p>
+            <p className="font-semibold text-[20px] ">{fmtTime(depTime)}</p>
             <p className="text-sm text-gray-500 font-semibold">{depCode}</p>
           </div>
 
-          {/* route + duration + stops */}
           <div className="flex flex-col items-center min-w-[240px]">
             <div className="text-[12px] font-medium text-gray-700 mb-1">
               {safe(duration, "—")}
@@ -168,24 +161,20 @@ function TimelineRow({ leg }) {
             <div className="flex items-center gap-2 w-full">
               <span className="" />
               <div className="justify-center items-center m-auto">
-                <img
-                  src={planeImg}
-                  alt="air route"
-                  className="h-4 "
-                />
+                <img src={planeImg} alt="air route" className="h-4 " />
               </div>
-              
             </div>
             <div className="text-[12px] text-gray-500 mt-1">{stopText}</div>
           </div>
 
-          {/* right time */}
           <div className="text-right ml-3">
-            <p className="text-xs">{arrDate}</p>
+            <p className="text-sm text-gray-500 whitespace-nowrap font-semibold">
+              {arrDate}
+            </p>
             <p className="font-semibold text-[20px] leading-none">
               {fmtTime(arrTime)}
             </p>
-            <p className="text-sm text-gray-600">{arrCode}</p>
+            <p className="text-sm text-gray-500 font-semibold">{arrCode}</p>
           </div>
         </div>
       </div>
@@ -196,15 +185,32 @@ function TimelineRow({ leg }) {
 /* =============== main =============== */
 export default function FlightCard({ flight }) {
   const [open, setOpen] = useState(false);
-
   const legs = useMemo(() => getLegs(flight), [flight]);
   const isRoundTrip = legs.length >= 2;
 
-  // keep seats/refundable/top math
   const seatsLeft = useMemo(() => seatsLeftFromFlight(flight), [flight]);
   const refundable = useMemo(() => isRefundable(flight), [flight]);
 
   const paxMap = useMemo(() => buildPaxMap(flight), [flight]);
+
+  // traveler count
+  const travelerCount = useMemo(
+    () =>
+      Object.values(paxMap).reduce(
+        (sum, row) => sum + Number(row?.quantity || 0),
+        0
+      ),
+    [paxMap]
+  );
+
+  // travel class (pull from common spots in your API payload)
+  const travelClass = cabinLabel(
+    flight?.travelClass ||
+      flight?.raw?.cabinClasse ||
+      flight?.raw?.criteria?.cabinClasse ||
+      flight?.raw?.searchRequest?.cabinClasse
+  );
+
   const airFareBDT =
     (paxMap.ADT?.base || 0) +
     (paxMap.ADT?.tax || 0) +
@@ -218,23 +224,25 @@ export default function FlightCard({ flight }) {
   const totalBDT = Math.max(airFareBDT - couponBDT, 0);
 
   return (
-    <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl border border-gray-200 overflow-hidden font-murecho shadow-sm relative">
+    <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl font-murecho relative">
       {/* header chips */}
-      <div className="pt-3 flex   px-4">
+      <div className="pt-3 flex px-4">
         <span className="text-red-700 flex items-center gap-1 px-2 bg-red-50 rounded-full text-[12px] font-medium">
           <RiMoneyRupeeCircleFill size={16} className="opacity-70" />
           {refundable ? "Partially Refundable" : "Non-refundable"}
         </span>
+
         {seatsLeft ? (
-          // How to justify end please create it just change this code
-          <span className="text-red-700 flex items-center gap-1 px-2 bg-red-50 rounded-full text-[12px] border border-red-700 font-medium justify-end ml-84">
+          <span className="ml-auto text-red-700 flex items-center gap-1 px-2 bg-red-50 rounded-full text-[12px] border border-red-700 font-medium">
             <MdAirlineSeatReclineNormal size={16} className="opacity-70" />
             {seatsLeft} seat(s) left
           </span>
-        ) : null}
+        ) : (
+          <span className="ml-auto" />
+        )}
 
         {!open && (
-          <span className="ml-auto bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-[11px] font-semibold inline-flex items-center gap-2">
+          <span className="ml-2 bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-[11px] font-semibold inline-flex items-center gap-2">
             <img src={coupon} alt="coupon" className="w-4 h-4" />
             <span>{promoCode}</span>
           </span>
@@ -243,26 +251,23 @@ export default function FlightCard({ flight }) {
 
       {/* main row */}
       <div className="flex flex-col lg:flex-row items-stretch relative">
-        {/* left side: summary + tabs */}
+        {/* left side */}
         <div className="flex-1 p-5">
-          {/* brand (left) + stacked rows (center) */}
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-            {!isRoundTrip ? (
+          {!isRoundTrip ? (
+            <TimelineRow leg={legs[0]} />
+          ) : (
+            <div className="w-full">
               <TimelineRow leg={legs[0]} />
-            ) : (
-              <div className="w-full">
-                <TimelineRow leg={legs[0]} />
-                <div className="border-t my-4 border-gray-200" />
-                <TimelineRow leg={legs[1]} />
-              </div>
-            )}
-          </div>
+              <div className="border-t my-4 border-gray-200" />
+              <TimelineRow leg={legs[1]} />
+            </div>
+          )}
 
           <div className="border-t border-gray-200 my-5" />
 
           {/* toggle */}
           {!open ? (
-            <div className=" relative flex items-center ">
+            <div className="relative flex items-center">
               <span className="text-sky-900 flex gap-1 px-2 bg-blue-50 p-1 rounded-full">
                 <BiLike size={18} />
                 <span className="text-[12px] font-medium">Recommended</span>
@@ -278,8 +283,8 @@ export default function FlightCard({ flight }) {
           ) : (
             <>
               <CustomTabs flight={flight} />
-              <div className="border-t border-gray-200 " />
-              <div className="mt-3 relative flex items-center ">
+              <div className="border-t border-gray-200" />
+              <div className="mt-3 relative flex items-center">
                 <span className="text-sky-900 flex gap-1 px-2 bg-blue-50 p-1 rounded-full">
                   <BiLike size={18} />
                   <span className="text-[12px] font-medium">Recommended</span>
@@ -298,6 +303,9 @@ export default function FlightCard({ flight }) {
 
         {/* right side: price panel */}
         <aside className="lg:w-64 lg:self-stretch border-t lg:border-t-0 lg:border-l border-dashed border-gray-300 p-4 flex flex-col justify-between relative mb-6">
+          <div className="size-6 bg-slate-200 rounded-full absolute -top-[48px] -left-[10px]" />
+          <div className="size-6 bg-slate-200 rounded-full absolute -bottom-[35px] -left-[10px]" />
+
           {!open ? (
             <div className="flex flex-col items-end">
               <p className="text-red-600 text-2xl font-extrabold mt-2 leading-none">
@@ -306,6 +314,13 @@ export default function FlightCard({ flight }) {
               <p className="text-xs line-through text-gray-400 mt-1">
                 BDT {airFareBDT.toLocaleString()}
               </p>
+
+              {/* NEW: class + traveler count (matches your screenshot) */}
+              <p className="text-sm text-gray-700 mt-2">{travelClass}</p>
+              <p className="text-sm text-gray-700">
+                {travelerCount} {travelerCount === 1 ? "Traveler" : "Travelers"}
+              </p>
+
               <div className="mt-4 flex items-center gap-3 w-full">
                 <button
                   type="button"
@@ -329,7 +344,10 @@ export default function FlightCard({ flight }) {
                   const row = paxMap[t];
                   if (!row || row.quantity <= 0) return null;
                   return (
-                    <div key={t} className="bg-slate-100 rounded-lg p-3 text-sm">
+                    <div
+                      key={t}
+                      className="bg-slate-100 rounded-lg p-3 text-sm"
+                    >
                       <div className="flex items-center justify-between">
                         <span className="text-gray-700 font-semibold text-[16px]">
                           {paxLabel(t)} X {row.quantity}
@@ -375,6 +393,13 @@ export default function FlightCard({ flight }) {
                   </p>
                   <p className="text-xs line-through text-gray-400 mt-1">
                     BDT {airFareBDT.toLocaleString()}
+                  </p>
+
+                  {/* ALSO SHOW class + travelers in expanded view */}
+                  <p className="text-sm text-gray-700 mt-2">{travelClass}</p>
+                  <p className="text-sm text-gray-700">
+                    {travelerCount}{" "}
+                    {travelerCount === 1 ? "Traveler" : "Travelers"}
                   </p>
                 </div>
               </div>

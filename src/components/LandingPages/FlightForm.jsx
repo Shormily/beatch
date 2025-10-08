@@ -254,7 +254,7 @@ export default function FlightForm({
       onBlur={onBlur}
     >
       {/* Trip type */}
-      
+
       <div className="flex gap-2 mb-5">
         {[
           { key: "ONE_WAY", label: "One Way" },
@@ -321,7 +321,6 @@ export default function FlightForm({
             autoOpenAt={calendarAutoOpenAt} // 'start' | 'end' | null
             onPromoteRoundTrip={handlePromoteRoundTrip} // called when Return pill clicked in one-way
             onRequestOneWayClear={handleClearToOneWay} // called by “Clear return / One-way” button
-           
           />
         </div>
 
@@ -343,10 +342,9 @@ export default function FlightForm({
             <CiSearch size={36} />
             <span className="lg:hidden font-semibold text-sm">Search</span>
           </button>
-          <MissingHint />
+          {/* <MissingHint /> */}
         </div>
       </div>
-
     </div>
   );
 }

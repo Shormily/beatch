@@ -9,6 +9,8 @@ import FlightCard from "./FlightCard";
 import { searchFlights } from "../../redux/slices/flightsSlice";
 import FlightSortBar from "./FlightSortBar";
 import AirlineMinBar from "./AirlineMinBar";
+import LoadingCard from "./LoadingCard";
+import AirlineMinBarSkeleton from "./AirlineMinBarSkeleton";
 
 /* ================= tiny utils ================= */
 
@@ -764,7 +766,7 @@ export default function FlightSearchPage() {
   const [filters, setFilters] = useState({
     price: [priceMin, priceMax],
     layoverHours: [layMin, layMax],
-    stops: { nonstop: true },
+    stops: { nonstop: false },
     airlines: new Set(),
     depSlots: new Set(),
     arrSlots: new Set(),
@@ -936,7 +938,7 @@ export default function FlightSearchPage() {
   /* ---- render ---- */
 
   return (
-    <section className="bg-slate-100">
+    <section className="bg-slate-200">
       <div className="max-w-[1200px] m-auto">
         <div className="flex flex-col md:flex-row gap-4 p-4">
           {/* Left Sidebar */}
@@ -1063,11 +1065,17 @@ export default function FlightSearchPage() {
             </div>
 
             <div className="mb-3">
-              <AirlineMinBar
-                items={airlineAgg}
-                selected={filters.airlines}
-                onToggle={toggleAirlineFilter}
-              />
+              <div className="mb-3">
+                {status === "loading" && <AirlineMinBarSkeleton count={3} />}
+
+                {status === "succeeded" && (
+                  <AirlineMinBar
+                    items={airlineAgg}
+                    selected={filters.airlines}
+                    onToggle={toggleAirlineFilter}
+                  />
+                )}
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -1114,11 +1122,10 @@ export default function FlightSearchPage() {
 
               {status === "loading" && (
                 <>
-                  <div className="bg-white rounded-md p-4 animate-pulse h-28" />
-                  <div className="bg-white rounded-md p-4 animate-pulse h-28" />
-                  <div className="bg-white rounded-md p-4 animate-pulse h-28" />
-                  <div className="bg-white rounded-md p-4 animate-pulse h-28" />
-                  <div className="bg-white rounded-md p-4 animate-pulse h-28" />
+                  <LoadingCard />
+                  <LoadingCard />
+                  <LoadingCard />
+                  <LoadingCard />
                 </>
               )}
             </div>
