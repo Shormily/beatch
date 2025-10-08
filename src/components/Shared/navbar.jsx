@@ -95,12 +95,6 @@ export default function Navbar() {
                 >
                   Sign Up
                 </Link>
-
-                {/* ✅ Google Translate Button */}
-                <div
-                  id="google_translate_element"
-                  className="ml-3 border border-gray-300 rounded-md px-2 py-1 bg-white text-sm"
-                ></div>
               </div>
 
               {/* Mobile Noti */}
