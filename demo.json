@@ -1,0 +1,796 @@
+{
+  "searchId": "8af875ac9f474b90ae2a4bbe8fcaa489",
+  "results": [
+    {
+      "resultID": "8af875ac9f474b90ae2a4bbe8fcaa489-1",
+      "flightKey": "BG-BG227DACZYL202510152000-BG252ZYLDAC202510250955",
+      "validatingCarrierCode": "BG",
+      "validatingCarrier": "Biman Bangladesh Airlines",
+      "flights": [
+        {
+          "flightInfoId": "DAC-ZYL",
+          "cabinClass": "",
+          "flyDate": "2025-10-15",
+          "totalElapsedTime": "55m",
+          "totalStops": 0,
+          "flightSegments": [
+            {
+              "flightInfoId": "",
+              "segmentInfoId": "DAC-ZYL",
+              "segmentRPH": 1,
+              "cabinType": "ECONOMY",
+              "cabinTypeCode": "Y",
+              "bookingClass": "G",
+              "fareBasisCode": "GSPCLR",
+              "elapsedTime": "01h 55m",
+              "elapsedTimeMinutes": 55,
+              "totalMilesFlown": 124,
+              "stops": 0,
+              "stayTime": null,
+              "stopover": "",
+              "departure": {
+                "airport": {
+                  "airportCode": "DAC",
+                  "airportName": "Hazrat Shahjalal International Airport",
+                  "terminal": null,
+                  "gate": null,
+                  "cityCode": "DAC",
+                  "cityName": "Dhaka",
+                  "countryCode": "BD",
+                  "countryName": "Bangladesh"
+                },
+                "depTime": "20:00",
+                "depDate": "15 Oct, 2025"
+              },
+              "arrival": {
+                "airport": {
+                  "airportCode": "ZYL",
+                  "airportName": "Sylhet Osmany Arpt",
+                  "terminal": null,
+                  "gate": null,
+                  "cityCode": "ZYL",
+                  "cityName": "Sylhet",
+                  "countryCode": "BD",
+                  "countryName": "Bangladesh"
+                },
+                "arrTime": "20:55",
+                "arrDate": "15 Oct, 2025",
+                "dateAdjustment": 0
+              },
+              "airline": {
+                "code": "BG",
+                "name": "Biman Bangladesh Airlines",
+                "flightNo": "227",
+                "codeShare": null,
+                "optAirlineCode": "BG",
+                "optAirline": "Biman Bangladesh Airlines",
+                "optFlightNo": "227",
+                "aircraftType": null,
+                "aircraftTypeCode": "738"
+              },
+              "layoverTime": "",
+              "layoverTimeInMinutes": 0,
+              "numberOfSeats": 3,
+              "flightStatusCode": null,
+              "flightStatus": null,
+              "jsonData": null
+            }
+          ],
+          "data": ""
+        },
+        {
+          "flightInfoId": "ZYL-DAC",
+          "cabinClass": "",
+          "flyDate": "2025-10-25",
+          "totalElapsedTime": "50m",
+          "totalStops": 0,
+          "flightSegments": [
+            {
+              "flightInfoId": "",
+              "segmentInfoId": "ZYL-DAC",
+              "segmentRPH": 2,
+              "cabinType": "ECONOMY",
+              "cabinTypeCode": "Y",
+              "bookingClass": "G",
+              "fareBasisCode": "GSPCLR",
+              "elapsedTime": "01h 50m",
+              "elapsedTimeMinutes": 50,
+              "totalMilesFlown": 124,
+              "stops": 0,
+              "stayTime": null,
+              "stopover": "",
+              "departure": {
+                "airport": {
+                  "airportCode": "ZYL",
+                  "airportName": "Sylhet Osmany Arpt",
+                  "terminal": null,
+                  "gate": null,
+                  "cityCode": "ZYL",
+                  "cityName": "Sylhet",
+                  "countryCode": "BD",
+                  "countryName": "Bangladesh"
+                },
+                "depTime": "09:55",
+                "depDate": "25 Oct, 2025"
+              },
+              "arrival": {
+                "airport": {
+                  "airportCode": "DAC",
+                  "airportName": "Hazrat Shahjalal International Airport",
+                  "terminal": "D",
+                  "gate": null,
+                  "cityCode": "DAC",
+                  "cityName": "Dhaka",
+                  "countryCode": "BD",
+                  "countryName": "Bangladesh"
+                },
+                "arrTime": "10:45",
+                "arrDate": "25 Oct, 2025",
+                "dateAdjustment": 0
+              },
+              "airline": {
+                "code": "BG",
+                "name": "Biman Bangladesh Airlines",
+                "flightNo": "252",
+                "codeShare": null,
+                "optAirlineCode": "BG",
+                "optAirline": "Biman Bangladesh Airlines",
+                "optFlightNo": "252",
+                "aircraftType": null,
+                "aircraftTypeCode": "738"
+              },
+              "layoverTime": "",
+              "layoverTimeInMinutes": 0,
+              "numberOfSeats": 9,
+              "flightStatusCode": null,
+              "flightStatus": null,
+              "jsonData": null
+            }
+          ],
+          "data": ""
+        }
+      ],
+      "fares": [
+        {
+          "fareInfoID": 0,
+          "fareInfoTitle": "MIP",
+          "lastTicketTime": "",
+          "validatingCarrierCode": "BG",
+          "passengerFares": [
+            {
+              "passengerIds": null,
+              "passengerType": "ADT",
+              "quantity": 1,
+              "refundable": true,
+              "refundableType": 2,
+              "referanceFares": [
+                {
+                  "currency": "BDT",
+                  "amount": 4048,
+                  "exchangeRate": 0.035,
+                  "type": "FARE"
+                },
+                {
+                  "currency": "BDT",
+                  "amount": 2350,
+                  "exchangeRate": 0.035,
+                  "type": "TAX"
+                }
+              ],
+              "currency": "MYR",
+              "baseFare": 141.68,
+              "taxes": 82.25,
+              "subTotalFare": 223.93,
+              "commissionLess": 0,
+              "markupAddOn": 0,
+              "discountLess": 0,
+              "totalFare": 223.93,
+              "vendorCommission": 0,
+              "plbCommission": 0,
+              "segmentCommission": 0,
+              "otherCharges": 0,
+              "otherChargesList": [],
+              "baggages": [
+                {
+                  "type": "CheckedIn",
+                  "description": "20K",
+                  "segmentInfoId": "DAC-ZYL",
+                  "flightInfoId": "DAC-ZYL",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                },
+                {
+                  "type": "CheckedIn",
+                  "description": "20K",
+                  "segmentInfoId": "ZYL-DAC",
+                  "flightInfoId": "ZYL-DAC",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                },
+                {
+                  "type": "CarryOn",
+                  "description": "7K",
+                  "segmentInfoId": "DAC-ZYL",
+                  "flightInfoId": "DAC-ZYL",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                },
+                {
+                  "type": "CarryOn",
+                  "description": "7K",
+                  "segmentInfoId": "ZYL-DAC",
+                  "flightInfoId": "ZYL-DAC",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                }
+              ],
+              "penalties": [
+                {
+                  "type": "Before Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 105.0,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 3000,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 105.0,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 3000,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "Before Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 70.0,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 2000,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 70.0,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 2000,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                },
+                {
+                  "type": "Before Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 105.0,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 3000,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 105.0,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 3000,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "Before Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 70.0,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 2000,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 70.0,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 2000,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                }
+              ],
+              "cabins": "",
+              "rbds": "",
+              "ticketData": "",
+              "brandId": "",
+              "data": ""
+            },
+            {
+              "passengerIds": null,
+              "passengerType": "CHD",
+              "quantity": 1,
+              "refundable": true,
+              "refundableType": 2,
+              "referanceFares": [
+                {
+                  "currency": "BDT",
+                  "amount": 3036,
+                  "exchangeRate": 0.035,
+                  "type": "FARE"
+                },
+                {
+                  "currency": "BDT",
+                  "amount": 1950,
+                  "exchangeRate": 0.035,
+                  "type": "TAX"
+                }
+              ],
+              "currency": "MYR",
+              "baseFare": 106.26,
+              "taxes": 68.25,
+              "subTotalFare": 174.51,
+              "commissionLess": 0,
+              "markupAddOn": 0,
+              "discountLess": 0,
+              "totalFare": 174.51,
+              "vendorCommission": 0,
+              "plbCommission": 0,
+              "segmentCommission": 0,
+              "otherCharges": 0,
+              "otherChargesList": [],
+              "baggages": [
+                {
+                  "type": "CheckedIn",
+                  "description": "20K",
+                  "segmentInfoId": "DAC-ZYL",
+                  "flightInfoId": "DAC-ZYL",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                },
+                {
+                  "type": "CheckedIn",
+                  "description": "20K",
+                  "segmentInfoId": "ZYL-DAC",
+                  "flightInfoId": "ZYL-DAC",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                },
+                {
+                  "type": "CarryOn",
+                  "description": "7K",
+                  "segmentInfoId": "DAC-ZYL",
+                  "flightInfoId": "DAC-ZYL",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                },
+                {
+                  "type": "CarryOn",
+                  "description": "7K",
+                  "segmentInfoId": "ZYL-DAC",
+                  "flightInfoId": "ZYL-DAC",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                }
+              ],
+              "penalties": [
+                {
+                  "type": "Before Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 78.75,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 2250,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 78.75,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 2250,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "Before Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 52.5,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 1500,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 52.5,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 1500,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                },
+                {
+                  "type": "Before Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 78.75,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 2250,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 78.75,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 2250,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "Before Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 52.5,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 1500,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 52.5,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 1500,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                }
+              ],
+              "cabins": "",
+              "rbds": "",
+              "ticketData": "",
+              "brandId": "",
+              "data": ""
+            },
+            {
+              "passengerIds": null,
+              "passengerType": "INF",
+              "quantity": 1,
+              "refundable": true,
+              "refundableType": 2,
+              "referanceFares": [
+                {
+                  "currency": "BDT",
+                  "amount": 405,
+                  "exchangeRate": 0.035,
+                  "type": "FARE"
+                },
+                {
+                  "currency": "BDT",
+                  "amount": 492,
+                  "exchangeRate": 0.035,
+                  "type": "TAX"
+                }
+              ],
+              "currency": "MYR",
+              "baseFare": 14.18,
+              "taxes": 17.22,
+              "subTotalFare": 31.4,
+              "commissionLess": 0,
+              "markupAddOn": 0,
+              "discountLess": 0,
+              "totalFare": 31.4,
+              "vendorCommission": 0,
+              "plbCommission": 0,
+              "segmentCommission": 0,
+              "otherCharges": 0,
+              "otherChargesList": [],
+              "baggages": [
+                {
+                  "type": "CheckedIn",
+                  "description": "10K",
+                  "segmentInfoId": "DAC-ZYL",
+                  "flightInfoId": "DAC-ZYL",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                },
+                {
+                  "type": "CheckedIn",
+                  "description": "10K",
+                  "segmentInfoId": "ZYL-DAC",
+                  "flightInfoId": "ZYL-DAC",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                },
+                {
+                  "type": "CarryOn",
+                  "description": "7K",
+                  "segmentInfoId": "DAC-ZYL",
+                  "flightInfoId": "DAC-ZYL",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                },
+                {
+                  "type": "CarryOn",
+                  "description": "7K",
+                  "segmentInfoId": "ZYL-DAC",
+                  "flightInfoId": "ZYL-DAC",
+                  "items": [],
+                  "provisionType": "",
+                  "airlineCode": "",
+                  "pieceCount": null,
+                  "unit": null,
+                  "weight": null
+                }
+              ],
+              "penalties": [
+                {
+                  "type": "Before Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 10.5,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 300,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 10.5,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 300,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "Before Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 7.0,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 200,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "DAC-ZYL",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 7.0,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 200,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                },
+                {
+                  "type": "Before Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 10.5,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 300,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": true,
+                  "amount": 10.5,
+                  "currency": "MYR",
+                  "refundable": null,
+                  "referanceAmount": 300,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CHANGE"
+                },
+                {
+                  "type": "Before Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 7.0,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 200,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                },
+                {
+                  "type": "After Departure",
+                  "route": "ZYL-DAC",
+                  "applicability": "",
+                  "changeable": null,
+                  "amount": 7.0,
+                  "currency": "MYR",
+                  "refundable": true,
+                  "referanceAmount": 200,
+                  "referanceCurrency": "BDT",
+                  "exchangeRate": 0.035,
+                  "group": "CANCEL"
+                }
+              ],
+              "cabins": "",
+              "rbds": "",
+              "ticketData": "",
+              "brandId": "",
+              "data": ""
+            }
+          ],
+          "markupId": "",
+          "brands": [],
+          "jsonData": "[{\"FareBasisCode\":\"GSPCLR/IN90\",\"SegmentRph\":1,\"FlightInfoId\":\"DAC-ZYL\",\"SegmentInfoId\":null,\"ClassOfService\":\"G\",\"BrandCode\":null,\"OfferId\":null,\"OfferItemId\":null},{\"FareBasisCode\":\"GSPCLR/IN90\",\"SegmentRph\":2,\"FlightInfoId\":\"ZYL-DAC\",\"SegmentInfoId\":null,\"ClassOfService\":\"G\",\"BrandCode\":null,\"OfferId\":null,\"OfferItemId\":null}]",
+          "privateFareCode": null
+        }
+      ],
+      "totalFare": {
+        "fareInfoID": 0,
+        "fareInfoTitle": "MIP",
+        "nonRefundable": false,
+        "refundable": true,
+        "refundableType": 2,
+        "currency": "MYR",
+        "totalFare": 429.84,
+        "serviceCharge": 0,
+        "markupAddOn": 0,
+        "segmentCommission": 0,
+        "subTotalFare": 429.84,
+        "totalCommissionLess": 0,
+        "totalDiscountLess": 0,
+        "miscCharge": 0,
+        "ait": 0,
+        "otherCharges": 0,
+        "otherChargesList": []
+      },
+      "revalidated": false,
+      "flyTypeId": 1,
+      "tripTypeId": 2,
+      "fareTypeId": null,
+      "stops": 0,
+      "isExcluded": null,
+      "isManualTkt": null,
+      "selectedFareInfoID": 0,
+      "apiId": 1001,
+      "api": "S",
+      "badgeType": 0,
+      "badge": "",
+      "bookingData": "",
+      "ancillaryAvailability": {
+        "paidBag": null,
+        "paidSeat": null
+      },
+      "isBookingDocument": null,
+      "isBookingAllowed": true,
+      "source": null
+    }
+  ],
+  "dcc": "BD",
+  "isOk": null,
+  "message": null
+}

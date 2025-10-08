@@ -1,17 +1,60 @@
 // FareModalDemo.jsx
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
+
+/* ---------- small helpers ---------- */
+const safe = (v, d = "—") =>
+  v === undefined || v === null || v === "" ? d : v;
+const pad4 = (t) => (t ? String(t).padStart(4, "0") : "");
+const fmtTime = (t) => (t ? pad4(t).replace(/(\d{2})(\d{2})/, "$1:$2") : "—");
+
+const getLegs = (flight) =>
+  Array.isArray(flight?.flights) && flight.flights.length
+    ? flight.flights
+    : Array.isArray(flight?.raw?.flights) && flight.raw.flights.length
+    ? flight.raw.flights
+    : [];
+
+const firstLastSeg = (leg) => {
+  const segs = Array.isArray(leg?.flightSegments) ? leg.flightSegments : [];
+  const first = segs[0] || {};
+  const last = segs.length ? segs[segs.length - 1] : {};
+  return { segs, first, last };
+};
 
 export default function FareModalDemo({ flight }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const scrollRef = useRef(null);
 
-  // Parse fare options dynamically from flight.raw.fares
+  /* ---------- header info (works for one-way & round-trip) ---------- */
+  const legs = useMemo(() => getLegs(flight), [flight]);
+  const tripType = legs.length > 1 ? "Round Trip" : "One Way";
+
+  // First leg + last leg to get overall O&D
+  const firstLeg = legs[0] || {};
+  const lastLeg = legs.length > 1 ? legs[legs.length - 1] : legs[0] || {};
+
+  const { first: flFirst, last: flLast } = firstLastSeg(firstLeg);
+  const { last: llLast } = firstLastSeg(lastLeg);
+
+  const depCity = flFirst?.departure?.airport?.cityName;
+  const depCityCode =
+    flFirst?.departure?.airport?.cityCode ||
+    flFirst?.departure?.airport?.airportCode;
+  const arrCity = llLast?.arrival?.airport?.cityName;
+  const arrCityCode =
+    llLast?.arrival?.airport?.cityCode || llLast?.arrival?.airport?.airportCode;
+
+  const firstLegFlyDate = firstLeg?.flyDate; // e.g. "2025-10-15"
+  const firstLegDepTime = flFirst?.departure?.depTime;
+  const firstLegArrTime = flFirst?.arrival?.arrTime; // same-seg arrival (simple header line)
+
+  /* ---------- fare options from raw.fares (keep your design) ---------- */
   const fareOptions =
     flight?.raw?.fares?.map((f, i) => {
-      const firstPax = f.passengerFares?.[0];
-
+      const firstPax = f.passengerFares?.[0] || {};
+      // BDT base + tax from first passenger type (as in your modal)
       const base =
         firstPax?.referanceFares?.find(
           (r) => r.currency === "BDT" && r.type === "FARE"
@@ -22,24 +65,31 @@ export default function FareModalDemo({ flight }) {
           (r) => r.currency === "BDT" && r.type === "TAX"
         )?.amount ?? 0;
 
-      const total = base + tax;
+      const total = Number(base) + Number(tax);
 
-      // Extract refund & reissue details (simplified)
-      const refundAllowed = firstPax?.penalties?.some(
-        (p) => p.group === "CANCEL"
-      );
-      const reissueAllowed = firstPax?.penalties?.some(
-        (p) => p.group === "CHANGE"
-      );
+      // Refund / Reissue flags (any penalty group match)
+      const refundAllowed = Array.isArray(firstPax?.penalties)
+        ? firstPax.penalties.some(
+            (p) => (p?.group || "").toUpperCase() === "CANCEL"
+          )
+        : false;
 
-      // Extract baggage info
-      const baggageList = firstPax?.baggages || [];
+      const reissueAllowed = Array.isArray(firstPax?.penalties)
+        ? firstPax.penalties.some(
+            (p) => (p?.group || "").toUpperCase() === "CHANGE"
+          )
+        : false;
+
+      // Baggage list (keep your layout)
+      const baggageList = Array.isArray(firstPax?.baggages)
+        ? firstPax.baggages
+        : [];
 
       return {
         id: f.fareInfoID ?? `fare-${i}`,
         title: f.fareInfoTitle || "Economy",
         price: total,
-        refundable: firstPax?.refundable,
+        refundable: !!firstPax?.refundable,
         refundAllowed,
         reissueAllowed,
         baggages: baggageList,
@@ -102,39 +152,30 @@ export default function FareModalDemo({ flight }) {
                 More fare options available for your trip.
               </h3>
 
-              {/* Flight summary header */}
+              {/* Flight summary header (fixed for round-trip) */}
               <div className="bg-sky-50 border border-gray-200">
-                <div className="flex items-center gap-3 pt-4 text-sm text-gray-600">
+                <div className="flex flex-wrap items-center gap-3 pt-4 px-4 text-sm text-gray-600">
                   <div className="flex items-center gap-2 font-medium text-gray-700">
-                    <span>
-                      {
-                        flight?.raw?.flights?.[0]?.flightSegments?.[0]
-                          ?.departure?.airport?.cityName
-                      }
-                    </span>
+                    <span>{safe(depCity, depCityCode)}</span>
                     <span className="text-gray-400">→</span>
-                    <span>
-                      {
-                        flight?.raw?.flights?.[0]?.flightSegments?.[0]?.arrival
-                          ?.airport?.cityName
-                      }
-                    </span>
+                    <span>{safe(arrCity, arrCityCode)}</span>
                   </div>
                   <div className="text-gray-400">•</div>
-                  <div>{flight?.validatingCarrier || "Airline"}</div>
+                  <div>{safe(flight?.validatingCarrier, "Airline")}</div>
                   <div className="text-gray-400">•</div>
                   <div className="text-sm">
-                    {flight?.raw?.flights?.[0]?.flyDate} • Departure at{" "}
-                    {
-                      flight?.raw?.flights?.[0]?.flightSegments?.[0]?.departure
-                        ?.depTime
-                    }{" "}
-                    - Arrival at{" "}
-                    {
-                      flight?.raw?.flights?.[0]?.flightSegments?.[0]?.arrival
-                        ?.arrTime
-                    }
+                    {safe(firstLegFlyDate)} • Departure at{" "}
+                    {fmtTime(firstLegDepTime)} – Arrival at{" "}
+                    {fmtTime(firstLegArrTime)}
                   </div>
+                  {legs.length > 1 && (
+                    <>
+                      <div className="text-gray-400">•</div>
+                      <div className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-600 font-semibold">
+                        {tripType}
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Fare cards carousel */}
@@ -185,7 +226,7 @@ export default function FareModalDemo({ flight }) {
                         <div className="flex items-start justify-between">
                           <div>
                             <h4 className="text-lg font-semibold text-gray-800">
-                              {f.title}
+                              {safe(f.title, "Economy")}
                             </h4>
                             <div className="text-xs text-gray-500 mt-1">
                               fare offered by airline
@@ -194,17 +235,18 @@ export default function FareModalDemo({ flight }) {
                           <div className="text-right">
                             <div className="text-xs text-gray-500">BDT</div>
                             <div className="text-2xl font-bold text-red-600">
-                              {f.price.toLocaleString()}
+                              {Number(f.price).toLocaleString()}
                             </div>
                           </div>
                         </div>
 
+                        {/* Features list */}
                         <div className="mt-4 rounded-md p-3 text-sm text-gray-700 h-64 overflow-y-auto">
                           <div className="text-xs font-medium bg-sky-50 p-2 rounded-md text-gray-800 mb-2">
                             Baggage
                           </div>
                           <ul className="space-y-2">
-                            {f.baggages.map((b, i) => (
+                            {(f.baggages || []).map((b, i) => (
                               <li key={i} className="flex items-center gap-2">
                                 <svg
                                   className="w-4 h-4 text-teal-600"
@@ -220,7 +262,7 @@ export default function FareModalDemo({ flight }) {
                                   />
                                 </svg>
                                 <span className="text-sm text-gray-700">
-                                  {b.description}
+                                  {safe(b?.description)}
                                 </span>
                               </li>
                             ))}
@@ -257,7 +299,7 @@ export default function FareModalDemo({ flight }) {
                           <div className="text-sm text-gray-500">
                             BDT{" "}
                             <span className="font-bold text-xl text-red-600">
-                              {f.price.toLocaleString()}
+                              {Number(f.price).toLocaleString()}
                             </span>
                           </div>
                           <button
@@ -281,7 +323,7 @@ export default function FareModalDemo({ flight }) {
               <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div>
-                    <div className="text-xs text-gray-500">One Way</div>
+                    <div className="text-xs text-gray-500">{tripType}</div>
                     <div className="text-sm font-semibold text-sky-600">
                       {fareOptions.find((f) => f.id === selected)?.title || "—"}
                     </div>

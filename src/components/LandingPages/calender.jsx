@@ -1,3 +1,4 @@
+// src/LandingPages/calender.jsx
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { DayPicker } from "react-day-picker";
@@ -11,7 +12,7 @@ import {
   isWithinInterval,
 } from "date-fns";
 
-// --- helpers ---
+/* ---------- helpers ---------- */
 const strip = (d) => {
   if (!(d instanceof Date) || !isValid(d)) return null;
   const x = new Date(d);
@@ -33,7 +34,7 @@ const parseIn = (v, fb) => {
 const monthsFor = (oneWay) =>
   typeof window !== "undefined" && window.innerWidth < 640 ? 1 : oneWay ? 1 : 2;
 
-// --- component ---
+/* ---------- component ---------- */
 export default function FirsttripCalendarClone({
   disableReturn = false,
   departureISO,
@@ -42,6 +43,10 @@ export default function FirsttripCalendarClone({
   defaultDeparture,
   defaultReturn,
   minDepartureDate,
+  /* NEW: UX glue with parent */
+  autoOpenAt = null, // 'start' | 'end' | null
+  onPromoteRoundTrip, // () => void
+  onRequestOneWayClear, // () => void
 }) {
   const today = useMemo(() => startOfDay(new Date()), []);
   const minDate = useMemo(
@@ -65,12 +70,10 @@ export default function FirsttripCalendarClone({
   const [endDate, setEndDate] = useState(e0);
   const [open, setOpen] = useState(false);
   const [months, setMonths] = useState(monthsFor(disableReturn));
-  const [activeSide, setActiveSide] = useState("start");
+  const [activeSide, setActiveSide] = useState("start"); // 'start' | 'end'
 
   const containerRef = useRef(null);
   const popRef = useRef(null);
-
-  // NEW: shields the opening click so outside-click doesn't immediately close
   const openingRef = useRef(false);
 
   // Reset interaction state when switching modes (one-way <-> round-trip)
@@ -87,32 +90,23 @@ export default function FirsttripCalendarClone({
     setEndDate(disableReturn ? null : parseIn(returnISO, null));
   }, [isControlled, departureISO, returnISO, disableReturn, today]);
 
-  // close on outside click or Esc (with open-click shield)
+  // close on outside click / Esc
   useEffect(() => {
     if (!open) return;
-
     const onDoc = (e) => {
-      // if this event is the same press that opened, ignore once
       if (openingRef.current) {
         openingRef.current = false;
         return;
       }
       const root = containerRef.current;
       if (!root) return;
-      if (e.target instanceof Node && !root.contains(e.target)) {
-        setOpen(false);
-      }
+      if (e.target instanceof Node && !root.contains(e.target)) setOpen(false);
     };
-    const onKey = (e) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-
-    // Defer to avoid catching the opening click in the same tick
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
     const id = setTimeout(() => {
       document.addEventListener("mousedown", onDoc);
       document.addEventListener("keydown", onKey);
     }, 0);
-
     return () => {
       clearTimeout(id);
       document.removeEventListener("mousedown", onDoc);
@@ -150,16 +144,23 @@ export default function FirsttripCalendarClone({
     onDatesChange({ departureISO: depISO, returnISO: retISO });
   }, [startDate, endDate, disableReturn, onDatesChange]);
 
-  // ===== ONE-WAY =====
+  // NEW: programmatic auto open (after parent flips to round-trip)
+  useEffect(() => {
+    if (!autoOpenAt) return;
+    setActiveSide(autoOpenAt === "end" ? "end" : "start");
+    setOpen(true);
+  }, [autoOpenAt]);
+
+  /* ================= ONE-WAY ================= */
   if (disableReturn) {
     const oneStr = startDate ? format(startDate, "d LLL, yyyy") : "";
 
-    const Pill = ({ label, dateStr, muted }) => (
+    const Pill = ({ label, dateStr, muted, onClick }) => (
       <button
         type="button"
         onMouseDown={() => {
-          openingRef.current = true; // shield this click
-          setOpen(true);
+          openingRef.current = true;
+          onClick?.();
         }}
         className={`flex-1 border rounded-md px-3 py-2 text-left bg-white hover:bg-gray-50 transition ${
           muted ? "opacity-60" : ""
@@ -178,8 +179,21 @@ export default function FirsttripCalendarClone({
     return (
       <div ref={containerRef} className="relative">
         <div className="flex gap-2">
-          <Pill label="Departure" dateStr={oneStr} />
-          <Pill label="Return" dateStr="" muted />
+          <Pill
+            label="Departure"
+            dateStr={oneStr}
+            onClick={() => setOpen(true)}
+          />
+          {/* NEW: clicking the muted Return pill promotes to round-trip */}
+          <Pill
+            label="Return"
+            dateStr=""
+            muted
+            onClick={() => {
+              onPromoteRoundTrip && onPromoteRoundTrip();
+              // parent will change props; the autoOpenAt='end' will open us in RT mode
+            }}
+          />
         </div>
 
         {open && (
@@ -210,7 +224,7 @@ export default function FirsttripCalendarClone({
     );
   }
 
-  // ===== ROUND-TRIP =====
+  /* ================= ROUND-TRIP ================= */
   const depStr = startDate ? format(startDate, "d LLL, yyyy") : "";
   const retStr = endDate ? format(endDate, "d LLL, yyyy") : "";
 
@@ -218,7 +232,7 @@ export default function FirsttripCalendarClone({
     <button
       type="button"
       onMouseDown={() => {
-        openingRef.current = true; // shield this click
+        openingRef.current = true;
         onClick();
         setOpen(true);
       }}
@@ -280,7 +294,7 @@ export default function FirsttripCalendarClone({
     if (onDatesChange) {
       onDatesChange({
         departureISO: toIso(s),
-        returnISO: disableReturn ? "" : toIso(e),
+        returnISO: toIso(e),
       });
     }
   };
@@ -329,6 +343,33 @@ export default function FirsttripCalendarClone({
           ref={popRef}
           className="absolute z-50 mt-2 w-[90vw] sm:w-[680px] bg-white border border-gray-200 rounded-2xl shadow-xl p-3"
         >
+          {/* NEW: small header row with a clear button */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-700 px-1">
+              Select {activeSide === "start" ? "Departure" : "Return"} date
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                // clear return & request one-way on parent
+                onRequestOneWayClear && onRequestOneWayClear();
+                // locally reset + close
+                setEndDate(null);
+                setActiveSide("start");
+                setOpen(false);
+                onDatesChange &&
+                  onDatesChange({
+                    departureISO: toIso(startDate),
+                    returnISO: "",
+                  });
+              }}
+              className="text-xs px-2 py-1 rounded-full border border-gray-300 hover:bg-gray-50"
+              title="Clear return & set One-way"
+            >
+              Clear return • One-way
+            </button>
+          </div>
+
           <DayPicker
             mode="single"
             selected={[startDate, endDate].filter(Boolean)}

@@ -4,13 +4,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CiSearch } from "react-icons/ci";
 import { AiOutlineSwap } from "react-icons/ai";
-import FirsttripCalendarClone from "./calender";
+
 import AirportSelect from "./AirportSelect";
 import TravellerSelect from "../../pages/Traveller/TravellerSelect";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { searchFlights } from "../../redux/slices/flightsSlice";
 import { setForm } from "../../redux/slices/searchFormSlice";
+import FirsttripCalendarClone from "./calender";
 
 /* ---------------- helpers ---------------- */
 
@@ -75,6 +76,9 @@ export default function FlightForm({
 
   const [preferredAirline] = useState(saved.preferredAirline || "");
   const [apiId] = useState(saved.apiId || 1001);
+
+  // NEW: ask calendar to open at "start" or "end" after a state change
+  const [calendarAutoOpenAt, setCalendarAutoOpenAt] = useState(null); // 'start' | 'end' | null
 
   // Keep Redux form in sync whenever inputs change
   useEffect(() => {
@@ -143,7 +147,7 @@ export default function FlightForm({
     return hasFrom && hasTo && hasDep && hasRet && !sameAirport;
   }, [fromCode, toCode, departureDate, returnDate, isOneWay, sameAirport]);
 
-  // Build API request body for roundtrip/oneway (useful if your thunk posts it)
+  // Build API request body for roundtrip/oneway
   const buildRequestBody = () => {
     const originDestinationOptions = [
       {
@@ -170,22 +174,18 @@ export default function FlightForm({
     return {
       originDestinationOptions,
       passengers,
-      cabinClasse: normalizeCabin(trav.travelClass), // e.g., ECONOMY / BUSINESS / FIRST / PREMIUM_ECONOMY
-      preferredAirline: preferredAirline || undefined, // e.g., "BG", or "BG, EK"
-      apiId, // e.g., 1001 = Sabre BD
+      cabinClasse: normalizeCabin(trav.travelClass),
+      preferredAirline: preferredAirline || undefined,
+      apiId,
     };
   };
 
-  // Dispatch exactly like your original working version (flat payload),
-  // but we also attach the fully-formed request as __requestBody if you need it.
   const handleSearch = () => {
     if (!canSearch) return;
-
     const requestBody = buildRequestBody();
 
     dispatch(
       searchFlights({
-        // flat fields your thunk expects
         tripType,
         fromCode,
         toCode,
@@ -199,8 +199,6 @@ export default function FlightForm({
         travelClassLabel: trav.travelClass,
         preferredAirline,
         apiId,
-
-        // optional: exact API body
         __requestBody: requestBody,
       })
     );
@@ -208,10 +206,28 @@ export default function FlightForm({
     navigate("/searchresult");
   };
 
-  // ✅ Wire to your calendar's onDatesChange({ departureISO, returnISO })
+  // Calendar -> parent dates sync
   const handleCalendarDatesChange = ({ departureISO, returnISO }) => {
     setDepartureDate(departureISO || "");
-    setReturnDate(returnISO || ""); // ONE_WAY clearing is handled by the effect
+    setReturnDate(returnISO || "");
+  };
+
+  /* ====== NEW: UX glue with the calendar ======
+     1) If the user clicks the Return pill while in one-way,
+        calendar will call this to promote to round-trip and open on Return.
+     2) The calendar shows a small “One-way / Clear return” button — when pressed,
+        we clear return and flip back to one-way.
+  */
+  const handlePromoteRoundTrip = () => {
+    setTripType("ROUND_TRIP");
+    // Ask calendar to open with Return side active
+    setCalendarAutoOpenAt("end");
+  };
+
+  const handleClearToOneWay = () => {
+    setReturnDate("");
+    setTripType("ONE_WAY");
+    setCalendarAutoOpenAt(null);
   };
 
   // Small inline helper to show what’s missing
@@ -252,7 +268,11 @@ export default function FlightForm({
               type="radio"
               name="trip"
               checked={tripType === t.key}
-              onChange={() => setTripType(t.key)}
+              onChange={() => {
+                setTripType(t.key);
+                // if user manually flips to round-trip, open calendar on start
+                if (t.key === "ROUND_TRIP") setCalendarAutoOpenAt("start");
+              }}
               className="w-4 h-4 accent-red-600"
             />
             {t.label}
@@ -295,8 +315,11 @@ export default function FlightForm({
             defaultDeparture={saved.departureDate || ""}
             defaultReturn={saved.returnDate || ""}
             minDepartureDate={new Date()}
-            // 🔧 the correct prop name:
             onDatesChange={handleCalendarDatesChange}
+            /* NEW props for the UX glue */
+            autoOpenAt={calendarAutoOpenAt} // 'start' | 'end' | null
+            onPromoteRoundTrip={handlePromoteRoundTrip} // called when Return pill clicked in one-way
+            onRequestOneWayClear={handleClearToOneWay} // called by “Clear return / One-way” button
           />
         </div>
 

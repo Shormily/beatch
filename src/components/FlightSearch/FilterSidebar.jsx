@@ -10,7 +10,8 @@ import { searchFlights } from "../../redux/slices/flightsSlice";
 import FlightSortBar from "./FlightSortBar";
 import AirlineMinBar from "./AirlineMinBar";
 
-// ---------- tiny utils ----------
+/* ================= tiny utils ================= */
+
 const safe = (v, d = "") => (v === undefined || v === null ? d : v);
 
 const toShortDate = (isoOrLabel) => {
@@ -170,7 +171,8 @@ const slotLabel = {
   EVENING: { title: "Evening", range: "18:00–23:59" },
 };
 
-// ---------- Filter UI bits ----------
+/* ================= Filter UI bits ================= */
+
 function Section({ title, open, onToggle, children }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 mb-3">
@@ -223,8 +225,13 @@ function DualRange({
   const [a, b] = value;
   const lo = Math.min(a, b),
     hi = Math.max(a, b);
+
   const handleA = (e) => onChange([Number(e.target.value), hi]);
   const handleB = (e) => onChange([lo, Number(e.target.value)]);
+
+  // guard malformed bounds
+  const realMin = Number.isFinite(min) ? min : 0;
+  const realMax = Number.isFinite(max) && max > realMin ? max : realMin + 1;
 
   return (
     <div>
@@ -237,14 +244,14 @@ function DualRange({
         <div
           className="absolute h-2 rounded-full bg-red-600"
           style={{
-            left: `${((lo - min) / (max - min)) * 100}%`,
-            right: `${(1 - (hi - min) / (max - min)) * 100}%`,
+            left: `${((lo - realMin) / (realMax - realMin)) * 100}%`,
+            right: `${(1 - (hi - realMin) / (realMax - realMin)) * 100}%`,
           }}
         />
         <input
           type="range"
-          min={min}
-          max={max}
+          min={realMin}
+          max={realMax}
           step={step}
           value={lo}
           onChange={handleA}
@@ -252,8 +259,8 @@ function DualRange({
         />
         <input
           type="range"
-          min={min}
-          max={max}
+          min={realMin}
+          max={realMax}
           step={step}
           value={hi}
           onChange={handleB}
@@ -415,7 +422,7 @@ function FiltersSidebar({
         </div>
 
         <div className="mt-3 text-xs text-gray-500">
-          {schedTab === "dep" ? "Departure Dhaka: Anytime" : "Arrival: Anytime"}
+          {schedTab === "dep" ? "Departure: Anytime" : "Arrival: Anytime"}
         </div>
       </Section>
 
@@ -432,7 +439,6 @@ function FiltersSidebar({
             checked={value.baggage20kg}
             onChange={(e) => setField({ baggage20kg: e.target.checked })}
           />
-          <span>20 Kg</span>
         </label>
       </Section>
 
@@ -461,13 +467,13 @@ function FiltersSidebar({
       >
         <DualRange
           min={0}
-          max={Math.max(15, bounds.layMax)}
+          max={Math.max(1, bounds.layMax)} // hours
           value={value.layoverHours}
           onChange={(v) => setField({ layoverHours: v })}
           step={1}
           format={(v) => `${v} hrs`}
           minLabel="0 hrs"
-          maxLabel="15+ hrs"
+          maxLabel={`${Math.max(1, bounds.layMax)}+ hrs`}
         />
       </Section>
 
@@ -490,24 +496,15 @@ function FiltersSidebar({
                   <span>{ac}</span>
                 </label>
               ))
-            : ["ATR72", "ATR72-600", "ATR72S", "DH8D"].map((ac) => (
-                <label key={ac} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="accent-red-500"
-                    checked={value.aircraft.has(ac)}
-                    onChange={() => toggleSet("aircraft", ac)}
-                  />
-                  <span>{ac}</span>
-                </label>
-              ))}
+            : null}
         </div>
       </Section>
     </aside>
   );
 }
 
-// ---------- component ----------
+/* ================= page component ================= */
+
 export default function FlightSearchPage() {
   const dispatch = useDispatch();
   const { results, status, error, criteria } = useSelector(
@@ -518,10 +515,10 @@ export default function FlightSearchPage() {
   const depOD = criteria?.originDestinationOptions?.[0];
   const retOD = criteria?.originDestinationOptions?.[1];
 
-  // sorting key supports all options shown in FlightSortBar
   const [sortKey, setSortKey] = useState("best");
 
-  // ====== SHIFT DATE & RE-SEARCH ======
+  /* ---- date shift helpers ---- */
+
   const cabinToLabel = (c) => {
     switch ((c || "").toUpperCase()) {
       case "BUSINESS":
@@ -582,13 +579,14 @@ export default function FlightSearchPage() {
     dispatch(searchFlights(args));
   };
 
-  // ====== ENRICH ======
+  /* ---- enrich rows ---- */
+
   const enriched = useMemo(() => {
     return itineraries.map((it) => {
       const price = pickBDTPrice(it);
       const minutes = getDurationMinutes(it);
       const stops = getStops(it);
-      const layMin = totalLayoverMinutes(it);
+      const layMin = totalLayoverMinutes(it); // minutes
 
       const firstSeg = it?.flights?.[0]?.flightSegments?.[0];
       const lastSeg = it?.flights?.[0]?.flightSegments?.slice(-1)?.[0];
@@ -619,7 +617,15 @@ export default function FlightSearchPage() {
 
       const aircraft = new Set(
         (it?.flights?.[0]?.flightSegments || [])
-          .map((s) => s?.equipment?.code || s?.aircraft || s?.equipment || null)
+          .map(
+            (s) =>
+              s?.equipment?.code ||
+              s?.equipment ||
+              s?.aircraft ||
+              s?.airline?.aircraftTypeCode ||
+              s?.airline?.aircraftType ||
+              null
+          )
           .filter(Boolean)
       );
 
@@ -628,7 +634,7 @@ export default function FlightSearchPage() {
         price,
         minutes,
         stops,
-        layMin,
+        layMin, // minutes
         airlineCodes: Array.from(airlineCodes),
         aircraft: Array.from(aircraft),
         depMins,
@@ -639,8 +645,9 @@ export default function FlightSearchPage() {
     });
   }, [itineraries]);
 
+  /* ---- airline chips ---- */
+
   const airlineAgg = useMemo(() => {
-    // Map { code -> { count, min } }
     const map = new Map();
     for (const row of enriched) {
       const { price, airlineCodes } = row;
@@ -658,7 +665,6 @@ export default function FlightSearchPage() {
       .sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
   }, [enriched]);
 
-  // helper toggle to pass into AirlineMinBar (inside component, before return)
   const toggleAirlineFilter = (code) => {
     setFilters((f) => {
       const next = new Set(f.airlines);
@@ -667,7 +673,8 @@ export default function FlightSearchPage() {
     });
   };
 
-  // metrics for sort bar
+  /* ---- sort bar metrics ---- */
+
   const metrics = useMemo(() => {
     let cheapest = Infinity,
       fastest = Infinity,
@@ -702,12 +709,13 @@ export default function FlightSearchPage() {
     };
   }, [enriched]);
 
-  // global bounds
+  /* ---- bounds (price/layover/airlines/aircraft) ---- */
+
   const { priceMin, priceMax, layMin, layMax, airlineList, aircraftList } =
     useMemo(() => {
       let pMin = Infinity,
-        pMax = -Infinity,
-        lMax = 0;
+        pMax = -Infinity;
+      let lMaxHours = 0; // hours
       const airlinePriceMap = new Map();
       const aircraftSet = new Set();
 
@@ -716,20 +724,26 @@ export default function FlightSearchPage() {
           pMin = Math.min(pMin, price.total);
           pMax = Math.max(pMax, price.total);
         }
-        lMax = Math.max(lMax, Math.ceil((layMin || 0) / 60));
+        // convert minutes -> hours (rounded) to keep same unit as slider
+        const layH = Math.round((layMin || 0) / 60);
+        lMaxHours = Math.max(lMaxHours, layH);
+
         airlineCodes.forEach((c) => {
           const prev = airlinePriceMap.get(c);
           if (!prev || (Number.isFinite(price.total) && price.total < prev)) {
             airlinePriceMap.set(c, price.total);
           }
         });
+
         (aircraft || []).forEach((a) => aircraftSet.add(a));
       });
 
       if (!Number.isFinite(pMin)) pMin = 0;
       if (!Number.isFinite(pMax) || pMax < pMin) pMax = pMin + 1;
       if (pMax === pMin) pMax = pMin + 1;
-      if (!Number.isFinite(lMax) || lMax < 1) lMax = 1;
+
+      // add a little headroom on layover hours so slider doesn't clamp
+      const maxLayHours = Math.max(lMaxHours, 1);
 
       const list = Array.from(airlinePriceMap.entries())
         .map(([code, price]) => ({ code, price }))
@@ -739,13 +753,14 @@ export default function FlightSearchPage() {
         priceMin: Math.floor(pMin),
         priceMax: Math.ceil(pMax),
         layMin: 0,
-        layMax: Math.max(lMax, 1),
+        layMax: maxLayHours,
         airlineList: list,
         aircraftList: Array.from(aircraftSet).sort(),
       };
     }, [enriched]);
 
-  // FILTER STATE
+  /* ---- filters state ---- */
+
   const [filters, setFilters] = useState({
     price: [priceMin, priceMax],
     layoverHours: [layMin, layMax],
@@ -758,6 +773,7 @@ export default function FlightSearchPage() {
     aircraft: new Set(),
   });
 
+  // keep sliders in sync when bounds change
   useEffect(() => {
     setFilters((f) => ({
       ...f,
@@ -766,7 +782,8 @@ export default function FlightSearchPage() {
     }));
   }, [priceMin, priceMax, layMin, layMax]);
 
-  // timer UI
+  /* ---- timer UI ---- */
+
   const totalTime = 30 * 60;
   const [timeLeft, setTimeLeft] = useState(totalTime);
   useEffect(() => {
@@ -777,7 +794,8 @@ export default function FlightSearchPage() {
   const ss = String(timeLeft % 60).padStart(2, "0");
   const progress = (timeLeft / totalTime) * 100;
 
-  // sidebar dates
+  /* ---- date labels ---- */
+
   const depLabel =
     toShortDate(normalizeToISO(depOD?.flyDate)) ||
     (itineraries[0]?.flights?.[0]?.flightSegments?.[0]?.departure?.depDate ??
@@ -788,7 +806,8 @@ export default function FlightSearchPage() {
       ?.arrDate ??
       "");
 
-  // FILTER -> SORT -> DISPLAY
+  /* ---- FILTER -> SORT -> DISPLAY ---- */
+
   const view = useMemo(() => {
     const [pMin, pMax] = filters.price;
     const [loMinH, loMaxH] = filters.layoverHours;
@@ -808,6 +827,7 @@ export default function FlightSearchPage() {
       const { price, stops, layMin, airlineCodes, depSlot, arrSlot, aircraft } =
         row;
 
+      // price
       if (
         !Number.isFinite(price.total) ||
         price.total < pMin ||
@@ -815,22 +835,22 @@ export default function FlightSearchPage() {
       )
         return false;
 
-      // Stops (only show nonstop if checked)
+      // stops (only show nonstop if checked)
       if (stops === 0) {
         if (!filters.stops.nonstop) return false;
       }
 
-      // Layover
-      const layH = Math.ceil((layMin || 0) / 60);
+      // layover: convert minutes -> hours (rounded)
+      const layH = Math.round((layMin || 0) / 60);
       if (layH < loMinH || layH > loMaxH) return false;
 
-      // Airlines
+      // airlines
       if (filters.airlines.size > 0) {
         const hasAirline = airlineCodes?.some((c) => filters.airlines.has(c));
         if (!hasAirline) return false;
       }
 
-      // Departure slots
+      // dep slots
       if (
         filters.depSlots.size > 0 &&
         depSlot &&
@@ -838,7 +858,7 @@ export default function FlightSearchPage() {
       )
         return false;
 
-      // Arrival slots
+      // arr slots
       if (
         filters.arrSlots.size > 0 &&
         arrSlot &&
@@ -846,7 +866,7 @@ export default function FlightSearchPage() {
       )
         return false;
 
-      // Aircraft
+      // aircraft
       if (filters.aircraft.size > 0) {
         const hasAircraft =
           Array.isArray(aircraft) &&
@@ -854,7 +874,7 @@ export default function FlightSearchPage() {
         if (!hasAircraft) return false;
       }
 
-      // Baggage 20kg
+      // baggage 20kg
       if (filters.baggage20kg) {
         const brands = row?.it?.fares?.[0]?.brands || [];
         const allowOk = brands.some((b) => {
@@ -864,7 +884,7 @@ export default function FlightSearchPage() {
         if (!allowOk && brands.length) return false;
       }
 
-      // Refundable
+      // refundable
       if (filters.refundable) {
         const brands = row?.it?.fares?.[0]?.brands || [];
         const refOk = brands.some((b) => {
@@ -912,6 +932,8 @@ export default function FlightSearchPage() {
 
     return arr;
   }, [enriched, filters, sortKey]);
+
+  /* ---- render ---- */
 
   return (
     <section className="bg-slate-100">
@@ -1092,6 +1114,8 @@ export default function FlightSearchPage() {
 
               {status === "loading" && (
                 <>
+                  <div className="bg-white rounded-md p-4 animate-pulse h-28" />
+                  <div className="bg-white rounded-md p-4 animate-pulse h-28" />
                   <div className="bg-white rounded-md p-4 animate-pulse h-28" />
                   <div className="bg-white rounded-md p-4 animate-pulse h-28" />
                   <div className="bg-white rounded-md p-4 animate-pulse h-28" />
