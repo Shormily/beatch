@@ -19,7 +19,7 @@ export default function Searchresult() {
         className={`max-w-[1240px] px-8 mx-auto relative`}
         style={{ zIndex: formZ }}
       >
-        <div className="bg-white pt-14 pb-4">
+        <div className="bg-white  pb-4">
           {activeTab === "flight" && (
             <FlightForm
               showMissingHint={true} // 👈 hide the “Missing: …” helper on this page

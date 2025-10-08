@@ -309,7 +309,7 @@ export default function FlightForm({
         </div>
 
         {/* Dates */}
-        <div className="flex-1 min-w-[250px]">
+        <div className="flex-1 min-w-[250px] ">
           <FirsttripCalendarClone
             disableReturn={isOneWay}
             defaultDeparture={saved.departureDate || ""}
@@ -320,6 +320,7 @@ export default function FlightForm({
             autoOpenAt={calendarAutoOpenAt} // 'start' | 'end' | null
             onPromoteRoundTrip={handlePromoteRoundTrip} // called when Return pill clicked in one-way
             onRequestOneWayClear={handleClearToOneWay} // called by “Clear return / One-way” button
+           
           />
         </div>
 

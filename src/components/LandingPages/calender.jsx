@@ -47,6 +47,7 @@ export default function FirsttripCalendarClone({
   autoOpenAt = null, // 'start' | 'end' | null
   onPromoteRoundTrip, // () => void
   onRequestOneWayClear, // () => void
+   
 }) {
   const today = useMemo(() => startOfDay(new Date()), []);
   const minDate = useMemo(
@@ -155,7 +156,7 @@ export default function FirsttripCalendarClone({
   if (disableReturn) {
     const oneStr = startDate ? format(startDate, "d LLL, yyyy") : "";
 
-    const Pill = ({ label, dateStr, muted, onClick }) => (
+    const Pill = ({ label, dateStr, muted, onClick}) => (
       <button
         type="button"
         onMouseDown={() => {
@@ -178,11 +179,13 @@ export default function FirsttripCalendarClone({
 
     return (
       <div ref={containerRef} className="relative">
-        <div className="flex gap-2">
+        <div className="flex gap-2  ">
           <Pill
             label="Departure"
             dateStr={oneStr}
             onClick={() => setOpen(true)}
+             className="border border-gray-300 rounded-lg h-20 py-2"
+            
           />
           {/* NEW: clicking the muted Return pill promotes to round-trip */}
           <Pill
@@ -193,6 +196,7 @@ export default function FirsttripCalendarClone({
               onPromoteRoundTrip && onPromoteRoundTrip();
               // parent will change props; the autoOpenAt='end' will open us in RT mode
             }}
+            
           />
         </div>
 
