@@ -12,12 +12,23 @@ import { BiSolidPlaneAlt } from "react-icons/bi";
 import { loadAirports } from "../../redux/slices/airportsSlice";
 import bdAirportsData from "../../data/airports.json";
 
-// --- helpers ---
+/* ---------------- helpers ---------------- */
+
+// Extract IATA like "(DAC)" from a label if present
 const extractIataFromLabel = (txt = "") => {
   const m = String(txt || "")
     .toUpperCase()
     .match(/\(([A-Z]{3})\)/);
   return m ? m[1] : "";
+};
+
+// Normalize any incoming value to just the city part.
+// "City, Country" -> "City"
+// "City"          -> "City"
+const toCityOnly = (v = "") => {
+  const s = String(v || "").trim();
+  const m = /^([^,]+),\s*(.+)$/.exec(s);
+  return m ? m[1].trim() : s;
 };
 
 export default function AirportSelect({
@@ -32,6 +43,7 @@ export default function AirportSelect({
   debounceMs = 300,
   clearOnFocus = true,
   excludeCode,
+  disabled = false,
 }) {
   const dispatch = useDispatch();
   const {
@@ -44,60 +56,41 @@ export default function AirportSelect({
     error: null,
   };
 
-  // Use Redux when present; fallback to local JSON so lookups work on first paint
+  // Prefer Redux airports; fall back to bundled JSON so it works on first paint
   const allAirports = useMemo(() => {
-    const arr = airports && Array.isArray(airports) ? airports : [];
+    const arr = Array.isArray(airports) ? airports : [];
     const fallback = Array.isArray(bdAirportsData) ? bdAirportsData : [];
     return arr.length ? arr : fallback;
   }, [airports]);
 
-  // Bangladesh subset (shown when not typing)
+  // Bangladesh subset (used when not actively typing)
   const bdAirports = useMemo(
     () =>
       allAirports.filter((a) => (a.countryCode || "").toUpperCase() === "BD"),
     [allAirports]
   );
 
-  // Debug: warn if nothing to show
-  useEffect(() => {
-    if (!allAirports.length) {
-      console.warn(
-        "[AirportSelect] No airports loaded. Check redux slice and /data/airports.json."
-      );
-    }
-  }, [allAirports.length]);
-
-  // Debug: print BD list once
-  const printedRef = useRef(false);
-  useEffect(() => {
-    if (!printedRef.current && bdAirports.length) {
-      printedRef.current = true;
-      console.log(
-        "🇧🇩 BD airports loaded:",
-        JSON.stringify(bdAirports, null, 2)
-      );
-    }
-  }, [bdAirports]);
-
+  // Local state
   const [open, setOpen] = useState(false);
-  const [q, setQ] = useState(value || "");
+  const [q, setQ] = useState(toCityOnly(value) || ""); // 👈 city-only in the input
   const [highlight, setHighlight] = useState(-1);
 
-  // keep local q in sync with prop changes
+  // Keep local input synced with parent value (as city only)
   useEffect(() => {
-    setQ(value || "");
+    setQ(toCityOnly(value) || "");
   }, [value]);
 
+  // Refs
   const boxRef = useRef(null);
   const listRef = useRef(null);
   const inputRef = useRef(null);
-
   const lastCommittedRef = useRef(q);
-  useEffect(() => {
-    lastCommittedRef.current = value || q;
-  }, [value]);
 
-  // Load airports if needed from redux
+  useEffect(() => {
+    lastCommittedRef.current = toCityOnly(value || q || "");
+  }, [value, q]);
+
+  // Load airports via Redux on mount (if not already)
   useEffect(() => {
     if ((status === "idle" || status === "failed") && !airports?.length) {
       dispatch(loadAirports());
@@ -109,7 +102,6 @@ export default function AirportSelect({
     const onDocClick = (e) => {
       if (boxRef.current && !boxRef.current.contains(e.target)) {
         setOpen(false);
-        // restore previous if user cleared and didn't pick
         if ((q ?? "") === "" && (value ?? "") !== "") {
           setQ(lastCommittedRef.current || "");
         }
@@ -126,7 +118,7 @@ export default function AirportSelect({
     return () => clearTimeout(t);
   }, [q, debounceMs]);
 
-  // Pool selection: BD-only when not typing; ALL when typing (and threshold met)
+  // Decide whether to search all airports or just BD
   const usingAllAirports = useMemo(() => {
     const len = (debouncedQ || "").length;
     if (!debouncedQ) return false;
@@ -134,7 +126,7 @@ export default function AirportSelect({
     return true;
   }, [debouncedQ, minChars]);
 
-  // Filter options
+  // Filter options based on query and exclude code
   const filtered = useMemo(() => {
     const pool = usingAllAirports ? allAirports : bdAirports;
     const exclude = (excludeCode || "").trim().toUpperCase();
@@ -142,7 +134,6 @@ export default function AirportSelect({
       ? pool.filter((a) => (a.code || "").toUpperCase() !== exclude)
       : pool;
 
-    // If nothing typed, show first page
     const needle = (debouncedQ || "").toLowerCase();
     if (!needle) return base.slice(0, maxResults);
 
@@ -181,37 +172,47 @@ export default function AirportSelect({
     maxResults,
   ]);
 
-  // keep highlight valid
+  // Keep highlight index valid
   useEffect(() => {
     setHighlight((h) =>
       filtered.length ? Math.max(0, Math.min(h, filtered.length - 1)) : -1
     );
   }, [filtered.length]);
 
-  // Resolve the selected airport by "(CODE)" first, then "City, Country"
+  // Resolve the selected airport for the subtitle line:
+  // 1) try by (CODE) if input carries it, 2) by "City, Country", 3) exact city-only match (unique)
   const selectedAirport = useMemo(() => {
     const label = (q || value || "").trim();
-    // Try "(CODE)" format
-    const code = extractIataFromLabel(label);
-    if (code) {
-      const byCode = allAirports.find(
-        (a) => (a.code || "").toUpperCase() === code
+
+    const byCode = (() => {
+      const code = extractIataFromLabel(label);
+      if (!code) return null;
+      return (
+        allAirports.find((a) => (a.code || "").toUpperCase() === code) || null
       );
-      if (byCode) return byCode;
-    }
-    // Fallback: "City, Country"
-    const lc = label.toLowerCase();
-    return (
+    })();
+    if (byCode) return byCode;
+
+    const byCityCountry =
       allAirports.find(
-        (a) => `${a.cityName}, ${a.countryName}`.toLowerCase() === lc
-      ) || null
+        (a) =>
+          `${a.cityName}, ${a.countryName}`.toLowerCase() ===
+          label.toLowerCase()
+      ) || null;
+    if (byCityCountry) return byCityCountry;
+
+    const exactCity = allAirports.filter(
+      (a) => (a.cityName || "").toLowerCase() === label.toLowerCase()
     );
+    if (exactCity.length === 1) return exactCity[0];
+
+    return null;
   }, [allAirports, q, value]);
 
+  // Selection handler — commit city only to the input/parent, but pass full airport object via onSelect
   const selectAirport = useCallback(
     (a) => {
-      // Use "City, Country" so resolver is consistent
-      const v = `${a.cityName}, ${a.countryName}`;
+      const v = a.cityName; // 👈 city only
       setQ(v);
       onChange?.(v);
       onSelect?.(a);
@@ -222,7 +223,7 @@ export default function AirportSelect({
     [onChange, onSelect]
   );
 
-  // Keyboard navigation
+  // Keyboard nav
   const onKeyDown = (e) => {
     if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
       setOpen(true);
@@ -247,7 +248,7 @@ export default function AirportSelect({
     }
   };
 
-  // Ensure highlighted option is visible
+  // Ensure the highlighted option stays in view
   useEffect(() => {
     if (!open) return;
     const node = listRef.current?.querySelector(`[data-idx="${highlight}"]`);
@@ -258,8 +259,8 @@ export default function AirportSelect({
   const hasError = !!error;
 
   const handleFocus = () => {
+    if (disabled) return;
     setOpen(true);
-    // If user focuses on a committed value, clear for new typing
     if (
       clearOnFocus &&
       q &&
@@ -272,21 +273,25 @@ export default function AirportSelect({
   return (
     <div className={`relative ${className}`} ref={boxRef}>
       <div
-        className="h-20 border cursor-pointer pointer-events-auto border-gray-300 rounded-lg px-3 pt-2 pb-4 bg-white flex flex-col"
+        className={`h-20 border rounded-lg bg-white flex flex-col py-2 px-4 ${
+          disabled ? "opacity-60 pointer-events-none" : "cursor-pointer"
+        } border-gray-300`}
         role="combobox"
         aria-expanded={open}
-        // 👇 This ensures clicking the card opens the list and focuses the input
         onClick={(e) => {
+          if (disabled) return;
           if (e.target.tagName !== "INPUT") {
             setOpen(true);
             inputRef.current?.focus();
           }
         }}
       >
-        <span className="text-[12px] text-gray-500">{label}</span>
+        <span className="text-xs text-gray-500">{label}</span>
+
+        {/* City-only input */}
         <div className="flex-1 flex items-start">
           <input
-            className="outline-none bg-transparent text-[14px] w-full"
+            className="outline-none bg-transparent text-base text-stone-800 font-semibold w-full"
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
@@ -296,15 +301,17 @@ export default function AirportSelect({
             onFocus={handleFocus}
             onKeyDown={onKeyDown}
             placeholder={placeholder}
+            disabled={disabled}
           />
         </div>
-        {/* Always render the second line; empty string collapses visually if not found */}
-        <span className="text-[12px] text-gray-500 truncate">
+
+        {/* Second line: airport name (subtitle) */}
+        <span className="text-sm text-gray-500 truncate">
           {selectedAirport?.name || ""}
         </span>
       </div>
 
-      {open && (
+      {open && !disabled && (
         <div
           className="absolute top-full left-0 mt-2 z-50 w-[420px] max-h-[400px] overflow-y-auto border border-gray-200 rounded-xl shadow-xl bg-white"
           ref={listRef}
@@ -320,6 +327,7 @@ export default function AirportSelect({
           {!isLoading && !hasError && filtered.length === 0 && (
             <div className="px-4 py-3 text-sm text-gray-500">No results</div>
           )}
+
           {!isLoading &&
             !hasError &&
             filtered.map((a, i) => (

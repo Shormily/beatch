@@ -123,14 +123,12 @@ export default function FirsttripCalendarClone({
     return () => window.removeEventListener("resize", onResize);
   }, [disableReturn]);
 
-  // uncontrolled defaults
   useEffect(() => {
     if (isControlled) return;
     setStartDate(parseIn(defaultDeparture, today));
     setEndDate(disableReturn ? null : parseIn(defaultReturn, null));
   }, [isControlled, defaultDeparture, defaultReturn, disableReturn, today]);
 
-  // ensure end >= start
   useEffect(() => {
     if (startDate && endDate && isBefore(endDate, startDate)) {
       setEndDate(startDate);
@@ -145,15 +143,12 @@ export default function FirsttripCalendarClone({
     onDatesChange({ departureISO: depISO, returnISO: retISO });
   }, [startDate, endDate, disableReturn, onDatesChange]);
 
-  // programmatic auto open (after parent flips to round-trip)
   useEffect(() => {
     if (!autoOpenAt) return;
     setActiveSide(autoOpenAt === "end" ? "end" : "start");
     setOpen(true);
   }, [autoOpenAt]);
 
-  // 🚀 NEW: when switching ONE_WAY -> ROUND_TRIP, if no return is selected,
-  // set return = 3 days from *today*, adjusted to not be before startDate/minDate.
   useEffect(() => {
     const prev = prevDisableRef.current;
     if (prev === true && disableReturn === false) {
@@ -252,7 +247,7 @@ export default function FirsttripCalendarClone({
   const depStr = startDate ? format(startDate, "d LLL, yyyy") : "";
   const retStr = endDate ? format(endDate, "d LLL, yyyy") : "";
 
-  const Pill = ({ label, dateStr, active, onClick, onClear }) => (
+  const Pill = ({ label, dateStr, onClick, onClear }) => (
     <div className="relative flex-1">
       <button
         type="button"
@@ -398,7 +393,7 @@ export default function FirsttripCalendarClone({
       {open && (
         <div
           ref={popRef}
-          className="absolute z-50 mt-2 w-[90vw] sm:w-[680px] bg-white border border-gray-200 rounded-2xl shadow-xl p-3"
+          className="absolute z-50 mt-2 w-[90vw] sm:w-[645px] bg-white border border-gray-200 rounded-2xl shadow-xl p-3"
         >
           {/* Header row with One-way clear button */}
           <div className="flex items-center justify-between mb-2">

@@ -18,7 +18,7 @@ const Shimmer = ({ className = "" }) => (
 
 function SkeletonPill() {
   return (
-    <div className="min-w-[208px] h-[72px] rounded-2xl border border-sky-100 bg-sky-50 flex items-center gap-3 px-3">
+    <div className="min-w-[208px] h-[72px] rounded-2xl border border-sky-100 bg-white flex items-center gap-3 px-3">
       {/* left icon tile */}
       <div className="h-12 w-12 rounded-xl bg-white grid place-items-center">
         <Shimmer className="h-8 w-8 rounded-lg" />

@@ -8,7 +8,7 @@
 
 /* === Compact + “pill” look === */
 .rdp {
-  --rdp-accent: #dc2626;
+  --rdp-accent: #fff;
   --rdp-accent-contrast: #fff;
   --rdp-background-color: #fee2e2;
 }
@@ -56,10 +56,10 @@
   justify-content: center;
 }
 .rdp-today > button {
-  color: red;
+  color: gray;
 }
 .rdp-selected > .rdp-day_button {
-  border: red 2px solid;
+  border: gray 2px solid;
 }
 .rdp-chevron {
   fill: #dc2626;
