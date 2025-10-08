@@ -93,6 +93,11 @@ export default function CustomTabs({ flight }) {
   const arrName = last?.arrival?.airport?.airportName;
   const arrDate = last?.arrival?.arrDate;
   const arrTime = last?.arrival?.arrTime;
+  const airlineCodeDept =
+    first?.airline?.optAirlineCode || first?.airline?.code || "";
+
+  const airlineCodeAri =
+    last?.airline?.optAirlineCode || first?.airline?.code || "";
 
   const hasArrival = Boolean(arrCity || arrCode || arrName || arrTime);
 
@@ -195,7 +200,7 @@ export default function CustomTabs({ flight }) {
       {activeTab === "details" && (
         <div className="pt-1 space-y-2">
           {/* Departure */}
-          <div className="grid grid-cols-[96px_24px_1fr] items-center bg-slate-50 rounded-xl p-3 ">
+          <div className="grid grid-cols-[96px_24px_1fr] gap-2 items-center bg-slate-50 rounded-xl p-3 ">
             <div className="text-center">
               <p className="text-base font-semibold">{fmtTime(depTime)}</p>
               <p className="text-[11px] text-gray-500">{safe(depDate)}</p>
@@ -215,7 +220,7 @@ export default function CustomTabs({ flight }) {
           </div>
 
           {/* Airline row with vertical divider & logo placeholder (kept your style) */}
-          <div className="grid grid-cols-[96px_24px_1fr] items-stretch bg-white rounded-xl p-3">
+          <div className="grid grid-cols-[96px_24px_1fr] gap-2 items-stretch bg-white rounded-xl p-3">
             <div>
               <p className="text-sm font-semibold text-red-500">
                 {cabin} {rbd ? `(${rbd})` : ""}
@@ -224,9 +229,15 @@ export default function CustomTabs({ flight }) {
             </div>
             <div className="relative flex items-center justify-center">
               <span className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-gray-200" />
-              {/* you can optionally render the airline logo here if needed */}
+              <img
+                src={`https://airlines.a4aero.com/images/${
+                  airlineCodeAri || airlineCodeDept
+                }.png`}
+                alt={flightNo}
+                className="w-full h-full z-40 object-contain"
+              />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 mx-1">
               <p className="text-sm font-semibold">{airline}</p>
               <p className="text-[12px] text-gray-600 mt-0.5">{aircraft}</p>
               <p className="text-[11px] text-gray-500 mt-1">
@@ -242,7 +253,7 @@ export default function CustomTabs({ flight }) {
 
           {/* Arrival — FIX: always read from selected leg's last segment */}
           {hasArrival && (
-            <div className="grid grid-cols-[96px_24px_1fr] items-center bg-slate-50 rounded-xl p-3">
+            <div className="grid grid-cols-[96px_24px_1fr] gap-2 items-center bg-slate-50 rounded-xl p-3">
               <div className="text-center">
                 <p className="text-base font-semibold">{fmtTime(arrTime)}</p>
                 <p className="text-[11px] text-gray-500">{safe(arrDate)}</p>
