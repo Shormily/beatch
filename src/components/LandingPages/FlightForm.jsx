@@ -1,7 +1,7 @@
 // src/LandingPages/FlightForm.jsx
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { CiSearch } from "react-icons/ci";
 import { AiOutlineSwap } from "react-icons/ai";
 
@@ -13,9 +13,6 @@ import { searchFlights } from "../../redux/slices/flightsSlice";
 import { setForm } from "../../redux/slices/searchFormSlice";
 import FirsttripCalendarClone from "./calender";
 import bdAirportsData from "../../data/airports.json";
-
-// 🔴 top loading bar
-import LoadingBar from "react-top-loading-bar";
 
 /* ---------------- helpers ---------------- */
 
@@ -66,9 +63,6 @@ export default function FlightForm({
   const airportsState = useSelector((s) => s.airports);
   const airports = airportsState?.items || [];
   const allAirports = airports.length ? airports : bdAirportsData;
-
-  // 👀 observe flights status to drive the loading bar
-  const flightsStatus = useSelector((s) => s.flights?.status); // expect 'idle' | 'loading' | 'succeeded' | 'failed'
 
   const saved = useSelector((s) => s.searchForm);
 
@@ -131,18 +125,6 @@ export default function FlightForm({
   const [apiId] = useState(saved.apiId || 1001);
 
   const [calendarAutoOpenAt, setCalendarAutoOpenAt] = useState(null); // 'start' | 'end' | null
-
-  // 🔴 Loading bar ref
-  const loadingRef = useRef(null);
-
-  // Drive the loading bar from redux status
-  useEffect(() => {
-    if (flightsStatus === "loading") {
-      loadingRef.current?.continuousStart();
-    } else if (flightsStatus === "succeeded" || flightsStatus === "failed") {
-      loadingRef.current?.complete();
-    }
-  }, [flightsStatus]);
 
   // init defaults once
   useEffect(() => {
@@ -293,12 +275,8 @@ export default function FlightForm({
   const handleSearch = () => {
     if (!canSearch) return;
 
-    const requestBody = buildRequestBody();
-
-    // kick off bar immediately in case your slice status update is delayed
-    loadingRef.current?.continuousStart();
-
-    const thunk = dispatch(
+    // dispatch the search and go to results page immediately
+    dispatch(
       searchFlights({
         tripType,
         fromCode,
@@ -313,20 +291,11 @@ export default function FlightForm({
         travelClassLabel: trav.travelClass,
         preferredAirline,
         apiId,
-        __requestBody: requestBody,
+        __requestBody: buildRequestBody(),
       })
     );
 
-    // If you're using RTK createAsyncThunk, you can unwrap
-    (thunk.unwrap ? thunk.unwrap() : Promise.resolve())
-      .then(() => {
-        loadingRef.current?.complete();
-        navigate("/searchresult");
-      })
-      .catch(() => {
-        // optional: show toast
-        loadingRef.current?.complete();
-      });
+    navigate("/searchresult"); // loader will show there
   };
 
   const handleCalendarDatesChange = ({ departureISO, returnISO }) => {
@@ -362,12 +331,13 @@ export default function FlightForm({
   };
 
   return (
-    <div className="relative">
+    <div className="relative z-50">
       <div
-        className="px-3 sm:px-6 sticky top-0 inset-0 lg:px-6 pt-7 pb-2 max-w-[1200px] mx-auto"
+        className="px-3 sm:px-6 lg:px-6 pt-7 pb-5 max-w-[1200px] mx-auto"
         onFocus={onFocus}
         onBlur={onBlur}
       >
+        {/* Trip type */}
         <div className="flex gap-2 mb-5">
           {[
             { key: "ONE_WAY", label: "One Way" },
@@ -393,6 +363,7 @@ export default function FlightForm({
             </label>
           ))}
         </div>
+
         {/* Inputs */}
         <div className="flex flex-col lg:flex-row gap-4">
           {/* From / To */}
@@ -429,7 +400,7 @@ export default function FlightForm({
               defaultReturn={returnDate}
               minDepartureDate={new Date()}
               onDatesChange={handleCalendarDatesChange}
-              autoOpenAt={calendarAutoOpenAt} // 'start' | 'end' | null
+              autoOpenAt={calendarAutoOpenAt}
               onPromoteRoundTrip={handlePromoteRoundTrip}
               onRequestOneWayClear={handleClearToOneWay}
             />
@@ -453,24 +424,8 @@ export default function FlightForm({
               <CiSearch size={36} />
               <span className="lg:hidden font-semibold text-sm">Search</span>
             </button>
-            {/* <MissingHint /> */}
           </div>
-        </div>{" "}
-      </div>
-      <div className="relative  mt-4">
-        <LoadingBar
-          ref={loadingRef}
-          color="#dc2626"
-          height={3}
-          shadow={false} // ⬅️ no glow
-          waitingTime={400}
-          containerStyle={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-          }}
-        />
+        </div>
       </div>
     </div>
   );

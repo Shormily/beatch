@@ -1,6 +1,6 @@
 // src/pages/Flights/FlightSearchPage.jsx
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { FcAlarmClock } from "react-icons/fc";
 import next from "../LandingPages/assets/next.png";
@@ -11,6 +11,7 @@ import FlightSortBar from "./FlightSortBar";
 import AirlineMinBar from "./AirlineMinBar";
 import LoadingCard from "./LoadingCard";
 import AirlineMinBarSkeleton from "./AirlineMinBarSkeleton";
+import LoadingBar from "react-top-loading-bar";
 
 /* ================= tiny utils ================= */
 
@@ -513,6 +514,13 @@ export default function FlightSearchPage() {
     (s) => s.flights || {}
   );
 
+  const loadingRef = useRef(null);
+  useEffect(() => {
+    if (status === "loading") loadingRef.current?.continuousStart();
+    if (status === "succeeded" || status === "failed")
+      loadingRef.current?.complete();
+  }, [status]);
+
   const itineraries = results?.results || [];
   const depOD = criteria?.originDestinationOptions?.[0];
   const retOD = criteria?.originDestinationOptions?.[1];
@@ -938,7 +946,20 @@ export default function FlightSearchPage() {
   /* ---- render ---- */
 
   return (
-    <section className="bg-slate-200">
+    <section className="bg-slate-200 relative">
+      <LoadingBar
+        ref={loadingRef}
+        color="#dc2626"
+        height={3}
+        shadow={false} // ⬅️ no glow
+        waitingTime={400}
+        containerStyle={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+        }}
+      />
       <div className="max-w-[1200px] m-auto">
         <div className="flex flex-col md:flex-row gap-4 p-4">
           {/* Left Sidebar */}
