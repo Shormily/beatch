@@ -118,7 +118,7 @@ export default function FareModalDemo({ flight }) {
 
           <button
             onClick={handleContinue}
-            className="w-full bg-red-600 text-[14px] text-white font-semibold rounded-full hover:bg-red-500 flex items-center justify-center p-2"
+            className="w-full bg-red-700 text-[14px] text-white font-semibold rounded-full hover:bg-red-500 flex items-center justify-center p-2"
           >
             Select
           </button>

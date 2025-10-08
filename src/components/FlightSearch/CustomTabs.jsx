@@ -135,10 +135,10 @@ export default function CustomTabs({ flight }) {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`flex-1 text-sm font-medium py-2 text-center rounded-t-lg transition-all ${
+            className={`flex-1 text-[16px] cursor-pointer  py-3 text-center rounded-t-lg transition-all ${
               activeTab === t.id
-                ? "text-red-600 border-b-2 border-red-500 bg-red-50"
-                : "text-gray-600 hover:text-red-500"
+                ? "text-black border-b-1 border-red-700 bg-red-50"
+                : "text-gray-700 "
             }`}
           >
             {t.label}
@@ -148,16 +148,16 @@ export default function CustomTabs({ flight }) {
 
       {/* ===== Leg radio toggle (if round trip) ===== */}
       {legs.length > 1 && (
-        <div className="flex items-center gap-4 py-3 text-sm">
+        <div className="flex items-center gap-4 font-medium text-[15px] py-3 text-sm">
           <label className="flex items-center gap-2">
             <input
               type="radio"
               name="legSwitch"
-              className="accent-red-600"
+              className="accent-red-700 "
               checked={activeLeg === 0}
               onChange={() => setActiveLeg(0)}
             />
-            <span>
+            <span >
               {safe(legs[0]?.flightSegments?.[0]?.departure?.airport?.cityCode)}{" "}
               -{" "}
               {safe(
@@ -172,7 +172,7 @@ export default function CustomTabs({ flight }) {
             <input
               type="radio"
               name="legSwitch"
-              className="accent-red-600"
+              className="accent-red-700"
               checked={activeLeg === 1}
               onChange={() => setActiveLeg(1)}
               disabled={!legs[1]}
@@ -195,7 +195,7 @@ export default function CustomTabs({ flight }) {
       {activeTab === "details" && (
         <div className="pt-1 space-y-2">
           {/* Departure */}
-          <div className="grid grid-cols-[96px_24px_1fr] items-center bg-slate-50 rounded-xl p-3">
+          <div className="grid grid-cols-[96px_24px_1fr] items-center bg-slate-50 rounded-xl p-3 ">
             <div className="text-center">
               <p className="text-base font-semibold">{fmtTime(depTime)}</p>
               <p className="text-[11px] text-gray-500">{safe(depDate)}</p>
@@ -269,14 +269,14 @@ export default function CustomTabs({ flight }) {
           {/* Route chip (matches details line) */}
 
           {/* Table header (matches your screenshot with Adult/Child/Infant columns) */}
-          <div className="rounded-md overflow-hidden border border-gray-200">
-            <div className="grid grid-cols-7 bg-gray-100 text-xs font-medium text-gray-700">
+          <div className="rounded-lg overflow-hidden border border-gray-200">
+            <div className="grid grid-cols-7 bg-slate-100 text-[16px] font-medium text-gray-700">
               <div className="col-span-2 px-3 py-2">Flight</div>
-              <div className="col-span-2 px-3 py-2">Cabin</div>
-              <div className="col-span-3 px-3 py-2">Checked-in</div>
+              <div className="col-span-2 px-3 py-2 text-center">Cabin</div>
+              <div className="col-span-3 px-3 py-2 text-center">Checked-in</div>
             </div>
 
-            <div className="grid grid-cols-7 bg-gray-50 text-[11px] text-gray-600">
+            <div className="grid grid-cols-7 bg-slate-100 pb-2 text-[11px] text-gray-600">
               <div className="col-span-2 px-3 py-2" />
               <div className="col-span-2 px-3 py-2 grid grid-cols-3 text-center">
                 <div>Adult</div>
@@ -291,8 +291,8 @@ export default function CustomTabs({ flight }) {
             </div>
 
             {/* Data row */}
-            <div className="grid grid-cols-7 text-sm">
-              <div className="col-span-2 px-3 py-3 border-t">
+            <div className="grid grid-cols-7 text-sm my-3">
+              <div className="col-span-2 px-3 py-3 ">
                 <div className="font-medium">
                   {safe(first?.cabinType, "Economy")}
                 </div>
@@ -303,14 +303,14 @@ export default function CustomTabs({ flight }) {
               </div>
 
               {/* Carry-on (Cabin) */}
-              <div className="col-span-2 px-3 py-3 border-t grid grid-cols-3 gap-2 text-center">
+              <div className="col-span-2 px-3 py-3 grid grid-cols-3 gap-2 text-center">
                 <div>{adt.carryOn}</div>
                 <div>{chd.carryOn}</div>
                 <div>{inf.carryOn}</div>
               </div>
 
               {/* Checked-in */}
-              <div className="col-span-3 px-3 py-3 border-t grid grid-cols-3 gap-2 text-center">
+              <div className="col-span-3 px-3 py-3  grid grid-cols-3 gap-2 text-center">
                 <div>{adt.checkedIn}</div>
                 <div>{chd.checkedIn}</div>
                 <div>{inf.checkedIn}</div>

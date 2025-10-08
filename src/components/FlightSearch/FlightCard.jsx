@@ -134,10 +134,10 @@ function TimelineRow({ leg }) {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-[auto_1fr] items-center gap-4">
+      <div className="grid grid-cols-[auto_1fr] items-center gap-1">
         {/* left: single airline badge + stacked name (like screenshot) */}
         <div className="flex items-center gap-3 min-w-[170px]">
-          <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden">
+          <div className="w-14 h-14 p-2 rounded-full bg-gray-100 overflow-hidden">
             <img
               src={`https://airlines.a4aero.com/images/${airlineCode}.png`}
               alt={airlineCode}
@@ -152,12 +152,12 @@ function TimelineRow({ leg }) {
         {/* center: date/time blocks at edges + dashed route in middle */}
         <div className="flex items-center justify-between">
           {/* left time */}
-          <div className="text-left mr-3">
-            <p className="text-xs">{depDate}</p>
-            <p className="font-semibold text-[20px] leading-none">
+          <div className="text-left ">
+            <p className="text-[12px] text-gray-500 font-semibold">{depDate}</p>
+            <p className="font-semibold text-[20px] ">
               {fmtTime(depTime)}
             </p>
-            <p className="text-sm text-gray-600">{depCode}</p>
+            <p className="text-sm text-gray-500 font-semibold">{depCode}</p>
           </div>
 
           {/* route + duration + stops */}
@@ -166,15 +166,15 @@ function TimelineRow({ leg }) {
               {safe(duration, "—")}
             </div>
             <div className="flex items-center gap-2 w-full">
-              <span className="h-2 w-2 rounded-full bg-sky-600 opacity-70" />
-              <div className="flex-1 border-t border-dashed border-gray-400 relative">
+              <span className="" />
+              <div className="justify-center items-center m-auto">
                 <img
                   src={planeImg}
                   alt="air route"
-                  className="w-5 absolute left-1/2 -translate-x-1/2 -top-2"
+                  className="h-4 "
                 />
               </div>
-              <span className="h-2 w-2 rounded-full bg-sky-600 opacity-70" />
+              
             </div>
             <div className="text-[12px] text-gray-500 mt-1">{stopText}</div>
           </div>
@@ -220,13 +220,14 @@ export default function FlightCard({ flight }) {
   return (
     <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl border border-gray-200 overflow-hidden font-murecho shadow-sm relative">
       {/* header chips */}
-      <div className="pt-3 flex gap-3 px-4">
+      <div className="pt-3 flex   px-4">
         <span className="text-red-700 flex items-center gap-1 px-2 bg-red-50 rounded-full text-[12px] font-medium">
           <RiMoneyRupeeCircleFill size={16} className="opacity-70" />
           {refundable ? "Partially Refundable" : "Non-refundable"}
         </span>
         {seatsLeft ? (
-          <span className="text-red-700 flex items-center gap-1 px-2 bg-red-50 rounded-full text-[12px] font-medium">
+          // How to justify end please create it just change this code
+          <span className="text-red-700 flex items-center gap-1 px-2 bg-red-50 rounded-full text-[12px] border border-red-700 font-medium justify-end ml-84">
             <MdAirlineSeatReclineNormal size={16} className="opacity-70" />
             {seatsLeft} seat(s) left
           </span>
@@ -243,7 +244,7 @@ export default function FlightCard({ flight }) {
       {/* main row */}
       <div className="flex flex-col lg:flex-row items-stretch relative">
         {/* left side: summary + tabs */}
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-5">
           {/* brand (left) + stacked rows (center) */}
           <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
             {!isRoundTrip ? (
@@ -257,18 +258,18 @@ export default function FlightCard({ flight }) {
             )}
           </div>
 
-          <div className="border-t border-gray-200 my-3" />
+          <div className="border-t border-gray-200 my-5" />
 
           {/* toggle */}
           {!open ? (
-            <div className="mt-2 relative flex items-center">
+            <div className=" relative flex items-center ">
               <span className="text-sky-900 flex gap-1 px-2 bg-blue-50 p-1 rounded-full">
                 <BiLike size={18} />
                 <span className="text-[12px] font-medium">Recommended</span>
               </span>
               <button
                 onClick={() => setOpen(true)}
-                className="absolute left-1/2 -translate-x-1/2 text-red-800 text-[14px] font-medium flex items-center gap-1"
+                className="absolute left-1/2 -translate-x-1/2 text-red-800 text-[16px] font-medium flex items-center gap-1"
               >
                 <span>View Details</span>
                 <ChevronDown size={18} />
@@ -277,8 +278,8 @@ export default function FlightCard({ flight }) {
           ) : (
             <>
               <CustomTabs flight={flight} />
-              <div className="border-t border-gray-200 my-6 mb-5" />
-              <div className="mt-3 relative flex items-center pb-2">
+              <div className="border-t border-gray-200 " />
+              <div className="mt-3 relative flex items-center ">
                 <span className="text-sky-900 flex gap-1 px-2 bg-blue-50 p-1 rounded-full">
                   <BiLike size={18} />
                   <span className="text-[12px] font-medium">Recommended</span>
@@ -309,13 +310,13 @@ export default function FlightCard({ flight }) {
                 <button
                   type="button"
                   onClick={() => setOpen(true)}
-                  className="flex-1 h-10 rounded-full border border-red-300 text-red-600 text-sm font-medium hover:bg-red-50 transition"
+                  className="flex-1 h-10 rounded-full border border-red-700 text-red-700 text-sm font-medium hover:bg-red-50 transition"
                 >
                   View Prices
                 </button>
                 <button
                   type="button"
-                  className="flex-[1.2] h-10 rounded-full bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+                  className="flex-[1.2] h-10 rounded-full bg-red-700 text-white text-sm font-semibold hover:bg-red-700 transition"
                 >
                   Select
                 </button>
@@ -328,19 +329,19 @@ export default function FlightCard({ flight }) {
                   const row = paxMap[t];
                   if (!row || row.quantity <= 0) return null;
                   return (
-                    <div key={t} className="bg-gray-50 rounded-md p-3 text-sm">
+                    <div key={t} className="bg-slate-100 rounded-lg p-3 text-sm">
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-700">
+                        <span className="text-gray-700 font-semibold text-[16px]">
                           {paxLabel(t)} X {row.quantity}
                         </span>
                       </div>
-                      <div className="mt-2 flex items-center justify-between text-gray-600">
+                      <div className="mt-2 flex items-center justify-between font-medium text-gray-600">
                         <span>Base Fare</span>
                         <span className="font-medium">
                           BDT {row.base.toLocaleString()}
                         </span>
                       </div>
-                      <div className="mt-1 flex items-center justify-between text-gray-600">
+                      <div className="mt-1 flex items-center font-medium justify-between text-gray-600">
                         <span>Tax</span>
                         <span className="font-medium">
                           BDT {row.tax.toLocaleString()}
@@ -350,15 +351,15 @@ export default function FlightCard({ flight }) {
                   );
                 })}
 
-                <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
+                <div className="bg-slate-100 rounded-lg p-3 text-sm my-4 flex items-center justify-between">
                   <span className="text-gray-700 font-medium">Air Fare</span>
                   <span className="font-semibold">
                     BDT {airFareBDT.toLocaleString()}
                   </span>
                 </div>
 
-                <div className="bg-gray-50 rounded-md p-3 text-sm flex items-center justify-between">
-                  <span className="text-orange-600">Coupon</span>
+                <div className="bg-slate-100 rounded-lg p-3 text-sm flex items-center justify-between">
+                  <span className="text-orange-600 font-medium">Coupon</span>
                   <span className="font-semibold text-orange-600">
                     - BDT {couponBDT.toLocaleString()}
                   </span>
@@ -369,7 +370,7 @@ export default function FlightCard({ flight }) {
                     <img src={coupon} alt="coupon" className="w-4 h-4" />
                     <span>{promoCode}</span>
                   </span>
-                  <p className="text-red-600 text-2xl font-extrabold mt-2 leading-none">
+                  <p className="text-red-700 text-2xl font-extrabold mt-2 leading-none">
                     BDT {totalBDT.toLocaleString()}
                   </p>
                   <p className="text-xs line-through text-gray-400 mt-1">

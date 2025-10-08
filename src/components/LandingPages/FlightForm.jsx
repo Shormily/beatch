@@ -254,6 +254,7 @@ export default function FlightForm({
       onBlur={onBlur}
     >
       {/* Trip type */}
+      
       <div className="flex gap-2 mb-5">
         {[
           { key: "ONE_WAY", label: "One Way" },
@@ -345,6 +346,7 @@ export default function FlightForm({
           <MissingHint />
         </div>
       </div>
+
     </div>
   );
 }
