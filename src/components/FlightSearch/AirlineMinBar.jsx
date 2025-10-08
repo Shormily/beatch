@@ -19,7 +19,7 @@ function AirlineLogo({ code }) {
     <img
       src={`https://airlines.a4aero.com/images/${code}.png`}
       alt={code}
-      className="h-6 w-6 object-contain bg-white rounded-md border border-gray-200 p-0.5 shadow-sm"
+      className="h-10 w-10 object-contain bg-gray-50 rounded-md border border-gray-200 p-1  "
       onError={(e) => {
         // fallback if image not found
         e.target.onerror = null;
@@ -62,7 +62,7 @@ export default function AirlineMinBar({ items = [], selected, onToggle }) {
                 <button
                   key={code}
                   onClick={() => onToggle(code)}
-                  className={`inline-flex items-center gap-3 rounded-lg cursor-pointer  hover:border-red-600 hover:bg-red-50 text-gray-500  px-3 py-2  transition
+                  className={`inline-flex items-center gap-3 rounded-lg cursor-pointer  hover:border-red-600 hover:bg-red-50 text-gray-500  px-8 py-2  transition
                     ${
                       isActive
                         ? "bg-red-50 border border-red-600 text-red-600 "
@@ -74,7 +74,7 @@ export default function AirlineMinBar({ items = [], selected, onToggle }) {
                     <div className="text-xs font-semibold">
                       {code}{" "}
                       <span
-                        className={isActive ? "text-red-50" : "text-gray-500"}
+                        className={isActive ? "text-red-500" : "text-gray-500"}
                       >
                         ({count})
                       </span>
