@@ -1,13 +1,7 @@
 // src/components/FlightSortBar.jsx
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  LuBadgeDollarSign,
-  LuClock,
-  LuSun,
-  LuChevronDown,
-  LuChevronUp,
-} from "react-icons/lu";
+import { LuChevronDown, LuChevronUp } from "react-icons/lu";
 import fastest from "../LandingPages/assets/fastest.png";
 import fastestWhite from "../LandingPages/assets/fastestWhite.png";
 import cheapest from "../LandingPages/assets/cheapest.png";
@@ -15,18 +9,48 @@ import cheapestWhite from "../LandingPages/assets/cheapestWhite.png";
 import earliest from "../LandingPages/assets/earliest.png";
 import earliestWhitee from "../LandingPages/assets/earliestWhitee.png";
 
+/* ---------------- skeleton bits ---------------- */
+const Shimmer = ({ className = "" }) => (
+  <div className={`relative overflow-hidden ${className} bg-gray-200`}>
+    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent animate-[shimmer_1.2s_infinite]" />
+  </div>
+);
+
+function SkeletonPill() {
+  return (
+    <div className="min-w-[208px] h-[72px] rounded-2xl border border-sky-100 bg-sky-50 flex items-center gap-3 px-3">
+      {/* left icon tile */}
+      <div className="h-12 w-12 rounded-xl bg-white grid place-items-center">
+        <Shimmer className="h-8 w-8 rounded-lg" />
+      </div>
+
+      {/* right text area */}
+      <div className="flex-1">
+        <Shimmer className="h-4 w-24 rounded-md mb-2" />
+        <Shimmer className="h-3 w-20 rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+/* keyframes for shimmer (works with Tailwind) */
+const ShimmerKeyframes = () => (
+  <style>{`@keyframes shimmer{100%{transform:translateX(100%)}}`}</style>
+);
+
+/* ---------------- component ---------------- */
 export default function FlightSortBar({
   sortKey,
   onChange,
-
   metrics,
   className = "",
+  loading = false, // pass status === 'loading'
 }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
   const btnRef = useRef(null);
 
-  // Close dropdown on outside click
+  // hooks always run
   useEffect(() => {
     const handler = (e) => {
       if (!open) return;
@@ -44,11 +68,8 @@ export default function FlightSortBar({
     return () => document.removeEventListener("mousedown", handler, true);
   }, [open]);
 
-  // Close on Escape
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
@@ -76,7 +97,7 @@ export default function FlightSortBar({
   };
 
   const pillBase =
-    "flex items-center gap-3 rounded-lg  border-b-2 px-1 h-17 min-w-[208px]  transition";
+    "flex items-center gap-3 rounded-2xl border-b-2 px-1 h-[72px] min-w-[208px] transition";
   const inactive =
     "bg-white border-gray-200 hover:border-gray-300 text-gray-800";
   const active = "bg-red-50 border-red-600 text-red-600";
@@ -91,15 +112,33 @@ export default function FlightSortBar({
     </span>
   );
 
+  /* --------- loading skeleton (after hooks) --------- */
+  if (loading) {
+    return (
+      <>
+        <ShimmerKeyframes />
+        <div className={`flex items-start gap-2 flex-wrap ${className}`}>
+          <SkeletonPill />
+          <SkeletonPill />
+          <SkeletonPill />
+          <SkeletonPill />
+        </div>
+      </>
+    );
+  }
+
+  /* --------- normal content --------- */
   return (
     <div className={`flex items-start gap-2 flex-wrap ${className}`}>
+      <ShimmerKeyframes />
+
       {/* Cheapest */}
       <button
         onClick={() => onChange("cheapest")}
         className={`${pillBase} ${sortKey === "cheapest" ? active : inactive}`}
       >
         <span
-          className={`grid place-items-center mx-1  rounded-full ${
+          className={`grid place-items-center mx-1 rounded-xl ${
             sortKey === "cheapest" ? "bg-white/15" : "bg-gray-100"
           }`}
         >
@@ -113,8 +152,8 @@ export default function FlightSortBar({
             }`}
           />
         </span>
-        <div className="flex flex-col ">
-          <span className="text- font-medium ">Cheapest</span>
+        <div className="flex flex-col">
+          <span className="font-medium">Cheapest</span>
           <Sub active={sortKey === "cheapest"}>
             {formatBDT(metrics?.cheapestPrice)}
           </Sub>
@@ -127,7 +166,7 @@ export default function FlightSortBar({
         className={`${pillBase} ${sortKey === "fastest" ? active : inactive}`}
       >
         <span
-          className={`grid place-items-center mx-1 rounded-full ${
+          className={`grid place-items-center mx-1 rounded-xl ${
             sortKey === "fastest" ? "bg-white/15" : "bg-gray-100"
           }`}
         >
@@ -154,7 +193,7 @@ export default function FlightSortBar({
         className={`${pillBase} ${sortKey === "earliest" ? active : inactive}`}
       >
         <span
-          className={`grid place-items-center mx-1 rounded-full ${
+          className={`grid place-items-center mx-1 rounded-xl ${
             sortKey === "earliest" ? "bg-white/15" : "bg-gray-100"
           }`}
         >
@@ -175,10 +214,7 @@ export default function FlightSortBar({
         </div>
       </button>
 
-      {/* Spacer */}
-      <div className="" />
-
-      {/* More Sorts Dropdown */}
+      {/* More Sorts */}
       <div className="relative">
         <button
           ref={btnRef}
@@ -187,11 +223,10 @@ export default function FlightSortBar({
           aria-haspopup="menu"
           aria-expanded={open}
         >
-          <div className="flex items-center ">
+          <div className="flex items-center">
             <span className="text-sm font-semibold px-2">More Sorts</span>
           </div>
           <div className="px-4">
-            {" "}
             {open ? <LuChevronUp /> : <LuChevronDown />}
           </div>
         </button>
@@ -208,12 +243,11 @@ export default function FlightSortBar({
                 <button
                   key={key}
                   role="menuitem"
-                  className={`w-full text-left px-4 py-3 text-sm transition flex items-center justify-between
-                    ${
-                      isActive
-                        ? "bg-gray-50 text-gray-900"
-                        : "hover:bg-gray-50 text-gray-800"
-                    }`}
+                  className={`w-full text-left px-4 py-3 text-sm transition flex items-center justify-between ${
+                    isActive
+                      ? "bg-gray-50 text-gray-900"
+                      : "hover:bg-gray-50 text-gray-800"
+                  }`}
                   onClick={() => {
                     onChange(key);
                     setOpen(false);
@@ -232,13 +266,6 @@ export default function FlightSortBar({
           </div>
         )}
       </div>
-
-      {/* Results count (optional) */}
-      {/* {typeof counts?.total === "number" && (
-        <div className="self-center text-xs text-gray-500 ml-2">
-          {counts.total} result{counts.total === 1 ? "" : "s"}
-        </div>
-      )} */}
     </div>
   );
 }

@@ -64,6 +64,10 @@ export default function FlightForm({
   const airports = airportsState?.items || [];
   const allAirports = airports.length ? airports : bdAirportsData;
 
+  // 🔒 loading flag -> disable everything
+  const flightsStatus = useSelector((s) => s.flights?.status);
+  const isLoading = flightsStatus === "loading";
+
   const saved = useSelector((s) => s.searchForm);
 
   // ----- Date defaults -----
@@ -91,7 +95,7 @@ export default function FlightForm({
     timezone: "6",
   };
 
-  // ----- Text defaults (AirportSelect expects "City, Country") -----
+  // ----- Text defaults -----
   const DEFAULT_FROM_TEXT = formatSelectLabel(DEFAULT_FROM_AIRPORT);
   const DEFAULT_TO_TEXT = formatSelectLabel(DEFAULT_TO_AIRPORT);
 
@@ -212,6 +216,7 @@ export default function FlightForm({
 
   // swap
   const swap = () => {
+    if (isLoading) return; // guard
     setFromText(toText);
     setToText(fromText);
     setFromAirport(toAirport);
@@ -273,9 +278,9 @@ export default function FlightForm({
   };
 
   const handleSearch = () => {
+    if (isLoading) return; // guard
     if (!canSearch) return;
 
-    // dispatch the search and go to results page immediately
     dispatch(
       searchFlights({
         tripType,
@@ -295,20 +300,23 @@ export default function FlightForm({
       })
     );
 
-    navigate("/searchresult"); // loader will show there
+    navigate("/searchresult");
   };
 
   const handleCalendarDatesChange = ({ departureISO, returnISO }) => {
+    if (isLoading) return; // guard
     setDepartureDate(departureISO || "");
     setReturnDate(returnISO || "");
   };
 
   const handlePromoteRoundTrip = () => {
+    if (isLoading) return; // guard
     setTripType("ROUND_TRIP");
     setCalendarAutoOpenAt("end");
   };
 
   const handleClearToOneWay = () => {
+    if (isLoading) return; // guard
     setReturnDate("");
     setTripType("ONE_WAY");
     setCalendarAutoOpenAt(null);
@@ -332,100 +340,127 @@ export default function FlightForm({
 
   return (
     <div className="relative z-50">
+      {/* overlay that eats all pointer events while loading */}
+      {isLoading && (
+        <div className="absolute inset-0 z-20 cursor-not-allowed" aria-hidden />
+      )}
+
       <div
-        className="px-3 sm:px-6 lg:px-6 pt-7 pb-5 max-w-[1200px] mx-auto"
+        className={`px-3 sm:px-6 lg:px-6 pt-7 pb-5 max-w-[1200px] mx-auto transition-opacity ${
+          isLoading ? "opacity-50" : ""
+        }`}
+        aria-busy={isLoading}
+        aria-disabled={isLoading}
         onFocus={onFocus}
         onBlur={onBlur}
       >
-        {/* Trip type */}
-        <div className="flex gap-2 mb-5">
-          {[
-            { key: "ONE_WAY", label: "One Way" },
-            { key: "ROUND_TRIP", label: "Round Trip" },
-            { key: "MULTI_CITY", label: "Multi City" },
-          ].map((t) => (
-            <label
-              key={t.key}
-              className="flex items-center gap-1 cursor-pointer text-[10px] sm:text-[14px]"
-            >
-              <input
-                type="radio"
-                name="trip"
-                checked={tripType === t.key}
-                onChange={() => {
-                  setTripType(t.key);
-                  if (t.key === "ROUND_TRIP") setCalendarAutoOpenAt("start");
-                  if (t.key === "ONE_WAY") setCalendarAutoOpenAt(null);
-                }}
-                className="w-4 h-4 accent-red-600"
+        {/* put native controls inside a disabled fieldset so keyboard interaction is blocked too */}
+        <fieldset disabled={isLoading}>
+          {/* Trip type */}
+          <div className="flex gap-2 mb-5">
+            {[
+              { key: "ONE_WAY", label: "One Way" },
+              { key: "ROUND_TRIP", label: "Round Trip" },
+              { key: "MULTI_CITY", label: "Multi City" },
+            ].map((t) => (
+              <label
+                key={t.key}
+                className="flex items-center gap-1 cursor-pointer text-[10px] sm:text-[14px]"
+              >
+                <input
+                  type="radio"
+                  name="trip"
+                  checked={tripType === t.key}
+                  onChange={() => {
+                    if (isLoading) return;
+                    setTripType(t.key);
+                    if (t.key === "ROUND_TRIP") setCalendarAutoOpenAt("start");
+                    if (t.key === "ONE_WAY") setCalendarAutoOpenAt(null);
+                  }}
+                  className="w-4 h-4 accent-red-600"
+                />
+                {t.label}
+              </label>
+            ))}
+          </div>
+
+          {/* Inputs */}
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* From / To */}
+            <div className="lg:basis-[35%] grid grid-cols-1 sm:grid-cols-2 gap-4 relative min-w-[250px]">
+              <AirportSelect
+                label="From"
+                value={fromText}
+                onChange={setFromText}
+                onSelect={setFromAirport}
+                excludeCode={toAirport?.code}
+                disabled={isLoading}
               />
-              {t.label}
-            </label>
-          ))}
-        </div>
+              <AirportSelect
+                label="To"
+                value={toText}
+                onChange={setToText}
+                onSelect={setToAirport}
+                excludeCode={fromAirport?.code}
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={swap}
+                disabled={isLoading}
+                className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex w-10 h-10 rounded-full items-center justify-center shadow-lg z-10 ${
+                  isLoading
+                    ? "bg-gray-300 text-white cursor-not-allowed"
+                    : "bg-red-700 text-white"
+                }`}
+                title="Swap"
+              >
+                <AiOutlineSwap className="text-xl" />
+              </button>
+            </div>
 
-        {/* Inputs */}
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* From / To */}
-          <div className="lg:basis-[35%] grid grid-cols-1 sm:grid-cols-2 gap-4 relative min-w-[250px]">
-            <AirportSelect
-              label="From"
-              value={fromText}
-              onChange={setFromText}
-              onSelect={setFromAirport}
-              excludeCode={toAirport?.code}
+            {/* Dates */}
+            <div className="flex-1 min-w-[250px]">
+              <FirsttripCalendarClone
+                disableReturn={isOneWay}
+                defaultDeparture={departureDate}
+                defaultReturn={returnDate}
+                minDepartureDate={new Date()}
+                onDatesChange={handleCalendarDatesChange}
+                autoOpenAt={calendarAutoOpenAt}
+                onPromoteRoundTrip={handlePromoteRoundTrip}
+                onRequestOneWayClear={handleClearToOneWay}
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Travellers */}
+            <TravellerSelect
+              onChange={setTrav}
+              initialValue={saved.travellers}
+              disabled={isLoading}
             />
-            <AirportSelect
-              label="To"
-              value={toText}
-              onChange={setToText}
-              onSelect={setToAirport}
-              excludeCode={fromAirport?.code}
-            />
-            <button
-              type="button"
-              onClick={swap}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex w-10 h-10 rounded-full bg-red-700 text-white items-center justify-center shadow-lg z-20"
-              title="Swap"
-            >
-              <AiOutlineSwap className="text-xl" />
-            </button>
+
+            {/* Search */}
+            <div className="w-full lg:w-auto flex flex-col items-center lg:items-end flex-shrink-0 mt-4 lg:mt-0">
+              <button
+                onClick={handleSearch}
+                disabled={!canSearch || isLoading}
+                className={`w-32 sm:w-36 md:w-40 lg:w-24 py-1 lg:h-20 rounded-md text-white flex items-center justify-center gap-2 ${
+                  canSearch && !isLoading
+                    ? "bg-red-700 hover:bg-red-500"
+                    : "bg-gray-300 cursor-not-allowed"
+                }`}
+                title={canSearch ? "Search" : "Fill required fields"}
+              >
+                <CiSearch size={36} />
+                <span className="lg:hidden font-semibold text-sm">Search</span>
+              </button>
+            </div>
           </div>
 
-          {/* Dates */}
-          <div className="flex-1 min-w-[250px]">
-            <FirsttripCalendarClone
-              disableReturn={isOneWay}
-              defaultDeparture={departureDate}
-              defaultReturn={returnDate}
-              minDepartureDate={new Date()}
-              onDatesChange={handleCalendarDatesChange}
-              autoOpenAt={calendarAutoOpenAt}
-              onPromoteRoundTrip={handlePromoteRoundTrip}
-              onRequestOneWayClear={handleClearToOneWay}
-            />
-          </div>
-
-          {/* Travellers */}
-          <TravellerSelect onChange={setTrav} initialValue={saved.travellers} />
-
-          {/* Search */}
-          <div className="w-full lg:w-auto flex flex-col items-center lg:items-end flex-shrink-0 mt-4 lg:mt-0">
-            <button
-              onClick={handleSearch}
-              disabled={!canSearch}
-              className={`w-32 sm:w-36 md:w-40 lg:w-24 py-1 lg:h-20 rounded-md text-white flex items-center justify-center gap-2 ${
-                canSearch
-                  ? "bg-red-700 hover:bg-red-500"
-                  : "bg-gray-300 cursor-not-allowed"
-              }`}
-              title={canSearch ? "Search" : "Fill required fields"}
-            >
-              <CiSearch size={36} />
-              <span className="lg:hidden font-semibold text-sm">Search</span>
-            </button>
-          </div>
-        </div>
+          {showMissingHint && <MissingHint />}
+        </fieldset>
       </div>
     </div>
   );

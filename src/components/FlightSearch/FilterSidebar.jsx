@@ -1082,6 +1082,7 @@ export default function FlightSearchPage() {
                 onChange={setSortKey}
                 counts={{ total: view.length }}
                 metrics={metrics}
+                loading={status === "loading"}
               />
             </div>
 
