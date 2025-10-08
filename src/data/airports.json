@@ -1,0 +1,66 @@
+[
+  {
+    "code": "CGP",
+    "name": "Patenga Arpt",
+    "cityName": "Chittagong",
+    "countryCode": "BD",
+    "countryName": "Bangladesh",
+    "timezone": "6"
+  },
+  {
+    "code": "DAC",
+    "name": "Hazrat Shahjalal International Airport",
+    "cityName": "Dhaka",
+    "countryCode": "BD",
+    "countryName": "Bangladesh",
+    "timezone": "6"
+  },
+  {
+    "code": "ZYL",
+    "name": "Sylhet Osmany Arpt",
+    "cityName": "Sylhet",
+    "countryCode": "BD",
+    "countryName": "Bangladesh",
+    "timezone": "6"
+  },
+  {
+    "code": "CXB",
+    "name": "Cox's Bazar Airport",
+    "cityName": "Cox's Bazar",
+    "countryCode": "BD",
+    "countryName": "Bangladesh",
+    "timezone": "6"
+  },
+  {
+    "code": "RJH",
+    "name": "Shah Makhdum Airport",
+    "cityName": "Rajshahi",
+    "countryCode": "BD",
+    "countryName": "Bangladesh",
+    "timezone": "6"
+  },
+  {
+    "code": "BZL",
+    "name": "Barisal Airport",
+    "cityName": "Barisal",
+    "countryCode": "BD",
+    "countryName": "Bangladesh",
+    "timezone": "+06"
+  },
+  {
+    "code": "JSR",
+    "name": "Jessore Airport",
+    "cityName": "Jessore",
+    "countryCode": "BD",
+    "countryName": "Bangladesh",
+    "timezone": "+06"
+  },
+  {
+    "code": "SPD",
+    "name": "Saidpur Airport",
+    "cityName": "Nilphamari",
+    "countryCode": "BD",
+    "countryName": "Bangladesh",
+    "timezone": "360"
+  }
+]

@@ -15,11 +15,8 @@ export default function Searchresult() {
 
   return (
     <section>
-      <div
-        className={`max-w-[1240px] px-8 mx-auto relative`}
-        style={{ zIndex: formZ }}
-      >
-        <div className="bg-white  pb-4">
+      <div className={` px-0 mx-auto relative`} style={{ zIndex: formZ }}>
+        <div className="bg-white relative">
           {activeTab === "flight" && (
             <FlightForm
               showMissingHint={true} // 👈 hide the “Missing: …” helper on this page

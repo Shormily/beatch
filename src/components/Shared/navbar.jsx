@@ -14,7 +14,6 @@ import Hotel from "../LandingPages/assets/Hotel.png";
 import Business from "../LandingPages/assets/Business.png";
 import Promotions from "../LandingPages/assets/Promotions.png";
 
-
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -28,7 +27,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 text-[14px] font-murecho">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-999 text-[14px] font-murecho">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="flex justify-between items-center h-14 md:h-16">
             {/* Left side (Toggle + Logo for mobile) */}
@@ -60,9 +59,7 @@ export default function Navbar() {
                     key={item.to}
                     to={item.to}
                     className={`relative flex flex-col items-center group ${
-                      isActive
-                        ? "text-gray-800 font-semibold"
-                        : "text-black"
+                      isActive ? "text-gray-800 font-semibold" : "text-black"
                     }`}
                   >
                     <img className="h-7 w-auto mb-1" src={item.icon} alt="" />
@@ -100,10 +97,10 @@ export default function Navbar() {
                 </Link>
 
                 {/* ✅ Google Translate Button */}
-               <div
-  id="google_translate_element"
-  className="ml-3 border border-gray-300 rounded-md px-2 py-1 bg-white text-sm"
-></div>
+                <div
+                  id="google_translate_element"
+                  className="ml-3 border border-gray-300 rounded-md px-2 py-1 bg-white text-sm"
+                ></div>
               </div>
 
               {/* Mobile Noti */}

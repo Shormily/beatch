@@ -116,7 +116,7 @@ export default function OfferSlider() {
                     <img
                       src={offer.image}
                       alt={offer.title}
-                      className="w-full h-[260px] object-fill object-contain"
+                      className="w-full h-[260px] object-cover"
                     />
                     <a
                       href="#"

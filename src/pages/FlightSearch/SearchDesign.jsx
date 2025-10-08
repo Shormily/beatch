@@ -3,7 +3,7 @@ import Searchresult from "../../components/FlightSearch/Searchresult";
 
 const SearchDesign = () => {
   return (
-    <div className="font-murecho">
+    <div className="font-murecho relative">
       <Searchresult />
       <FlightSearchPage />
     </div>
