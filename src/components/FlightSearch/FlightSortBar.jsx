@@ -19,12 +19,9 @@ const Shimmer = ({ className = "" }) => (
 function SkeletonPill() {
   return (
     <div className="min-w-[208px] h-[72px] rounded-2xl border border-sky-100 bg-white flex items-center gap-3 px-3">
-      {/* left icon tile */}
       <div className="h-12 w-12 rounded-xl bg-white grid place-items-center">
         <Shimmer className="h-8 w-8 rounded-lg" />
       </div>
-
-      {/* right text area */}
       <div className="flex-1">
         <Shimmer className="h-4 w-24 rounded-md mb-2" />
         <Shimmer className="h-3 w-20 rounded-md" />
@@ -40,17 +37,17 @@ const ShimmerKeyframes = () => (
 
 /* ---------------- component ---------------- */
 export default function FlightSortBar({
-  sortKey,
-  onChange,
+  sortKey, // string | null
+  onChange, // (key: string|null) => void
   metrics,
   className = "",
-  loading = false, // pass status === 'loading'
+  loading = false,
 }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
   const btnRef = useRef(null);
 
-  // hooks always run
+  // Close menu on outside click
   useEffect(() => {
     const handler = (e) => {
       if (!open) return;
@@ -112,7 +109,15 @@ export default function FlightSortBar({
     </span>
   );
 
-  /* --------- loading skeleton (after hooks) --------- */
+  // Toggle helper: if clicking same key, deselect (null); otherwise select
+  const toggle = (key) => {
+    if (sortKey === key) {
+      onChange?.(null);
+    } else {
+      onChange?.(key);
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -127,28 +132,32 @@ export default function FlightSortBar({
     );
   }
 
-  /* --------- normal content --------- */
   return (
-    <div className={`flex items-start gap-2 flex-wrap ${className}`}>
+    <div
+      className={`flex items-start justify-between gap-2 flex-wrap ${className}`}
+    >
       <ShimmerKeyframes />
 
-      {/* Cheapest */}
+      {/* Cheapest (toggleable) */}
       <button
-        onClick={() => onChange("cheapest")}
-        className={`${pillBase} ${sortKey === "cheapest" ? active : inactive}`}
+        onClick={() => toggle("cheapest")}
+        aria-pressed={sortKey === "cheapest"}
+        className={`${pillBase} cursor-pointer ${
+          sortKey === "cheapest" ? active : inactive
+        }`}
       >
         <span
-          className={`grid place-items-center mx-1 rounded-xl ${
+          className={`grid place-items-center mx-2 rounded-xl ${
             sortKey === "cheapest" ? "bg-white/15" : "bg-gray-100"
           }`}
         >
           <img
             src={sortKey === "cheapest" ? cheapestWhite : cheapest}
             alt="Cheapest"
-            className={`${
+            className={`  ${
               sortKey === "cheapest"
-                ? "bg-red-600 w-12 h-13 p-3 rounded-md"
-                : "text-gray-700 bg-slate-200 rounded-md w-12 h-13 p-3"
+                ? "bg-red-600 rounded-xl w-13 h-13 p-3"
+                : "text-gray-700 bg-slate-200 rounded-xl w-13 h-13 p-3"
             }`}
           />
         </span>
@@ -160,22 +169,24 @@ export default function FlightSortBar({
         </div>
       </button>
 
-      {/* Fastest */}
+      {/* Fastest (toggleable) */}
       <button
-        onClick={() => onChange("fastest")}
+        onClick={() => toggle("fastest")}
+        aria-pressed={sortKey === "fastest"}
         className={`${pillBase} ${sortKey === "fastest" ? active : inactive}`}
       >
         <span
-          className={`grid place-items-center mx-1 rounded-xl ${
+          className={`grid place-items-center mx-2 rounded-xl ${
             sortKey === "fastest" ? "bg-white/15" : "bg-gray-100"
           }`}
         >
           <img
             src={sortKey === "fastest" ? fastestWhite : fastest}
+            alt="Fastest"
             className={`${
               sortKey === "fastest"
-                ? "bg-red-600 w-12 h-13 p-3 rounded-md"
-                : "text-gray-700 bg-slate-200 rounded-md w-12 h-13 p-3"
+                ? "bg-red-600 rounded-xl w-13 h-13 p-3"
+                : "text-gray-700 bg-slate-200 rounded-xl w-13 h-13 p-3"
             }`}
           />
         </span>
@@ -187,22 +198,24 @@ export default function FlightSortBar({
         </div>
       </button>
 
-      {/* Earliest */}
+      {/* Earliest (toggleable) */}
       <button
-        onClick={() => onChange("earliest")}
+        onClick={() => toggle("earliest")}
+        aria-pressed={sortKey === "earliest"}
         className={`${pillBase} ${sortKey === "earliest" ? active : inactive}`}
       >
         <span
-          className={`grid place-items-center mx-1 rounded-xl ${
+          className={`grid place-items-center mx-2 rounded-xl ${
             sortKey === "earliest" ? "bg-white/15" : "bg-gray-100"
           }`}
         >
           <img
             src={sortKey === "earliest" ? earliestWhitee : earliest}
+            alt="Earliest"
             className={`${
               sortKey === "earliest"
-                ? "bg-red-600 w-12 h-13 p-3 rounded-md"
-                : "text-gray-700 bg-slate-200 rounded-md w-12 h-13 p-3"
+                ? "bg-red-600 rounded-xl w-13 h-13 p-3"
+                : "text-gray-700 bg-slate-200 rounded-xl w-13 h-13 p-3"
             }`}
           />
         </span>
@@ -214,7 +227,7 @@ export default function FlightSortBar({
         </div>
       </button>
 
-      {/* More Sorts */}
+      {/* More Sorts (each is toggleable as well) */}
       <div className="relative">
         <button
           ref={btnRef}
@@ -249,14 +262,20 @@ export default function FlightSortBar({
                       : "hover:bg-gray-50 text-gray-800"
                   }`}
                   onClick={() => {
-                    onChange(key);
+                    // Toggle: clicking the active item deselects
+                    if (isActive) {
+                      onChange?.(null);
+                    } else {
+                      onChange?.(key);
+                    }
                     setOpen(false);
                   }}
                   autoFocus={idx === 0}
+                  aria-pressed={isActive}
                 >
                   {label}
                   {isActive && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-200 text-gray-700">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-600 text-white">
                       Selected
                     </span>
                   )}

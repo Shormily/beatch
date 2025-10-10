@@ -19,19 +19,53 @@ const fmtTime = (t) =>
     : "";
 const safe = (v, d = "") => (v === undefined || v === null || v === "" ? d : v);
 
-// map cabin code/label -> nice label
+// Put near your other helpers
+
+// Nice label normalizer
 const cabinLabel = (raw) => {
-  const v = String(raw || "")
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, "_");
-  if (!v) return "Economy";
-  if (["Y", "ECONOMY"].includes(v)) return "Economy";
-  if (["PREMIUM_ECONOMY", "PREMIUM", "PREMIUM_ECO"].includes(v))
-    return "Premium Economy";
-  if (["BUSINESS", "C", "J"].includes(v)) return "Business";
-  if (["FIRST", "F"].includes(v)) return "First Class";
-  return raw; // fallback to whatever came
+  if (!raw) return "Economy";
+  const v = String(raw).trim();
+
+  // UI labels first
+  const lower = v.toLowerCase();
+  if (lower === "economy") return "Economy";
+  if (lower === "premium economy") return "Premium Economy";
+  if (lower === "business" || lower === "business class") return "Business";
+  if (lower === "first" || lower === "first class") return "First";
+
+  // API tokens (common cases)
+  if (v === "PremiumEconomy") return "Premium Economy";
+  if (v.toUpperCase() === "ECONOMY") return "Economy";
+  if (v.toUpperCase() === "BUSINESS") return "Business";
+  if (v.toUpperCase() === "FIRST") return "First";
+
+  // Booking/cabin codes
+  const up = v.toUpperCase();
+  if (up === "Y") return "Economy";
+  if (up === "C" || up === "J") return "Business";
+  if (up === "F") return "First";
+
+  // fuzzy
+  if (lower.includes("premium")) return "Premium Economy";
+  if (lower.includes("business")) return "Business";
+  if (lower.includes("first")) return "First";
+
+  return "Economy";
+};
+
+// Pull a representative cabin from the first segment we find
+const extractCabinFromSegments = (flight) => {
+  const legs = getLegs(flight);
+  for (const leg of legs) {
+    const segs = leg?.flightSegments || [];
+    for (const s of segs) {
+      // prefer explicit cabinType, then code, then booking class
+      if (s?.cabinType) return s.cabinType; // e.g. "BUSINESS"
+      if (s?.cabinTypeCode) return s.cabinTypeCode; // e.g. "C"
+      if (s?.bookingClass) return s.bookingClass; // e.g. "D"
+    }
+  }
+  return null;
 };
 
 // pick legs (outbound/return)
@@ -91,13 +125,7 @@ const buildPaxMap = (flight) => {
   return map;
 };
 const paxLabel = (t) =>
-  t === "ADT"
-    ? "Adult"
-    : t === "CHD"
-    ? "Child ≥ 5"
-    : t === "INF"
-    ? "Infant"
-    : t;
+  t === "ADT" ? "Adult" : t === "CHD" ? "Child" : t === "INF" ? "Infant" : t;
 
 /* =============== row component =============== */
 function TimelineRow({ leg }) {
@@ -203,13 +231,24 @@ export default function FlightCard({ flight }) {
     [paxMap]
   );
 
-  // travel class (pull from common spots in your API payload)
-  const travelClass = cabinLabel(
-    flight?.travelClass ||
-      flight?.raw?.cabinClasse ||
-      flight?.raw?.criteria?.cabinClasse ||
-      flight?.raw?.searchRequest?.cabinClasse
-  );
+  const travelClass = useMemo(() => {
+    // 1) Prefer UI label you passed along (if present)
+    const preferred =
+      flight?.travelClassLabel ||
+      flight?.raw?.travelClassLabel ||
+      flight?.raw?.criteria?.travelClassLabel ||
+      flight?.raw?.searchRequest?.travelClassLabel;
+
+    // 2) Otherwise fallback to API-level tokens and finally segment-level data
+    const token =
+      flight?.travelClass ||
+      flight?.raw?.cabinClass ||
+      flight?.raw?.criteria?.cabinClass ||
+      flight?.raw?.searchRequest?.cabinClass ||
+      extractCabinFromSegments(flight); // <- from the sample you shared
+
+    return cabinLabel(preferred || token);
+  }, [flight]);
 
   const airFareBDT =
     (paxMap.ADT?.base || 0) +

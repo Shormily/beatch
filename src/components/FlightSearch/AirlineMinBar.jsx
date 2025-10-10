@@ -19,15 +19,26 @@ function AirlineLogo({ code }) {
     <img
       src={`https://airlines.a4aero.com/images/${code}.png`}
       alt={code}
-      className="h-10 w-10 object-contain bg-gray-50 rounded-md border border-gray-200 p-1  "
+      className="h-10 w-10 object-contain bg-gray-50 rounded-md border border-gray-200 p-1"
       onError={(e) => {
-        // fallback if image not found
         e.target.onerror = null;
-        e.target.src = "https://via.placeholder.com/24x24.png?text=?"; // optional fallback
+        e.target.src = "https://via.placeholder.com/24x24.png?text=?";
       }}
     />
   );
 }
+
+// Local, component-scoped styles to force overlay-like scrollbars
+const OverlayScrollbarStyles = () => (
+  <style>{`
+    /* Hide scrollbar but keep scrolling (WebKit) */
+    .overlay-scroll::-webkit-scrollbar { display: none; height: 0; }
+    /* Hide scrollbar (Firefox) */
+    .overlay-scroll { scrollbar-width: none; }
+    /* Reserve gutter if a UA still draws a scrollbar, avoiding layout shift */
+    .overlay-scroll { scrollbar-gutter: stable both-edges; }
+  `}</style>
+);
 
 export default function AirlineMinBar({ items = [], selected, onToggle }) {
   const scrollerRef = useRef(null);
@@ -39,21 +50,30 @@ export default function AirlineMinBar({ items = [], selected, onToggle }) {
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl">
+    <div className=" bg-white rounded-2xl overflow-hidden">
+      <OverlayScrollbarStyles />
+
       <div className="relative">
+        {/* Left chevron */}
         <button
           type="button"
           onClick={() => scrollBy(-280)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 z-10 h-8 w-8 grid place-items-center hover:bg-gray-50"
+          className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 z-10 h-8 w-8 grid place-items-center bg-white rounded-full hover:bg-red-500 hover:text-white cursor-pointer"
           aria-label="Scroll left"
         >
-          <LuChevronLeft size={36} />
+          <LuChevronLeft size={24} />
         </button>
 
+        {/* Scroller */}
         <div
           ref={scrollerRef}
-          className="overflow-x-auto whitespace-nowrap scrollbar-hide px-10"
-          style={{ scrollBehavior: "smooth" }}
+          className="overlay-scroll overflow-x-auto whitespace-nowrap px-10"
+          style={{
+            scrollBehavior: "smooth",
+            // lock in a stable height so content doesn't jump
+            // (tall enough for buttons + internal padding)
+            minHeight: 64,
+          }}
         >
           <div className="inline-flex gap-3 py-2">
             {items.map(({ code, count, price }) => {
@@ -62,11 +82,11 @@ export default function AirlineMinBar({ items = [], selected, onToggle }) {
                 <button
                   key={code}
                   onClick={() => onToggle(code)}
-                  className={`inline-flex items-center gap-3 rounded-lg cursor-pointer  hover:border-red-600 hover:bg-red-50 text-gray-500  px-8 py-2  transition
+                  className={`inline-flex items-center gap-3 rounded-lg cursor-pointer pr-10 pl-2 py-2 transition border
                     ${
                       isActive
-                        ? "bg-red-50 border border-red-600 text-red-600 "
-                        : "bg-white hover:border-red-500 "
+                        ? "bg-red-50 border-red-600 text-red-600"
+                        : "bg-white border-transparent hover:border-red-500 hover:bg-red-50/40 text-gray-700"
                     }`}
                 >
                   <AirlineLogo code={code} />
@@ -93,13 +113,14 @@ export default function AirlineMinBar({ items = [], selected, onToggle }) {
           </div>
         </div>
 
+        {/* Right chevron */}
         <button
           type="button"
           onClick={() => scrollBy(280)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 text-gray-500   grid place-items-center hover:bg-gray-50"
+          className="absolute right-2 top-1/2 -translate-y-1/2  text-gray-500 z-10 h-8 w-8 grid place-items-center bg-white rounded-full hover:bg-red-500 hover:text-white cursor-pointer"
           aria-label="Scroll right"
         >
-          <LuChevronRight size={36} />
+          <LuChevronRight size={24} />
         </button>
       </div>
     </div>

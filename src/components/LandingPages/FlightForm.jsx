@@ -14,42 +14,51 @@ import { setForm } from "../../redux/slices/searchFormSlice";
 import FirsttripCalendarClone from "./calender";
 import bdAirportsData from "../../data/airports.json";
 
-/* ---------------- helpers ---------------- */
-
 const toLocalISO = (d) => {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 };
-
+const shallowEqual = (a, b) => {
+  if (a === b) return true;
+  if (!a || !b || typeof a !== "object" || typeof b !== "object") return false;
+  const ka = Object.keys(a);
+  const kb = Object.keys(b);
+  if (ka.length !== kb.length) return false;
+  for (const k of ka) if (a[k] !== b[k]) return false;
+  return true;
+};
 function extractIata(text = "") {
-  const t = String(text || "")
-    .trim()
-    .toUpperCase();
+  const t = String(text || "").trim();
   const paren = t.match(/\(([A-Z]{3})\)/);
   if (paren) return paren[1];
   const plain = t.match(/\b[A-Z]{3}\b/);
   if (plain) return plain[0];
   return "";
 }
-
 const formatSelectLabel = (a) => (a ? `${a.cityName}, ${a.countryName}` : "");
-
-const normalizeCabin = (label = "Economy") => {
-  const v = String(label || "ECONOMY")
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, "_");
-  if (v === "PREMIUM" || v === "PREMIUM_ECO" || v === "PREMIUM_ECONOMY")
-    return "PREMIUM_ECONOMY";
-  if (v === "ECONOMY" || v === "Y") return "ECONOMY";
-  if (v === "BUSINESS" || v === "J" || v === "C") return "BUSINESS";
-  if (v === "FIRST" || v === "F") return "FIRST";
-  return v || "ECONOMY";
+const toUiCabinLabel = (label = "Economy") => {
+  const v = String(label).trim().toLowerCase();
+  if (v.includes("premium")) return "Premium Economy";
+  if (v.includes("business")) return "Business";
+  if (v.includes("first")) return "First";
+  return "Economy";
 };
-
-/* ---------------- component ---------------- */
+const toApiCabinValue = (label = "Economy") => {
+  switch (toUiCabinLabel(label)) {
+    case "Economy":
+      return "Economy";
+    case "Premium Economy":
+      return "PremiumEconomy";
+    case "Business":
+      return "Business";
+    case "First":
+      return "First";
+    default:
+      return "Economy";
+  }
+};
 
 export default function FlightForm({
   showMissingHint = true,
@@ -59,25 +68,20 @@ export default function FlightForm({
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // airports for hydrating
   const airportsState = useSelector((s) => s.airports);
   const airports = airportsState?.items || [];
   const allAirports = airports.length ? airports : bdAirportsData;
-
-  // 🔒 loading flag -> disable everything
   const flightsStatus = useSelector((s) => s.flights?.status);
   const isLoading = flightsStatus === "loading";
 
   const saved = useSelector((s) => s.searchForm);
 
-  // ----- Date defaults -----
   const today = new Date();
   const threeDaysLater = new Date(today);
   threeDaysLater.setDate(today.getDate() + 3);
   const defaultDepartureISO = toLocalISO(today);
   const defaultReturnISO = toLocalISO(threeDaysLater);
 
-  // ----- Correctly shaped default airport objects -----
   const DEFAULT_FROM_AIRPORT = {
     code: "DAC",
     name: "Hazrat Shahjalal International Airport",
@@ -95,11 +99,9 @@ export default function FlightForm({
     timezone: "6",
   };
 
-  // ----- Text defaults -----
   const DEFAULT_FROM_TEXT = formatSelectLabel(DEFAULT_FROM_AIRPORT);
   const DEFAULT_TO_TEXT = formatSelectLabel(DEFAULT_TO_AIRPORT);
 
-  // --- Local state ---
   const [tripType, setTripType] = useState(saved.tripType || "ROUND_TRIP");
   const isOneWay = tripType === "ONE_WAY";
 
@@ -115,14 +117,20 @@ export default function FlightForm({
     saved.returnDate || defaultReturnISO
   );
 
+  const initialClassUi = toUiCabinLabel(
+    saved?.travellers?.travelClass || "Economy"
+  );
+
   const [trav, setTrav] = useState(
-    saved.travellers || {
-      adults: 1,
-      children: 1,
-      infants: 1,
-      travelClass: "Economy",
-      childAges: [],
-    }
+    saved.travellers
+      ? { ...saved.travellers, travelClass: initialClassUi }
+      : {
+          adults: 1,
+          children: 1,
+          infants: 1,
+          travelClass: "Economy", // UI label
+          childAges: [],
+        }
   );
 
   const [preferredAirline] = useState(saved.preferredAirline || "");
@@ -130,7 +138,6 @@ export default function FlightForm({
 
   const [calendarAutoOpenAt, setCalendarAutoOpenAt] = useState(null); // 'start' | 'end' | null
 
-  // init defaults once
   useEffect(() => {
     const hasFrom =
       (saved.fromText && saved.fromText.trim()) || saved.fromAirport?.code;
@@ -179,7 +186,7 @@ export default function FlightForm({
     }
   }, [toAirport, toText, allAirports]);
 
-  // Keep Redux form in sync
+  // Keep Redux form in sync (store UI label + apiId, etc.)
   useEffect(() => {
     dispatch(
       setForm({
@@ -190,7 +197,7 @@ export default function FlightForm({
         toAirport,
         departureDate,
         returnDate,
-        travellers: trav,
+        travellers: trav, // contains travelClass as our UI label
         preferredAirline,
         apiId,
       })
@@ -271,7 +278,8 @@ export default function FlightForm({
     return {
       originDestinationOptions,
       passengers,
-      cabinClasse: normalizeCabin(trav.travelClass),
+      // <-- API needs these exact tokens
+      cabinClass: toApiCabinValue(trav.travelClass),
       preferredAirline: preferredAirline || undefined,
       apiId,
     };
@@ -293,7 +301,8 @@ export default function FlightForm({
           children: trav.children,
           infants: trav.infants,
         },
-        travelClassLabel: trav.travelClass,
+        // UI-friendly label (for display/criteria)
+        travelClassLabel: toUiCabinLabel(trav.travelClass),
         preferredAirline,
         apiId,
         __requestBody: buildRequestBody(),
@@ -321,6 +330,13 @@ export default function FlightForm({
     setTripType("ONE_WAY");
     setCalendarAutoOpenAt(null);
   };
+
+  const handleTravChange = React.useCallback((val) => {
+    setTrav((prev) => {
+      const next = { ...prev, ...val };
+      return shallowEqual(prev, next) ? prev : next;
+    });
+  }, []);
 
   const MissingHint = () => {
     if (!showMissingHint) return null;
@@ -436,7 +452,7 @@ export default function FlightForm({
 
             {/* Travellers */}
             <TravellerSelect
-              onChange={setTrav}
+              onChange={handleTravChange}
               initialValue={saved.travellers}
               disabled={isLoading}
             />

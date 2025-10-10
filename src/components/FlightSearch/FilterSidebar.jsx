@@ -12,6 +12,7 @@ import AirlineMinBar from "./AirlineMinBar";
 import LoadingCard from "./LoadingCard";
 import AirlineMinBarSkeleton from "./AirlineMinBarSkeleton";
 import LoadingBar from "react-top-loading-bar";
+import { setForm as setSearchForm } from "../../redux/slices/searchFormSlice";
 
 /* ================= tiny utils ================= */
 
@@ -117,8 +118,6 @@ const getAirlinesCount = (results = []) => {
   return s.size;
 };
 
-const formatCount = (n, thing) => `${n} ${thing}${n === 1 ? "" : "s"}`;
-
 const minutesToLabel = (mins) => {
   if (!Number.isFinite(mins) || mins <= 0) return "—";
   const d = Math.floor(mins / 1440);
@@ -174,6 +173,99 @@ const slotLabel = {
   EVENING: { title: "Evening", range: "18:00–23:59" },
 };
 
+/* ======== additions for summary/reset ======== */
+const plural = (n, s) => `${n} ${s}${n === 1 ? "" : "s"}`;
+
+const makeDefaultFilters = ({ priceMin, priceMax, layMin, layMax }) => ({
+  price: [priceMin, priceMax],
+  layoverHours: [layMin, layMax],
+  stops: { nonstop: false },
+  airlines: new Set(),
+  depSlots: new Set(),
+  arrSlots: new Set(),
+  baggage20kg: false,
+  refundable: false,
+  aircraft: new Set(),
+});
+
+const countActiveFilters = (f, d) => {
+  let n = 0;
+  if (f.price[0] !== d.price[0] || f.price[1] !== d.price[1]) n++;
+  if (
+    f.layoverHours[0] !== d.layoverHours[0] ||
+    f.layoverHours[1] !== d.layoverHours[1]
+  )
+    n++;
+  if (f.stops.nonstop) n++;
+  if (f.airlines.size > 0) n++;
+  if (f.depSlots.size > 0) n++;
+  if (f.arrSlots.size > 0) n++;
+  if (f.baggage20kg) n++;
+  if (f.refundable) n++;
+  if (f.aircraft.size > 0) n++;
+  return n;
+};
+
+/* ===== Cabin & Pax helpers (UI ↔ API) ===== */
+
+// Normalize any token/label -> nice UI label for display
+const cabinToUILabel = (raw) => {
+  const v = String(raw || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "");
+  if (!v) return "Economy";
+  if (v === "y" || v === "economy") return "Economy";
+  if (
+    v === "premiumeconomy" ||
+    v === "premium_economy" ||
+    v.includes("premium")
+  )
+    return "Premium Economy";
+  if (v === "business" || v === "c" || v === "j") return "Business";
+  if (v === "first" || v === "firstclass" || v === "f") return "First";
+  return "Economy";
+};
+
+// UI label -> API token with exact casing the backend expects
+const toApiCabinValue = (label = "Economy") => {
+  const v = String(label).trim().toLowerCase();
+  if (v.includes("premium")) return "PremiumEconomy";
+  if (v.includes("business")) return "Business";
+  if (v.includes("first")) return "First";
+  return "Economy";
+};
+
+// Prefer passengers array; else reconstruct from travellers
+const extractPassengers = (criteria) => {
+  if (Array.isArray(criteria?.passengers) && criteria.passengers.length) {
+    return criteria.passengers;
+  }
+  const t = criteria?.travellers || {};
+  const rows = [
+    { passengerType: "ADT", quantity: Number(t.adults || 0) },
+    { passengerType: "CHD", quantity: Number(t.children || 0) },
+    { passengerType: "INF", quantity: Number(t.infants || 0) },
+  ].filter((p) => p.quantity > 0);
+  return rows.length ? rows : [{ passengerType: "ADT", quantity: 1 }];
+};
+
+// choose best UI label from criteria
+const labelFromCriteria = (criteria) =>
+  criteria?.travelClassLabel ||
+  cabinToUILabel(criteria?.cabinClass) ||
+  "Economy";
+
+// choose best API token from criteria
+const tokenFromCriteria = (criteria) => {
+  const t1 = criteria?.__requestBody?.cabinClass;
+  if (t1) return t1;
+  if (criteria?.cabinClass) return toApiCabinValue(criteria.cabinClass);
+  if (criteria?.travelClassLabel)
+    return toApiCabinValue(criteria.travelClassLabel);
+  return "Economy";
+};
+
 /* ================= Filter UI bits ================= */
 
 function Section({ title, open, onToggle, children }) {
@@ -197,14 +289,14 @@ function Chip({ active, onClick, icon, title, sub }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left rounded-xl border px-3 py-3 mb-2 transition
+      className={`w-full cursor-pointer text-left rounded-xl border px-1 py-2  transition
         ${
           active
             ? "bg-red-50 border-red-300"
             : "bg-white hover:border-gray-300 border-gray-200"
         }`}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {icon}
         <div>
           <div className="text-sm font-semibold">{title}</div>
@@ -232,7 +324,6 @@ function DualRange({
   const handleA = (e) => onChange([Number(e.target.value), hi]);
   const handleB = (e) => onChange([lo, Number(e.target.value)]);
 
-  // guard malformed bounds
   const realMin = Number.isFinite(min) ? min : 0;
   const realMax = Number.isFinite(max) && max > realMin ? max : realMin + 1;
 
@@ -381,10 +472,10 @@ function FiltersSidebar({
             className="text-xs px-3 py-1.5 rounded-full bg-white"
           >
             <span
-              className={`${
+              className={`cursor-pointer ${
                 schedTab === "dep"
-                  ? "font-semibold text-red-600 bg-red-50 px-4 pt-2 border-b-2 border-red-600 pb-0.5"
-                  : "text-gray-500"
+                  ? "font-semibold text-red-600 bg-red-50 px-4  pt-2 border-b-2 border-red-600 pb-0.5"
+                  : "text-gray-500  px-4 pt-2 border-b-2 pb-0.5"
               }`}
             >
               Departure
@@ -396,11 +487,11 @@ function FiltersSidebar({
             className="text-xs px-3 py-1.5 rounded-full bg-white"
           >
             <span
-              className={
+              className={`cursor-pointer ${
                 schedTab === "arr"
-                  ? "font-semibold text-red-600 bg-red-50 px-4 pt-2 border-b-2 border-red-600 pb-0.5"
-                  : "text-gray-500"
-              }
+                  ? "font-semibold text-red-600 bg-red-50  px-4 pt-2 border-b-2 border-red-600 pb-0.5"
+                  : "text-gray-500  px-4 pt-2 border-b-2 pb-0.5"
+              }`}
             >
               Arrival
             </span>
@@ -442,6 +533,7 @@ function FiltersSidebar({
             checked={value.baggage20kg}
             onChange={(e) => setField({ baggage20kg: e.target.checked })}
           />
+          <span>20kg+ Checked baggage</span>
         </label>
       </Section>
 
@@ -527,37 +619,50 @@ export default function FlightSearchPage() {
 
   const [sortKey, setSortKey] = useState("best");
 
-  /* ---- date shift helpers ---- */
-
-  const cabinToLabel = (c) => {
-    switch ((c || "").toUpperCase()) {
-      case "BUSINESS":
-        return "Business";
-      case "FIRST":
-        return "First Class";
-      case "PREMIUM_ECONOMY":
-        return "Premium Economy";
-      default:
-        return "Economy";
-    }
-  };
+  /* ---- buildSearchArgs (keeps cabin + pax consistent) ---- */
 
   const buildSearchArgs = (override = {}) => {
-    const fromCode = depOD?.departureAirport || "";
-    const toCode = depOD?.arrivalAirport || "";
-    const departureDateISO = normalizeToISO(depOD?.flyDate);
-    const isRound = !!retOD;
-    const returnDateISO = isRound ? normalizeToISO(retOD?.flyDate) : undefined;
+    // base fields from current criteria / OD blocks
+    const fromCode = depOD?.departureAirport || criteria?.fromCode || "";
+    const toCode = depOD?.arrivalAirport || criteria?.toCode || "";
 
-    const pax = Array.isArray(criteria?.passengers) ? criteria.passengers : [];
-    const qty = (t) => pax.find((p) => p?.passengerType === t)?.quantity || 0;
+    const departureDateISO = normalizeToISO(
+      override.departureDate ?? depOD?.flyDate
+    );
+    const isRound = !!retOD;
+    const returnDateISO = isRound
+      ? normalizeToISO(override.returnDate ?? retOD?.flyDate)
+      : undefined;
+
+    // passengers + travellers
+    const passengers = extractPassengers(criteria);
+    const qty = (t) =>
+      passengers.find((p) => p.passengerType === t)?.quantity || 0;
     const travellers = {
       adults: qty("ADT") || 1,
       children: qty("CHD") || 0,
       infants: qty("INF") || 0,
     };
 
-    const travelClassLabel = cabinToLabel(criteria?.cabinClasse);
+    // class (UI label + API token)
+    const travelClassLabel = labelFromCriteria(criteria);
+    const cabinClassToken = tokenFromCriteria(criteria);
+
+    // origin-destination for the API body
+    const originDestinationOptions = [
+      {
+        departureAirport: fromCode,
+        arrivalAirport: toCode,
+        flyDate: departureDateISO,
+      },
+    ];
+    if (isRound) {
+      originDestinationOptions.push({
+        departureAirport: toCode,
+        arrivalAirport: fromCode,
+        flyDate: returnDateISO,
+      });
+    }
 
     return {
       tripType: isRound ? "ROUND_TRIP" : "ONE_WAY",
@@ -566,17 +671,36 @@ export default function FlightSearchPage() {
       departureDate: departureDateISO,
       returnDate: isRound ? returnDateISO : undefined,
       travellers,
-      travelClassLabel,
+      travelClassLabel, // for UI
+      // also keep cabinClass on criteria for subsequent searches
+      cabinClass: cabinClassToken,
       preferredAirline: criteria?.preferredAirline ?? undefined,
       apiId: criteria?.apiId ?? undefined,
+
+      // request body the flights API needs
+      __requestBody: {
+        originDestinationOptions,
+        passengers,
+        cabinClass: cabinClassToken,
+        preferredAirline: criteria?.preferredAirline ?? undefined,
+        apiId: criteria?.apiId ?? undefined,
+      },
+
+      // allow explicit overrides (if you pass more later)
       ...override,
     };
   };
+
+  /* ---- date shift handlers (also sync searchForm slice) ---- */
 
   const shiftDepartureBy = (delta) => {
     if (!depOD) return;
     const depISO = normalizeToISO(depOD.flyDate);
     const newDep = addDaysISO(depISO, delta);
+
+    // keep the Search Form slice in sync for the main form UI
+    dispatch(setSearchForm({ departureDate: newDep }));
+
     const args = buildSearchArgs({ departureDate: newDep });
     dispatch(searchFlights(args));
   };
@@ -585,6 +709,10 @@ export default function FlightSearchPage() {
     if (!retOD) return;
     const retISO = normalizeToISO(retOD.flyDate);
     const newRet = addDaysISO(retISO, delta);
+
+    // keep the Search Form slice in sync for the main form UI
+    dispatch(setSearchForm({ returnDate: newRet }));
+
     const args = buildSearchArgs({ returnDate: newRet });
     dispatch(searchFlights(args));
   };
@@ -752,7 +880,6 @@ export default function FlightSearchPage() {
       if (!Number.isFinite(pMax) || pMax < pMin) pMax = pMin + 1;
       if (pMax === pMin) pMax = pMin + 1;
 
-      // add a little headroom on layover hours so slider doesn't clamp
       const maxLayHours = Math.max(lMaxHours, 1);
 
       const list = Array.from(airlinePriceMap.entries())
@@ -769,21 +896,16 @@ export default function FlightSearchPage() {
       };
     }, [enriched]);
 
-  /* ---- filters state ---- */
+  /* ---- filters state (with defaults & reset) ---- */
 
-  const [filters, setFilters] = useState({
-    price: [priceMin, priceMax],
-    layoverHours: [layMin, layMax],
-    stops: { nonstop: false },
-    airlines: new Set(),
-    depSlots: new Set(),
-    arrSlots: new Set(),
-    baggage20kg: false,
-    refundable: false,
-    aircraft: new Set(),
-  });
+  const defaultFilters = useMemo(
+    () => makeDefaultFilters({ priceMin, priceMax, layMin, layMax }),
+    [priceMin, priceMax, layMin, layMax]
+  );
 
-  // keep sliders in sync when bounds change
+  const [filters, setFilters] = useState(defaultFilters);
+
+  // when bounds change, sync only range sliders to new bounds
   useEffect(() => {
     setFilters((f) => ({
       ...f,
@@ -791,6 +913,8 @@ export default function FlightSearchPage() {
       layoverHours: [layMin, layMax],
     }));
   }, [priceMin, priceMax, layMin, layMax]);
+
+  const resetAllFilters = () => setFilters(defaultFilters);
 
   /* ---- timer UI ---- */
 
@@ -941,6 +1065,12 @@ export default function FlightSearchPage() {
     return arr;
   }, [enriched, filters, sortKey]);
 
+  // airline count AFTER filters
+  const filteredAirlineCount = useMemo(
+    () => getAirlinesCount(view.map((v) => v.it)),
+    [view]
+  );
+
   /* ---- render ---- */
 
   return (
@@ -949,7 +1079,7 @@ export default function FlightSearchPage() {
         ref={loadingRef}
         color="#dc2626"
         height={3}
-        shadow={false} // ⬅️ no glow
+        shadow={false}
         waitingTime={400}
         containerStyle={{
           position: "absolute",
@@ -959,7 +1089,7 @@ export default function FlightSearchPage() {
         }}
       />
       <div className="max-w-[1200px] m-auto">
-        <div className="flex flex-col md:flex-row gap-4 p-4">
+        <div className="flex flex-col md:flex-row ">
           {/* Left Sidebar */}
           <aside className="w-full md:w-72 p-4">
             <div className="flex items-center justify-between mb-2">
@@ -1059,19 +1189,45 @@ export default function FlightSearchPage() {
           </aside>
 
           {/* Right Section */}
-          <main className="flex-1">
-            <p className="text-[14px] font-semibold mt-5 mb-4">
-              {status === "loading" && "Searching flights…"}
+          <main className="flex-1 max-w-4xl">
+            <div className="flex items-center gap-3 text-[14px] font-semibold mt-5 mb-4">
+              {status === "loading" && <span>Searching flights…</span>}
+
               {status === "failed" && (
                 <span className="text-red-600">Error: {error}</span>
               )}
-              {status === "succeeded" &&
-                `${formatCount(view.length, "Flight")} & ${formatCount(
-                  getAirlinesCount(itineraries),
-                  "Airline"
-                )}`}
-              {status === "idle" && "Pick your filters to begin"}
-            </p>
+
+              {status === "succeeded" && (
+                <>
+                  <span>
+                    Showing {plural(view.length, "Flight")} &{" "}
+                    {plural(filteredAirlineCount, "Airline")}
+                  </span>
+
+                  <span className="text-gray-300">·</span>
+
+                  {(() => {
+                    const active = countActiveFilters(filters, defaultFilters);
+                    return active > 0 ? (
+                      <button
+                        type="button"
+                        onClick={resetAllFilters}
+                        className="text-red-600 underline underline-offset-2 hover:text-red-700"
+                        title="Clear all filters"
+                      >
+                        Reset {plural(active, "filter")}
+                      </button>
+                    ) : (
+                      <span className="text-gray-500 font-normal">
+                        No filters applied
+                      </span>
+                    );
+                  })()}
+                </>
+              )}
+
+              {status === "idle" && <span>Pick your filters to begin</span>}
+            </div>
 
             {/* SORT BAR */}
             <div className="mb-4">

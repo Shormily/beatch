@@ -12,13 +12,13 @@ function buildPassengers({ adults = 1, children = 0, infants = 0 }) {
   return pax;
 }
 
-function mapClassToCabinClasse(label) {
+function mapClassToCabinClass(label) {
   if (!label) return null; // return null (not undefined) so it serializes
   const L = String(label).toLowerCase();
-  if (L.includes("business")) return "BUSINESS";
-  if (L.includes("first")) return "FIRST";
-  if (L.includes("premium")) return "PREMIUM_ECONOMY";
-  return "ECONOMY";
+  if (L.includes("business")) return "Business";
+  if (L.includes("first")) return "First";
+  if (L.includes("premium")) return "PremiumEconomy";
+  return "Economy";
 }
 
 /**
@@ -78,10 +78,11 @@ export const searchFlights = createAsyncThunk(
       const body = {
         originDestinationOptions,
         passengers: buildPassengers(travellers),
-        cabinClasse: mapClassToCabinClasse(travelClassLabel),
+        cabinClass: mapClassToCabinClass(travelClassLabel),
         preferredAirline: preferredAirline ?? null,
         apiId: Number(apiId ?? DEFAULT_API_ID),
       };
+      console.log("REQ cabinClass =", body.cabinClass, body);
 
       const res = await fetch(`${API_BASE}/api/flights/search`, {
         method: "POST",
@@ -165,7 +166,7 @@ const flightsSlice = createSlice({
           state.criteria = {
             originDestinationOptions,
             passengers: buildPassengers(travellers),
-            cabinClasse: mapClassToCabinClasse(travelClassLabel),
+            cabinClass: mapClassToCabinClass(travelClassLabel),
             preferredAirline: preferredAirline ?? null,
             apiId: Number(apiId ?? DEFAULT_API_ID),
           };

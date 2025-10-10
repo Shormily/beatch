@@ -22,9 +22,6 @@ const extractIataFromLabel = (txt = "") => {
   return m ? m[1] : "";
 };
 
-// Normalize any incoming value to just the city part.
-// "City, Country" -> "City"
-// "City"          -> "City"
 const toCityOnly = (v = "") => {
   const s = String(v || "").trim();
   const m = /^([^,]+),\s*(.+)$/.exec(s);
@@ -56,14 +53,12 @@ export default function AirportSelect({
     error: null,
   };
 
-  // Prefer Redux airports; fall back to bundled JSON so it works on first paint
   const allAirports = useMemo(() => {
     const arr = Array.isArray(airports) ? airports : [];
     const fallback = Array.isArray(bdAirportsData) ? bdAirportsData : [];
     return arr.length ? arr : fallback;
   }, [airports]);
 
-  // Bangladesh subset (used when not actively typing)
   const bdAirports = useMemo(
     () =>
       allAirports.filter((a) => (a.countryCode || "").toUpperCase() === "BD"),
@@ -72,8 +67,9 @@ export default function AirportSelect({
 
   // Local state
   const [open, setOpen] = useState(false);
-  const [q, setQ] = useState(toCityOnly(value) || ""); // 👈 city-only in the input
+  const [q, setQ] = useState(toCityOnly(value) || ""); // city-only in the input
   const [highlight, setHighlight] = useState(-1);
+  const [selected, setSelected] = useState(null); // remember exact pick
 
   // Keep local input synced with parent value (as city only)
   useEffect(() => {
@@ -179,9 +175,66 @@ export default function AirportSelect({
     );
   }, [filtered.length]);
 
-  // Resolve the selected airport for the subtitle line:
-  // 1) try by (CODE) if input carries it, 2) by "City, Country", 3) exact city-only match (unique)
+  // ---------- Selection resolution & memory ----------
+
+  // When user selects an airport, store it (so subtitle shows exact airport even for multi-airport cities)
+  const selectAirport = useCallback(
+    (a) => {
+      const v = a.cityName; // city only in the input
+      setQ(v);
+      setSelected(a);
+      onChange?.(v);
+      onSelect?.(a);
+      lastCommittedRef.current = v;
+      setOpen(false);
+      inputRef.current?.blur();
+    },
+    [onChange, onSelect]
+  );
+
+  // If typed city diverges from the remembered selection, clear it
+  useEffect(() => {
+    if (!q || !selected) return;
+    if ((selected.cityName || "").toLowerCase() !== q.toLowerCase()) {
+      setSelected(null);
+    }
+  }, [q, selected]);
+
+  // If parent sets value (city-only), try to resolve a preferred airport
+  useEffect(() => {
+    const city = toCityOnly(value || "");
+    if (!city) {
+      setSelected(null);
+      return;
+    }
+    // already selected & matches the city? keep it
+    if (
+      selected &&
+      (selected.cityName || "").toLowerCase() === city.toLowerCase()
+    ) {
+      return;
+    }
+    const matches = allAirports.filter(
+      (a) => (a.cityName || "").toLowerCase() === city.toLowerCase()
+    );
+    if (matches.length === 1) {
+      setSelected(matches[0]);
+    } else if (matches.length > 1) {
+      // Prefer the airport whose name includes "International"
+      const intl =
+        matches.find((a) =>
+          (a.name || "").toLowerCase().includes("international")
+        ) || null;
+      setSelected(intl || matches[0] || null);
+    } else {
+      setSelected(null);
+    }
+  }, [value, allAirports]); // intentionally not depending on `selected` to avoid loops
+
+  // Fallback resolver (code in input, city+country label, exact city unique, or "International" among multiples)
   const selectedAirport = useMemo(() => {
+    if (selected) return selected;
+
     const label = (q || value || "").trim();
 
     const byCode = (() => {
@@ -206,22 +259,12 @@ export default function AirportSelect({
     );
     if (exactCity.length === 1) return exactCity[0];
 
-    return null;
-  }, [allAirports, q, value]);
-
-  // Selection handler — commit city only to the input/parent, but pass full airport object via onSelect
-  const selectAirport = useCallback(
-    (a) => {
-      const v = a.cityName; // 👈 city only
-      setQ(v);
-      onChange?.(v);
-      onSelect?.(a);
-      lastCommittedRef.current = v;
-      setOpen(false);
-      inputRef.current?.blur();
-    },
-    [onChange, onSelect]
-  );
+    const intl =
+      exactCity.find((a) =>
+        (a.name || "").toLowerCase().includes("international")
+      ) || null;
+    return intl || null;
+  }, [allAirports, q, value, selected]);
 
   // Keyboard nav
   const onKeyDown = (e) => {
