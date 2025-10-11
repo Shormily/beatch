@@ -1,5 +1,13 @@
+// src/components/Navbar.jsx
 import { useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectUser,
+} from "../../redux/slices/authSlice";
+
 import { FaBars } from "react-icons/fa";
 import { FaBoxesPacking } from "react-icons/fa6";
 import { BsSearch } from "react-icons/bs";
@@ -17,6 +25,11 @@ import Promotions from "../LandingPages/assets/Promotions.png";
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const isAuthed = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectUser);
 
   const navItems = [
     { to: "/", label: "Flight", icon: Flight },
@@ -24,6 +37,12 @@ export default function Navbar() {
     { to: "/searchresult", label: "Promotions", icon: Promotions },
     { to: "/business", label: "Business Class", icon: Business },
   ];
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setOpen(false);
+    navigate("/", { replace: true });
+  };
 
   return (
     <>
@@ -35,6 +54,7 @@ export default function Navbar() {
               <button
                 className="text-2xl flex items-center"
                 onClick={() => setOpen(!open)}
+                aria-label="Toggle menu"
               >
                 <FaBars />
               </button>
@@ -80,21 +100,37 @@ export default function Navbar() {
               })}
             </div>
 
-            {/* Right Side */}
+            {/* Right Side (Desktop Auth Buttons) */}
             <div className="flex items-center gap-3">
               <div className="hidden md:flex items-center gap-3">
-                <Link
-                  to="/sign"
-                  className="px-5 py-2 border border-red-500 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all duration-300"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/signup"
-                  className="px-5 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-300"
-                >
-                  Sign Up
-                </Link>
+                {isAuthed ? (
+                  <>
+                    <span className="text-sm text-gray-700">
+                      {user?.name || user?.email || "My Account"}
+                    </span>
+                    <button
+                      onClick={handleLogout}
+                      className="px-5 py-2 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-100 transition-all duration-300"
+                    >
+                      Log out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/sign"
+                      className="px-5 py-2 border border-red-500 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all duration-300"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="px-5 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-300"
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
               </div>
 
               {/* Mobile Noti */}
@@ -113,7 +149,7 @@ export default function Navbar() {
         >
           <div className="flex justify-between items-center p-4">
             <img className="h-10" src={navlogo} alt="logo" />
-            <button onClick={() => setOpen(false)}>
+            <button onClick={() => setOpen(false)} aria-label="Close menu">
               <RxCross1 className="text-xl" />
             </button>
           </div>
@@ -139,20 +175,38 @@ export default function Navbar() {
               </NavLink>
             ))}
 
-            {/* Mobile Buttons */}
+            {/* Mobile Auth Buttons */}
             <div className="flex flex-col gap-3 pt-6">
-              <Link
-                to="/signin"
-                className="w-full px-4 py-2 border border-red-500 text-red-500 rounded-full text-center hover:bg-red-500 hover:text-white transition-all"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/signup"
-                className="w-full px-4 py-2 bg-red-500 text-white rounded-full text-center hover:bg-red-600 transition-all"
-              >
-                Sign Up
-              </Link>
+              {isAuthed ? (
+                <>
+                  <div className="text-sm text-gray-700 px-1">
+                    {user?.name || user?.email || "My Account"}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-full text-center hover:bg-gray-100 transition-all"
+                  >
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/sign" // keep consistent with desktop
+                    onClick={() => setOpen(false)}
+                    className="w-full px-4 py-2 border border-red-500 text-red-500 rounded-full text-center hover:bg-red-500 hover:text-white transition-all"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setOpen(false)}
+                    className="w-full px-4 py-2 bg-red-500 text-white rounded-full text-center hover:bg-red-600 transition-all"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

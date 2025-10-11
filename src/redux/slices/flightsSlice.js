@@ -1,5 +1,6 @@
 // src/redux/slices/flightsSlice.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { selectBestToken, selectAuthHeader } from "./authSlice";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 const DEFAULT_API_ID = Number(import.meta?.env?.VITE_FLIGHTS_API_ID || 1001);
@@ -13,7 +14,7 @@ function buildPassengers({ adults = 1, children = 0, infants = 0 }) {
 }
 
 function mapClassToCabinClass(label) {
-  if (!label) return null; // return null (not undefined) so it serializes
+  if (!label) return null;
   const L = String(label).toLowerCase();
   if (L.includes("business")) return "Business";
   if (L.includes("first")) return "First";
@@ -21,26 +22,18 @@ function mapClassToCabinClass(label) {
   return "Economy";
 }
 
-/**
- * Args supported:
- * {
- *   tripType: "ONE_WAY" | "ROUND_TRIP",
- *   fromCode, toCode, departureDate, returnDate?,
- *   travellers: { adults, children, infants },
- *   travelClassLabel, preferredAirline, apiId?,
- *   token?
- * }
- */
 export const searchFlights = createAsyncThunk(
   "flights/search",
   async (args, { getState, rejectWithValue }) => {
     try {
-      const state = typeof getState === "function" ? getState() : undefined;
-      const token = (args && args.token) || state?.auth?.token;
+      const state = getState?.() ?? undefined;
 
+      // Prefer user token; fall back to app token; allow override via args.token
+      const token =
+        (args && args.token) || (state ? selectBestToken(state) : null);
       if (!token) {
         throw new Error(
-          "Missing auth token. Ensure reducer is mounted at state.auth or pass { token } to searchFlights."
+          "Missing auth token. Ensure auth slice is mounted and app/user token exists, or pass { token } to searchFlights."
         );
       }
 
@@ -82,22 +75,23 @@ export const searchFlights = createAsyncThunk(
         preferredAirline: preferredAirline ?? null,
         apiId: Number(apiId ?? DEFAULT_API_ID),
       };
-      console.log("REQ cabinClass =", body.cabinClass, body);
 
+      // ✅ FIX: single headers object; no nested "headers" key
       const res = await fetch(`${API_BASE}/api/flights/search`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...(state
+            ? selectAuthHeader(state)
+            : { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify(body),
       });
 
       if (!res.ok) {
         const text = await res.text().catch(() => "");
-        if (res.status === 401) {
+        if (res.status === 401)
           throw new Error("Unauthorized (401). Token missing/expired/invalid.");
-        }
         throw new Error(
           `Search failed (${res.status}). ${text || "No details"}`
         );
@@ -116,7 +110,7 @@ const flightsSlice = createSlice({
   initialState: {
     results: null,
     criteria: null,
-    status: "idle", // idle | loading | succeeded | failed
+    status: "idle",
     error: null,
   },
   reducers: {
@@ -129,7 +123,6 @@ const flightsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // ✅ update criteria immediately so UI date labels refresh on prev/next click
       .addCase(searchFlights.pending, (state, action) => {
         state.status = "loading";
         state.error = null;
@@ -175,7 +168,7 @@ const flightsSlice = createSlice({
       .addCase(searchFlights.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.results = action.payload?.data ?? null;
-        state.criteria = action.payload?.criteria ?? state.criteria; // keep pending value if API omits it
+        state.criteria = action.payload?.criteria ?? state.criteria;
       })
       .addCase(searchFlights.rejected, (state, action) => {
         state.status = "failed";

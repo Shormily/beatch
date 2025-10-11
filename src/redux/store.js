@@ -15,20 +15,56 @@ import {
 import authReducer from "./slices/authSlice";
 import flightsReducer from "./slices/flightsSlice";
 import airportsReducer from "./slices/airportsSlice";
-import searchFormReducer from "./slices/searchFormSlice"; // ✅ add this
+import searchFormReducer from "./slices/searchFormSlice";
 
 const rootReducer = combineReducers({
   auth: authReducer,
   flights: flightsReducer,
   airports: airportsReducer,
-  searchForm: searchFormReducer, // ✅ mount it if you whitelist it
+  searchForm: searchFormReducer,
 });
 
+// 🚀 add a version + migrate to handle old auth shape
 const persistConfig = {
   key: "root",
   storage,
-  // Persist only what you truly need. Keeping `flights` can be large; safe to remove if you prefer.
-  whitelist: ["auth", "airports", "searchForm", "flights"], // ✅ add searchForm here
+  version: 2,
+  whitelist: ["auth", "airports", "searchForm", "flights"],
+  migrate: async (state) => {
+    if (!state) return state;
+
+    try {
+      const s = { ...state };
+
+      // If auth exists but doesn't have the new nested keys, wrap it.
+      const a = s.auth && typeof s.auth === "object" ? s.auth : null;
+      const hasNewShape = a && ("app" in a || "user" in a);
+
+      if (a && !hasNewShape) {
+        s.auth = {
+          app: {
+            token: a.token ?? null,
+            expire: a.expire ?? null,
+            status: a.status ?? "idle",
+            error: a.error ?? null,
+          },
+          user: {
+            token: null,
+            expire: null,
+            profile: null,
+            status: "idle",
+            error: null,
+            isAuthenticated: false,
+          },
+        };
+      }
+
+      return s;
+    } catch {
+      // As a fallback, drop persisted state if migration fails
+      return undefined;
+    }
+  },
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -38,7 +74,6 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // Silence redux-persist non-serializable warnings
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
     }),

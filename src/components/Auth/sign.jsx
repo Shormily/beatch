@@ -1,157 +1,269 @@
 // src/components/Sign.jsx
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import login from "../LandingPages/assets/login.svg";
-import email from "../LandingPages/assets/email.png";
-import lock from "../LandingPages/assets/lock.png";
+import emailIcon from "../LandingPages/assets/email.png";
+import lockIcon from "../LandingPages/assets/lock.png";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook, FaApple, FaLock, FaChevronLeft } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { FaFacebook, FaApple, FaChevronLeft } from "react-icons/fa";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Explore from "../LandingPages/Explore";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  loginCustomer,
+  selectIsAuthenticated,
+} from "../../redux/slices/authSlice";
 
 const Sign = () => {
-  const [mode, setMode] = useState("choose"); // "choose" | "email" | "mobile"
+  const [mode, setMode] = useState("choose");
+  const [email, setEmail] = useState("");
+  const [showEmailPassword, setShowEmailPassword] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isAuthed = useSelector(selectIsAuthenticated);
+  const userStatus = useSelector((s) => s.auth?.user?.status || "idle");
+  const userError = useSelector((s) => s.auth?.user?.error || "");
+
+  const isLoading = userStatus === "loading";
+  const redirectTo = useMemo(
+    () => location.state?.from || "/",
+    [location.state]
+  );
+
+  // If already logged in, redirect out of the sign-in page
+  useEffect(() => {
+    if (isAuthed) {
+      navigate(redirectTo, { replace: true });
+    }
+  }, [isAuthed, navigate, redirectTo]);
+
+  const submitEmailPassword = async (e) => {
+    e?.preventDefault?.();
+    if (!email || !password) return;
+
+    // Dispatch login thunk
+    dispatch(loginCustomer({ email, password }));
+  };
 
   return (
-    <section
-     
-    >
-      <div  className="relative flex min-h-screen items-center justify-center bg-cover bg-center font-murecho"
-      style={{ backgroundImage: `url(${login})` }}>
-{/* Login card */}
-      <div className="w-[350px] max-w-md rounded-2xl bg-white shadow-2xl p-8 mx-4">
-        <h2 className="text-2xl font-bold text-gray-800 text-center mb-2">
-          Sign In
-        </h2>
-        <p className="text-sm text-center mb-6">Sign in to your account</p>
+    <section>
+      <div
+        className="relative flex min-h-screen items-center justify-center bg-cover bg-center font-murecho"
+        style={{ backgroundImage: `url(${login})` }}
+      >
+        {/* Login card */}
+        <div className="w-[350px] max-w-md rounded-2xl bg-white shadow-2xl p-8 mx-4">
+          <h2 className="text-2xl font-bold text-gray-800 text-center mb-2">
+            Sign In
+          </h2>
+          <p className="text-sm text-center mb-6">Sign in to your account</p>
 
-        {/* STEP 1: Choose Email or Mobile */}
-        {mode === "choose" && (
-          <>
-            {/* Email button */}
-            <button
-              onClick={() => setMode("email")}
-              className="w-full flex items-center justify-center gap-2 bg-red-700 text-white py-2 px-4 rounded-md cursor-pointer transition mb-4"
-            >
-              <img src={email} alt="email" className="w-4 h-4" />
-              <span>Email Address</span>
-            </button>
+          {/* STEP 1: Choose Email or Mobile */}
+          {mode === "choose" && (
+            <>
+              {/* Email button */}
+              <button
+                onClick={() => setMode("email")}
+                className="w-full flex items-center justify-center gap-2 bg-red-700 text-white py-2 px-4 rounded-md cursor-pointer transition mb-4"
+              >
+                <img src={emailIcon} alt="email" className="w-4 h-4" />
+                <span>Email Address</span>
+              </button>
 
-            {/* Mobile button */}
-            <button
-              onClick={() => setMode("mobile")}
-              className="w-full cursor-pointer flex items-center justify-center gap-2 border border-gray-300 rounded-md py-2 px-4 hover:bg-gray-50 transition"
-            >
-              <img src="/asset/Call.png"
-              
-              className="w-4 h-4" />
-              <span>Mobile Number</span>
-            </button>
-          </>
-        )}
+              {/* Mobile button */}
+              <button
+                onClick={() => setMode("mobile")}
+                className="w-full cursor-pointer flex items-center justify-center gap-2 border border-gray-300 rounded-md py-2 px-4 hover:bg-gray-50 transition"
+              >
+                <img src="/asset/Call.png" className="w-4 h-4" />
+                <span>Mobile Number</span>
+              </button>
+            </>
+          )}
 
-        {/* STEP 2: Email flow */}
-        {mode === "email" && (
-          <>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email <span className="text-red-600">*</span>
-            </label>
-            <input
-              type="email"
-              placeholder="Write your email"
-              className="w-full border text-[12px] border-gray-300 rounded-md px-4 py-2 outline-none focus:ring-2 focus:ring-red-500 mb-4"
-            />
-
-            <button className="w-full text-[13px] flex items-center justify-center gap-2 bg-red-700 text-white py-2 rounded-md hover:bg-red-500 transition">
-               <img src={lock} alt="mobile" className="w-4 h-4" />
-              <span>Sign In with Password</span>
-            </button>
-
-            <button className="w-full mt-3 border text-[14px] border-gray-300 rounded-md py-2 hover:bg-gray-50 transition">
-              Send OTP
-            </button>
-
-            {/* Back */}
-            <button
-              onClick={() => setMode("choose")}
-              className="mt-4 mx-auto flex items-center gap-2 text-sm text-red-600 hover:underline"
-            >
-              <FaChevronLeft className="text-[12px]" />
-              Back
-            </button>
-          </>
-        )}
-
-        {/* STEP 3: Mobile flow */}
-        {mode === "mobile" && (
-          <>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mobile Number
-            </label>
-
-            <div className="w-full flex items-center border border-gray-300 rounded-md overflow-hidden mb-4">
-              <div className="flex items-center gap-2 pl-3 pr-2 text-sm text-gray-700 bg-gray-50">
-                <span aria-hidden>🇧🇩</span>
-                <span className="text-gray-500">+880</span>
-              </div>
+          {/* STEP 2: Email flow */}
+          {mode === "email" && (
+            <>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email <span className="text-red-600">*</span>
+              </label>
               <input
-                type="tel"
-                placeholder="xxxx-xxxxxxx"
-                className="flex-1 px-3 py-2 outline-none"
+                type="email"
+                placeholder="Write your email"
+                className="w-full border text-[12px] border-gray-300 rounded-md px-4 py-2 outline-none focus:ring-2 focus:ring-red-500 mb-4"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
               />
-            </div>
 
-            <button className="w-full text-sm flex items-center justify-center gap-2 bg-red-700 text-white py-2 rounded-md  transition">
-              <img src={lock} alt="mobile" className="w-4 h-4" />
-              <span>Sign In with Password</span>
-            </button>
+              {!showEmailPassword ? (
+                <>
+                  <button
+                    onClick={() => setShowEmailPassword(true)}
+                    className="w-full text-[13px] flex items-center justify-center gap-2 bg-red-700 text-white py-2 rounded-md hover:bg-red-600 transition"
+                  >
+                    <img src={lockIcon} alt="lock" className="w-4 h-4" />
+                    <span>Sign In with Password</span>
+                  </button>
 
-            <button className="w-full mt-3 text-[14px] border border-gray-300 rounded-md py-2 hover:bg-gray-50 transition">
-              Send OTP
-            </button>
+                  <button
+                    className="w-full mt-3 border text-[14px] border-gray-300 rounded-md py-2 opacity-60 cursor-not-allowed"
+                    title="OTP flow not implemented yet"
+                    disabled
+                  >
+                    Send OTP
+                  </button>
+                </>
+              ) : (
+                <form onSubmit={submitEmailPassword} className="mt-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Password <span className="text-red-600">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPwd ? "text" : "password"}
+                      placeholder="Your password"
+                      className="w-full border text-[12px] border-gray-300 rounded-md px-4 py-2 pr-10 outline-none focus:ring-2 focus:ring-red-500"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPwd((s) => !s)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500"
+                      aria-label={showPwd ? "Hide password" : "Show password"}
+                    >
+                      {showPwd ? "Hide" : "Show"}
+                    </button>
+                  </div>
 
-            {/* Back */}
+                  {!!userError && (
+                    <p className="mt-2 text-xs text-red-600">{userError}</p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isLoading || !email || !password}
+                    className="mt-4 w-full text-[13px] flex items-center justify-center gap-2 bg-red-700 text-white py-2 rounded-md disabled:opacity-60 hover:bg-red-600 transition"
+                  >
+                    <img src={lockIcon} alt="lock" className="w-4 h-4" />
+                    <span>{isLoading ? "Signing in..." : "Sign In"}</span>
+                  </button>
+                </form>
+              )}
+
+              {/* Back */}
+              <button
+                onClick={() => {
+                  setShowEmailPassword(false);
+                  setPassword("");
+                  setMode("choose");
+                }}
+                className="mt-4 mx-auto flex items-center gap-2 text-sm text-red-600 hover:underline"
+              >
+                <FaChevronLeft className="text-[12px]" />
+                Back
+              </button>
+            </>
+          )}
+
+          {/* STEP 3: Mobile flow */}
+          {mode === "mobile" && (
+            <>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mobile Number
+              </label>
+
+              <div className="w-full flex items-center border border-gray-300 rounded-md overflow-hidden mb-4">
+                <div className="flex items-center gap-2 pl-3 pr-2 text-sm text-gray-700 bg-gray-50">
+                  <span aria-hidden>🇧🇩</span>
+                  <span className="text-gray-500">+880</span>
+                </div>
+                <input
+                  type="tel"
+                  placeholder="xxxx-xxxxxxx"
+                  className="flex-1 px-3 py-2 outline-none"
+                  disabled
+                />
+              </div>
+
+              <button
+                className="w-full text-sm flex items-center justify-center gap-2 bg-red-700 text-white py-2 rounded-md transition opacity-60 cursor-not-allowed"
+                disabled
+                title="Mobile-password sign-in not implemented yet"
+              >
+                <img src={lockIcon} alt="mobile" className="w-4 h-4" />
+                <span>Sign In with Password</span>
+              </button>
+
+              <button
+                className="w-full mt-3 text-[14px] border border-gray-300 rounded-md py-2 opacity-60 cursor-not-allowed"
+                disabled
+                title="OTP flow not implemented yet"
+              >
+                Send OTP
+              </button>
+
+              {/* Back */}
+              <button
+                onClick={() => setMode("choose")}
+                className="mt-4 mx-auto flex items-center gap-2 text-sm text-red-600 hover:underline"
+              >
+                <FaChevronLeft className="text-[12px]" />
+                Back
+              </button>
+            </>
+          )}
+
+          {/* Divider */}
+          <div className="flex items-center my-5">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="mx-3 text-sm">Or Sign In with</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+          </div>
+
+          {/* Social buttons (placeholders) */}
+          <div className="flex justify-center gap-4 mb-6">
             <button
-              onClick={() => setMode("choose")}
-              className="mt-4 mx-auto flex items-center gap-2 text-sm text-red-600 hover:underline"
+              className="border p-2 rounded-md border-gray-300"
+              title="Google Sign-In not implemented"
+              disabled
             >
-              <FaChevronLeft className="text-[12px]" />
-              Back
+              <FcGoogle size={24} />
             </button>
-          </>
-        )}
+            <button
+              className="border p-2 rounded-md border-gray-300 text-blue-600 opacity-60 cursor-not-allowed"
+              title="Facebook Sign-In not implemented"
+              disabled
+            >
+              <FaFacebook size={24} />
+            </button>
+            <button
+              className="border p-2 rounded-md border-gray-300 text-black opacity-60 cursor-not-allowed"
+              title="Apple Sign-In not implemented"
+              disabled
+            >
+              <FaApple size={24} />
+            </button>
+          </div>
 
-        {/* Divider */}
-        <div className="flex items-center my-5">
-          <div className="flex-grow border-t border-gray-300"></div>
-          <span className="mx-3 text-sm">Or Sign In with</span>
-          <div className="flex-grow border-t border-gray-300"></div>
+          {/* Sign Up */}
+          <p className="text-sm text-center text-gray-600">
+            Don’t have an account?{" "}
+            <Link to="/signup" className="text-red-600 font-semibold underline">
+              Sign up!
+            </Link>
+          </p>
         </div>
-
-        {/* Social buttons */}
-        <div className="flex justify-center gap-4 mb-6">
-          <button className="border p-2 rounded-md border-gray-300">
-            <FcGoogle size={24} />
-          </button>
-          <button className="border p-2 rounded-md border-gray-300 text-blue-600">
-            <FaFacebook size={24} />
-          </button>
-          <button className="border p-2 rounded-md border-gray-300 text-black">
-            <FaApple size={24} />
-          </button>
-        </div>
-        {/* Sign Up */}
-        <p className="text-sm text-center text-gray-600">
-          Don’t have an account?{" "}
-          <Link to="/signup" className="text-red-600 font-semibold underline">
-         Sign up!
-          </Link>
-        </p>
       </div>
-      </div>
-    <Explore/>
 
-
-      
+      {/* Keep your Explore section */}
+      <Explore />
     </section>
   );
 };
