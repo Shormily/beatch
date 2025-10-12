@@ -1,6 +1,9 @@
-// FareModalDemo.jsx
+// src/components/FareModal.jsx
 "use client";
 import React, { useMemo, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { setSelectedFlight } from "../../redux/slices/checkoutSlice";
 
 /* ---------- small helpers ---------- */
 const safe = (v, d = "—") =>
@@ -27,15 +30,16 @@ export default function FareModalDemo({ flight }) {
   const [selected, setSelected] = useState(null);
   const scrollRef = useRef(null);
 
-  /* ---------- header info (works for one-way & round-trip) ---------- */
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  /* ---------- header info ---------- */
   const legs = useMemo(() => getLegs(flight), [flight]);
   const tripType = legs.length > 1 ? "Round Trip" : "One Way";
 
-  // First leg + last leg to get overall O&D
   const firstLeg = legs[0] || {};
   const lastLeg = legs.length > 1 ? legs[legs.length - 1] : legs[0] || {};
-
-  const { first: flFirst, last: flLast } = firstLastSeg(firstLeg);
+  const { first: flFirst } = firstLastSeg(firstLeg);
   const { last: llLast } = firstLastSeg(lastLeg);
 
   const depCity = flFirst?.departure?.airport?.cityName;
@@ -46,20 +50,18 @@ export default function FareModalDemo({ flight }) {
   const arrCityCode =
     llLast?.arrival?.airport?.cityCode || llLast?.arrival?.airport?.airportCode;
 
-  const firstLegFlyDate = firstLeg?.flyDate; // e.g. "2025-10-15"
+  const firstLegFlyDate = firstLeg?.flyDate;
   const firstLegDepTime = flFirst?.departure?.depTime;
-  const firstLegArrTime = flFirst?.arrival?.arrTime; // same-seg arrival (simple header line)
+  const firstLegArrTime = flFirst?.arrival?.arrTime;
 
-  /* ---------- fare options from raw.fares (keep your design) ---------- */
+  /* ---------- fare options from raw.fares ---------- */
   const fareOptions =
     flight?.raw?.fares?.map((f, i) => {
       const firstPax = f.passengerFares?.[0] || {};
-      // BDT base + tax from first passenger type (as in your modal)
       const base =
         firstPax?.referanceFares?.find(
           (r) => r.currency === "BDT" && r.type === "FARE"
         )?.amount ?? 0;
-
       const tax =
         firstPax?.referanceFares?.find(
           (r) => r.currency === "BDT" && r.type === "TAX"
@@ -67,7 +69,6 @@ export default function FareModalDemo({ flight }) {
 
       const total = Number(base) + Number(tax);
 
-      // Refund / Reissue flags (any penalty group match)
       const refundAllowed = Array.isArray(firstPax?.penalties)
         ? firstPax.penalties.some(
             (p) => (p?.group || "").toUpperCase() === "CANCEL"
@@ -80,8 +81,7 @@ export default function FareModalDemo({ flight }) {
           )
         : false;
 
-      // Baggage list (keep your layout)
-      const baggageList = Array.isArray(firstPax?.baggages)
+      const baggages = Array.isArray(firstPax?.baggages)
         ? firstPax.baggages
         : [];
 
@@ -92,7 +92,7 @@ export default function FareModalDemo({ flight }) {
         refundable: !!firstPax?.refundable,
         refundAllowed,
         reissueAllowed,
-        baggages: baggageList,
+        baggages,
       };
     }) ?? [];
 
@@ -101,9 +101,31 @@ export default function FareModalDemo({ flight }) {
     scrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
   }
 
-  function handleContinue() {
-    window.location.href = "/fare";
-  }
+  const handleContinue = () => {
+    const chosen = fareOptions.find((x) => x.id === selected);
+    const promoCode = "FTFLASH10";
+
+    // Build minimal pricing using chosen fare for adults (UI parity with card)
+    const airFareBDT = chosen?.price ?? 0;
+    const couponBDT = legs.length > 1 ? 3895 : 1894;
+    const totalBDT = Math.max(airFareBDT - couponBDT, 0);
+
+    dispatch(
+      setSelectedFlight({
+        flight,
+        pricing: {
+          airFareBDT,
+          couponBDT,
+          totalBDT,
+          promoCode,
+        },
+        travelClass: chosen?.title || "Economy",
+        travelerCount: 1, // you can compute from search criteria if you store it
+      })
+    );
+
+    navigate("/booking");
+  };
 
   return (
     <div className="flex">
@@ -152,7 +174,7 @@ export default function FareModalDemo({ flight }) {
                 More fare options available for your trip.
               </h3>
 
-              {/* Flight summary header (fixed for round-trip) */}
+              {/* Summary header */}
               <div className="bg-sky-50 border border-gray-200">
                 <div className="flex flex-wrap items-center gap-3 pt-4 px-4 text-sm text-gray-600">
                   <div className="flex items-center gap-2 font-medium text-gray-700">
@@ -240,7 +262,6 @@ export default function FareModalDemo({ flight }) {
                           </div>
                         </div>
 
-                        {/* Features list */}
                         <div className="mt-4 rounded-md p-3 text-sm text-gray-700 h-64 overflow-y-auto">
                           <div className="text-xs font-medium bg-sky-50 p-2 rounded-md text-gray-800 mb-2">
                             Baggage
@@ -267,7 +288,6 @@ export default function FareModalDemo({ flight }) {
                               </li>
                             ))}
 
-                            {/* Refund/Reissue */}
                             <li className="flex items-center gap-2">
                               {f.refundAllowed ? <Check /> : <Cross />}
                               <span

@@ -1,7 +1,8 @@
+// src/redux/slices/authSlice.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 const API_BASE = import.meta.env.VITE_API_URL;
-const APP_SECRATE = import.meta.env.VITE_APP_SECRET; // keep your current env key
+const APP_SECRATE = import.meta.env.VITE_APP_SECRET; // keeping your current env key
 
 /* ===================== APP TOKEN (for preloaders) ===================== */
 export const fetchToken = createAsyncThunk(
@@ -27,10 +28,7 @@ export const fetchToken = createAsyncThunk(
 
       if (!token) throw new Error("No token found in response payload");
 
-      return {
-        token,
-        expire: data?.expire || null,
-      };
+      return { token, expire: data?.expire || null };
     } catch (err) {
       return rejectWithValue(err.message || "Failed to fetch token");
     }
@@ -50,11 +48,8 @@ export const loginCustomer = createAsyncThunk(
       const res = await fetch(`${API_BASE}/api/auth/customer/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // 👇 send "username" instead of "email"
-        body: JSON.stringify({
-          username: email,
-          password,
-        }),
+        // API expects "username" not "email"
+        body: JSON.stringify({ username: email, password }),
       });
 
       const text = await res.text();
@@ -65,7 +60,7 @@ export const loginCustomer = createAsyncThunk(
         throw new Error(`Login failed (${res.status}) ${text?.slice(0, 200)}`);
       }
 
-      if (!res.ok || !data?.isSuccess) {
+      if (!res.ok || data?.isSuccess === false) {
         const msg =
           data?.messages?.[0] ||
           data?.message ||
@@ -81,8 +76,9 @@ export const loginCustomer = createAsyncThunk(
         expire: data?.expire || null,
         profile: {
           id: data?.id || data?.UserId || data?.CustomerId || null,
-          name: data?.name || data?.Name || null,
-          email: data?.email || data?.unique_name || null,
+          name: data?.name || data?.Name || "",
+          email: data?.email || data?.unique_name || "",
+          phone: data?.phone || "",
           role: data?.role || data?.RoleIds || null,
           url: data?.url || null,
         },
@@ -94,6 +90,7 @@ export const loginCustomer = createAsyncThunk(
   }
 );
 
+/* ===================== SIGNUP + VERIFY ===================== */
 const genTempPassword = () =>
   `Tmp@${Math.random().toString(36).slice(2, 8)}${Date.now()
     .toString()
@@ -161,8 +158,9 @@ export const signupCustomer = createAsyncThunk(
       try {
         data = text ? JSON.parse(text) : {};
       } catch {
-        console.log("error on data");
+        // ignore parse error; show generic error below if needed
       }
+
       if (!res.ok || data?.isSuccess === false) {
         const msg =
           data?.messages?.[0] ||
@@ -171,22 +169,13 @@ export const signupCustomer = createAsyncThunk(
         throw new Error(msg);
       }
 
-      return {
-        email,
-        mobile,
-        passwordUsed, // for auto-login after verify
-      };
+      return { email, mobile, passwordUsed };
     } catch (err) {
       return rejectWithValue(err.message || "Signup failed");
     }
   }
 );
 
-/* ---------- VERIFY OTP (step 2) ---------- */
-/**
- * payload: { code:string, email:string }
- * Optionally support resend: { resend:true, email }
- */
 export const verifySignupCode = createAsyncThunk(
   "auth/verifySignupCode",
   async (payload, { rejectWithValue }) => {
@@ -195,7 +184,7 @@ export const verifySignupCode = createAsyncThunk(
       if (!email) throw new Error("verifyEmail (email) is required");
 
       const body = {
-        VerificationCode: resend ? "" : code, // some APIs ignore code on resend
+        VerificationCode: resend ? "" : code,
         verifyEmail: email,
         IsResend: Boolean(resend),
       };
@@ -211,8 +200,9 @@ export const verifySignupCode = createAsyncThunk(
       try {
         data = text ? JSON.parse(text) : {};
       } catch {
-        console.log("error on otp");
+        // ignore parse error; show generic error below if needed
       }
+
       if (!res.ok || data?.isSuccess === false) {
         const msg =
           data?.messages?.[0] ||
@@ -254,7 +244,7 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // app token manual set/clear (rarely needed)
+    // app token manual set/clear
     setAppToken(state, action) {
       state.app.token = action.payload?.token || action.payload || null;
       state.app.expire = action.payload?.expire || null;
@@ -309,7 +299,8 @@ const authSlice = createSlice({
         state.user.status = "succeeded";
         state.user.token = action.payload.token;
         state.user.expire = action.payload.expire || null;
-        state.user.profile = action.payload.profile || null;
+        const p = action.payload || {};
+        state.user.profile = p.profile || p.raw || null; // ✅ ensure profile is never null
         state.user.isAuthenticated = true;
       })
       .addCase(loginCustomer.rejected, (state, action) => {
@@ -318,8 +309,9 @@ const authSlice = createSlice({
           action.payload || action.error?.message || "Login error";
         state.user.isAuthenticated = false;
       });
+
+    /* ---- signup ---- */
     builder
-      // signup
       .addCase(signupCustomer.pending, (state) => {
         state.user.status = "loading";
         state.user.error = null;
@@ -332,9 +324,10 @@ const authSlice = createSlice({
         state.user.status = "failed";
         state.user.error =
           action.payload || action.error?.message || "Signup failed";
-      })
+      });
 
-      // verify OTP
+    /* ---- verify OTP ---- */
+    builder
       .addCase(verifySignupCode.pending, (state) => {
         state.user.verifyStatus = "loading";
         state.user.verifyError = null;
@@ -360,9 +353,54 @@ export const {
 
 /* ===================== SELECTORS & HELPERS ===================== */
 
-// Prefer user token when available; else fall back to app token
-export const selectBestToken = (state) =>
-  state?.auth?.user?.token || state?.auth?.app?.token || null;
+/** Best available token (prefers user, falls back to app token). */
+export const selectBestToken = (state) => {
+  const a = state?.auth || {};
+
+  // Prefer logged-in user token
+  if (a.user?.token) return a.user.token;
+
+  // Legacy/fallback shapes (if you ever store differently)
+  if (a.userToken) return a.userToken;
+  if (a.customerToken) return a.customerToken;
+  if (a.profile?.token) return a.profile.token;
+  if (a.customer?.token) return a.customer.token;
+  if (a.login?.token) return a.login.token;
+
+  // Fall back to app token (nested in auth.app.token)
+  if (a.app?.token) return a.app.token;
+
+  // Flat fallback
+  if (a.token) return a.token;
+  if (a.appToken) return a.appToken;
+
+  return null;
+};
+
+/** Normalized customer profile for UI forms. */
+// selectors (simple + robust because you confirmed the path)
+export const selectAuthProfile = (state) => {
+  const p = state?.auth?.user?.profile || {};
+
+  // name → first/last
+  const fullName = p.name || "";
+  const [firstName = "", ...rest] = fullName.trim().split(/\s+/);
+  const lastName = rest.join(" ");
+
+  return {
+    id: p.id ?? null,
+    name: fullName,
+    firstName,
+    lastName,
+    email: p.email || "",
+    mobile: p.phone || p.mobile || "",
+    dob: p.dob || p.dateOfBirth || "",
+    gender: p.gender || "",
+    nationality: p.nationality || "Bangladeshi",
+    postalCode: p.postalCode || p.zip || "",
+    _raw: p, // handy for debugging in DevTools
+  };
+};
 
 export const selectAuthHeader = (state) => {
   const t = selectBestToken(state);
@@ -374,9 +412,8 @@ export const selectVerifyState = (s) => ({
   status: s.auth?.user?.verifyStatus || "idle",
   error: s.auth?.user?.verifyError || null,
 });
-
-export const selectIsAuthenticated = (state) => !!state?.auth?.user?.token;
-
+export const selectIsAuthenticated = (state) =>
+  Boolean(state?.auth?.user?.token);
 export const selectUser = (state) => state?.auth?.user?.profile || null;
 
 export default authSlice.reducer;

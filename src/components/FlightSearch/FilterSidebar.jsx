@@ -613,6 +613,7 @@ export default function FlightSearchPage() {
       loadingRef.current?.complete();
   }, [status]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const itineraries = results?.results || [];
   const depOD = criteria?.originDestinationOptions?.[0];
   const retOD = criteria?.originDestinationOptions?.[1];
@@ -671,13 +672,11 @@ export default function FlightSearchPage() {
       departureDate: departureDateISO,
       returnDate: isRound ? returnDateISO : undefined,
       travellers,
-      travelClassLabel, // for UI
-      // also keep cabinClass on criteria for subsequent searches
+      travelClassLabel,
       cabinClass: cabinClassToken,
       preferredAirline: criteria?.preferredAirline ?? undefined,
       apiId: criteria?.apiId ?? undefined,
 
-      // request body the flights API needs
       __requestBody: {
         originDestinationOptions,
         passengers,
@@ -686,7 +685,6 @@ export default function FlightSearchPage() {
         apiId: criteria?.apiId ?? undefined,
       },
 
-      // allow explicit overrides (if you pass more later)
       ...override,
     };
   };
@@ -698,7 +696,6 @@ export default function FlightSearchPage() {
     const depISO = normalizeToISO(depOD.flyDate);
     const newDep = addDaysISO(depISO, delta);
 
-    // keep the Search Form slice in sync for the main form UI
     dispatch(setSearchForm({ departureDate: newDep }));
 
     const args = buildSearchArgs({ departureDate: newDep });
@@ -710,21 +707,18 @@ export default function FlightSearchPage() {
     const retISO = normalizeToISO(retOD.flyDate);
     const newRet = addDaysISO(retISO, delta);
 
-    // keep the Search Form slice in sync for the main form UI
     dispatch(setSearchForm({ returnDate: newRet }));
 
     const args = buildSearchArgs({ returnDate: newRet });
     dispatch(searchFlights(args));
   };
 
-  /* ---- enrich rows ---- */
-
   const enriched = useMemo(() => {
     return itineraries.map((it) => {
       const price = pickBDTPrice(it);
       const minutes = getDurationMinutes(it);
       const stops = getStops(it);
-      const layMin = totalLayoverMinutes(it); // minutes
+      const layMin = totalLayoverMinutes(it);
 
       const firstSeg = it?.flights?.[0]?.flightSegments?.[0];
       const lastSeg = it?.flights?.[0]?.flightSegments?.slice(-1)?.[0];

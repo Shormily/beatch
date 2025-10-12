@@ -1,13 +1,22 @@
+// src/pages/FlightBooking.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { FiChevronDown, FiClock, FiUser } from "react-icons/fi";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { FiChevronDown } from "react-icons/fi";
 import { FcAlarmClock } from "react-icons/fc";
 import next from "../LandingPages/assets/next.png";
 import prev from "../LandingPages/assets/prev.png";
 import mr from "../LandingPages/assets/mr.png";
-// import styles from "./FlightBooking.module.css";
+import { selectBestToken } from "../../redux/slices/authSlice";
+import {
+  setPrimaryTraveller,
+  setContact,
+  selectSelectedFlight,
+} from "../../redux/slices/checkoutSlice";
+import { persistor } from "../../redux/store";
 
 /* ------------------ helpers ------------------ */
-const useCountdown = (seconds = 95) => {
+const useCountdown = (seconds = 360) => {
   const [left, setLeft] = useState(seconds);
   useEffect(() => {
     const id = setInterval(() => setLeft((s) => (s > 0 ? s - 1 : 0)), 1000);
@@ -30,15 +39,17 @@ const TitleChoice = ({ text, active, onClick }) => (
           : "border-gray-300 text-gray-700 hover:bg-gray-50"
       }`}
   >
-    <img src={mr} className={active ? "text-red-500" : "text-gray-500"} />
+    <img
+      src={mr}
+      className={active ? "text-red-500" : "text-gray-500"}
+      alt=""
+    />
     {text}
   </button>
 );
 
-/* ------------------ Floating Input ------------------ */
 const FloatingInput = ({ label, type = "text", required, ...props }) => {
   const [focused, setFocused] = useState(false);
-
   return (
     <div className="relative w-full font-murecho">
       <label
@@ -47,8 +58,7 @@ const FloatingInput = ({ label, type = "text", required, ...props }) => {
             focused || props.value
               ? "top-2 text-[12px] pt-2 text-gray-700 font-normal"
               : "text-[15px] text-gray-700 font-medium"
-          }
-        `}
+          }`}
       >
         {label}
         {required && "*"}
@@ -65,7 +75,6 @@ const FloatingInput = ({ label, type = "text", required, ...props }) => {
   );
 };
 
-/* ------------------ Select ------------------ */
 const Select = ({ children, ...props }) => (
   <select
     {...props}
@@ -76,8 +85,7 @@ const Select = ({ children, ...props }) => (
   </select>
 );
 
-/* ------------------ Phone Input ------------------ */
-const PhoneInput = () => (
+const PhoneInputBare = ({ value, onChange }) => (
   <div
     className="flex h-16 w-full items-center gap-2 rounded-md border border-gray-300 bg-white px-3 
                   outline-none"
@@ -94,16 +102,195 @@ const PhoneInput = () => (
     <input
       type="tel"
       placeholder="Mobile"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
       className="h-16 w-full text-sm text-gray-800 focus:outline-none"
     />
   </div>
 );
 
+// flight helpers
+const safe = (v, d = "") => (v === undefined || v === null || v === "" ? d : v);
+const getLegs = (flight) => {
+  if (Array.isArray(flight?.flights) && flight.flights.length)
+    return flight.flights;
+  if (Array.isArray(flight?.raw?.flights) && flight.raw.flights.length)
+    return flight.raw.flights;
+  const segs =
+    flight?.segments || flight?.raw?.flights?.[0]?.flightSegments || [];
+  return segs.length ? [{ flightSegments: segs }] : [];
+};
+const firstLastSeg = (leg) => {
+  const segs = Array.isArray(leg?.flightSegments) ? leg.flightSegments : [];
+  const first = segs[0] || {};
+  const last = segs.length ? segs[segs.length - 1] : {};
+  return { segs, first, last };
+};
+
+/* -------- robust profile extraction from auth -------- */
+function selectAuthProfile(state) {
+  const auth = state?.auth.user || {};
+
+  // Try several common shapes
+  const profile =
+    auth.profile ||
+    auth.user ||
+    auth.userInfo ||
+    auth.customer ||
+    auth.currentUser ||
+    {};
+
+  // Also try to merge nested fields if present
+  const data = {
+    // names
+    firstName:
+      profile.firstName ||
+      profile.given_name ||
+      (profile.name ? String(profile.name).split(" ")[0] : "") ||
+      auth.firstName ||
+      "",
+    lastName:
+      profile.lastName ||
+      profile.family_name ||
+      (profile.name
+        ? String(profile.name).split(" ").slice(1).join(" ")
+        : "") ||
+      auth.lastName ||
+      "",
+    // email / username as email fallback
+    email:
+      profile.email ||
+      auth.email ||
+      (/\S+@\S+\.\S+/.test(profile.username || "") ? profile.username : "") ||
+      "",
+    // phone
+    mobile:
+      profile.mobile ||
+      profile.phone ||
+      profile.phoneNumber ||
+      auth.mobile ||
+      auth.phone ||
+      "",
+    // dob
+    dob: profile.dob || profile.dateOfBirth || "",
+    // gender
+    gender: profile.gender || profile.sex || "",
+    // nationality / country
+    nationality: profile.nationality || profile.country || "Bangladeshi",
+    // postal
+    postalCode: profile.postalCode || profile.zip || "",
+  };
+
+  return data;
+}
+
+function genderToTitle(g) {
+  const v = String(g || "").toLowerCase();
+  if (v.startsWith("m")) return "Mr";
+  if (v.startsWith("f")) return "Mrs"; // you can tweak to "Ms" if you prefer
+  return "Mr";
+}
+
 /* ------------------ main ------------------ */
 export default function FlightBooking() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const selected = useSelector(selectSelectedFlight);
+  const authToken = useSelector(selectBestToken);
+
+  useEffect(() => {
+    if (!authToken) navigate("/sign"); // forces login
+  }, [authToken, navigate]);
+
+  useEffect(() => {
+    if (!selected?.flight) navigate("/searchresult");
+  }, [selected, navigate]);
+
   const [collapsed, setCollapsed] = useState(false);
-  const [title, setTitle] = useState("Mrs");
   const { label, pct } = useCountdown(360);
+
+  // read profile from auth (robust)
+  const authProfile = useSelector(selectAuthProfile);
+
+  // traveller form (prefill from auth once)
+  const [title, setTitle] = useState(genderToTitle(authProfile.gender));
+  const [firstName, setFirstName] = useState(authProfile.firstName || "");
+  const [surname, setSurname] = useState(authProfile.lastName || "");
+  const [dob, setDob] = useState(authProfile.dob || "");
+  const [nationality, setNationality] = useState(authProfile.nationality || "");
+  const [postalCode, setPostalCode] = useState(authProfile.postalCode || "");
+
+  // contact form prefill
+  const [mobile, setMobile] = useState(authProfile.mobile || "");
+  const [email, setEmail] = useState(authProfile.email || "");
+
+  // If auth updates later (e.g., hydration), fill blanks only once
+  useEffect(() => {
+    setTitle((t) => (t ? t : genderToTitle(authProfile.gender)));
+    setFirstName((v) => (v ? v : authProfile.firstName || ""));
+    setSurname((v) => (v ? v : authProfile.lastName || ""));
+    setDob((v) => (v ? v : authProfile.dob || ""));
+    setNationality((v) => (v ? v : authProfile.nationality || "Bangladeshi"));
+    setPostalCode((v) => (v ? v : authProfile.postalCode || ""));
+    setMobile((v) => (v ? v : authProfile.mobile || ""));
+    setEmail((v) => (v ? v : authProfile.email || ""));
+  }, [authProfile]);
+
+  // dynamic summary from selected
+  const legs = useMemo(() => getLegs(selected?.flight || {}), [selected]);
+  const isRoundTrip = legs.length >= 2;
+
+  const firstLeg = legs[0] || {};
+  const lastLeg = isRoundTrip ? legs[legs.length - 1] : legs[0] || {};
+  const { first: flFirst } = firstLastSeg(firstLeg);
+  const { last: llLast } = firstLastSeg(lastLeg);
+
+  const airlineCode =
+    flFirst?.airline?.optAirlineCode || flFirst?.airline?.code || "";
+  const airlineName =
+    flFirst?.airline?.optAirline ||
+    flFirst?.airline?.name ||
+    flFirst?.airline?.code ||
+    "Airline";
+
+  const depCode =
+    flFirst?.departure?.airport?.airportCode ||
+    flFirst?.departure?.airport?.cityCode ||
+    "";
+  const arrCode =
+    llLast?.arrival?.airport?.airportCode ||
+    llLast?.arrival?.airport?.cityCode ||
+    "";
+
+  const depDate = safe(flFirst?.departure?.depDate);
+  const retDate = isRoundTrip ? safe(llLast?.arrival?.arrDate) : "";
+
+  const airFareBDT = selected?.pricing?.airFareBDT ?? 0;
+  const couponBDT = selected?.pricing?.couponBDT ?? 0;
+  const totalBDT =
+    selected?.pricing?.totalBDT ?? Math.max(airFareBDT - couponBDT, 0);
+  const promoCode = selected?.pricing?.promoCode || "FTFLASH10";
+
+  const onSaveContinue = () => {
+    dispatch(
+      setPrimaryTraveller({
+        title,
+        firstName: firstName.trim(),
+        lastName: surname.trim(),
+        dob,
+        nationality,
+        postalCode,
+      })
+    );
+    dispatch(
+      setContact({
+        mobile: mobile.trim(),
+        email: email.trim(),
+      })
+    );
+    navigate("/addons");
+  };
 
   const topBadges = useMemo(
     () => [
@@ -120,10 +307,9 @@ export default function FlightBooking() {
       <div className="mx-auto max-w-6xl px-4 pt-6">
         {/* Top nav pills + time header */}
         <div className="grid grid-cols-[1fr_340px] items-start">
-          {/* start the code */}
-          <div className="flex items-start  ">
+          <div className="flex items-start">
             <div className="w-full ">
-              <nav aria-label="" className="">
+              <nav aria-label="">
                 <div className="flex  rounded-full text-sm p-1  ">
                   <button className=" bg-red-50 text-red-600 rounded-full z-10 font-semibold text-[14px] px-16 py-3.5 transition  border border-white shadow-[2px_0_4px_rgba(0,0,0,0.1)]">
                     1. Traveller Info
@@ -230,12 +416,31 @@ export default function FlightBooking() {
 
                 {/* Form grid */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <FloatingInput label="Given Name / First Name" required />
-                  <FloatingInput label="Surname" required />
-                  <FloatingInput label="Date of Birth" required />
+                  <FloatingInput
+                    label="Given Name / First Name"
+                    required
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                  <FloatingInput
+                    label="Surname"
+                    required
+                    value={surname}
+                    onChange={(e) => setSurname(e.target.value)}
+                  />
+                  <FloatingInput
+                    label="Date of Birth"
+                    required
+                    type="date"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                  />
 
                   <div className="relative">
-                    <Select>
+                    <Select
+                      value={nationality}
+                      onChange={(e) => setNationality(e.target.value)}
+                    >
                       <option>Bangladeshi</option>
                       <option>Indian</option>
                       <option>Pakistani</option>
@@ -245,7 +450,11 @@ export default function FlightBooking() {
                     <FiChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" />
                   </div>
 
-                  <FloatingInput label="Postal Code" />
+                  <FloatingInput
+                    label="Postal Code"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                  />
                 </div>
 
                 {/* Contact Info */}
@@ -258,8 +467,14 @@ export default function FlightBooking() {
                   </div>
                 </div>
                 <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <PhoneInput />
-                  <FloatingInput label="Email Address" type="email" required />
+                  <PhoneInputBare value={mobile} onChange={setMobile} />
+                  <FloatingInput
+                    label="Email Address"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
 
                 {/* Frequent Flyer */}
@@ -297,11 +512,12 @@ export default function FlightBooking() {
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2 text-gray-700">
                 <img
-                  alt="air"
-                  src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Airplane_silhouette.svg"
-                  className="h-4 w-4 opacity-70"
+                  src={`https://airlines.a4aero.com/images/${airlineCode}.png`}
+                  alt={airlineCode}
+                  className="w-10 h-full object-contain"
                 />
-                <span className="text-sm font-medium">US Bangla Airlines</span>
+
+                <span className="text-sm font-medium">{airlineName}</span>
               </div>
               <button className="text-xs font-medium text-blue-600 hover:underline">
                 Details
@@ -309,41 +525,61 @@ export default function FlightBooking() {
             </div>
 
             <div className="mb-2 text-sm text-gray-700">
-              <span className="font-semibold">DAC</span>
+              <span className="font-semibold">{depCode || "—"}</span>
               <span className="mx-1">↔</span>
-              <span className="font-semibold">CXB</span>
-              <span className="ml-1 text-gray-500">(Round Trip)</span>
-              <div className="text-[12px] text-gray-500">21 Sep - 24 Sep</div>
+              <span className="font-semibold">{arrCode || "—"}</span>
+              {isRoundTrip && (
+                <span className="ml-1 text-gray-500">(Round Trip)</span>
+              )}
+              <div className="text-[12px] text-gray-500">
+                {depDate || "—"}
+                {isRoundTrip && retDate ? ` - ${retDate}` : ""}
+              </div>
             </div>
 
             <div className="mb-2 flex items-center justify-between text-sm">
               <span className="text-gray-600">Air Fare</span>
-              <span className="font-medium text-gray-800">BDT 10,398</span>
+              <span className="font-medium text-gray-800">
+                BDT {Number(airFareBDT).toLocaleString()}
+              </span>
             </div>
 
-            <div className="mb-2 flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <span className="rounded bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
-                  Offer
-                </span>
-                <span className="rounded border border-orange-300 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
-                  FTFLASH10
+            {couponBDT > 0 && (
+              <div className="mb-2 flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="rounded bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
+                    Offer
+                  </span>
+                  <span className="rounded border border-orange-300 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
+                    {promoCode}
+                  </span>
+                </div>
+                <span className="font-medium text-red-600">
+                  BDT {Number(couponBDT).toLocaleString()}
                 </span>
               </div>
-              <span className="font-medium text-red-600">BDT 1,448</span>
-            </div>
+            )}
 
             <div className="mt-3 rounded-md bg-red-50 px-3 py-2">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs text-gray-600">Total</div>
-                  <div className="text-[11px] text-green-600">You Save</div>
+                  {couponBDT > 0 && (
+                    <div className="text-[11px] text-green-600">You Save</div>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-semibold text-gray-800">
-                    BDT <span className="text-xl">8,950</span>
+                    BDT{" "}
+                    <span className="text-xl">
+                      {Number(totalBDT).toLocaleString()}
+                    </span>
                   </div>
-                  <div className="text-[11px] text-green-600">1,448 BDT</div>
+                  {couponBDT > 0 && (
+                    <div className="text-[11px] text-green-600">
+                      {Number(couponBDT).toLocaleString()} BDT
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -354,6 +590,7 @@ export default function FlightBooking() {
         <div className="my-6 grid place-items-center">
           <button
             type="button"
+            onClick={onSaveContinue}
             className="w-[340px] rounded-2xl bg-red-700 px-5 py-3 text-white shadow-md hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-200"
           >
             Save & Continue →

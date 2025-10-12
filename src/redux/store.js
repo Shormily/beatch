@@ -16,12 +16,13 @@ import authReducer from "./slices/authSlice";
 import flightsReducer from "./slices/flightsSlice";
 import airportsReducer from "./slices/airportsSlice";
 import searchFormReducer from "./slices/searchFormSlice";
-
+import checkoutReducer from "./slices/checkoutSlice";
 const rootReducer = combineReducers({
   auth: authReducer,
   flights: flightsReducer,
   airports: airportsReducer,
   searchForm: searchFormReducer,
+  checkout: checkoutReducer,
 });
 
 // 🚀 add a version + migrate to handle old auth shape
@@ -29,7 +30,7 @@ const persistConfig = {
   key: "root",
   storage,
   version: 2,
-  whitelist: ["auth", "airports", "searchForm", "flights"],
+  whitelist: ["auth", "airports", "searchForm", "flights", "checkout"],
   migrate: async (state) => {
     if (!state) return state;
 

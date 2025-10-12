@@ -29,7 +29,7 @@ function App() {
         <Route path="/sign" element={<Sign />} />
         <Route path="/signup" element={<SignUp />} />
         <Route
-          path="/fare"
+          path="/booking"
           element={
             <RequireAuth>
               <FlightBooking />

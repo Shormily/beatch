@@ -1,6 +1,8 @@
-// FlightCard.jsx
+// src/components/FlightCard.jsx
 "use client";
 import { useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import coupon from "../LandingPages/assets/coupon.png";
 import planeImg from "../LandingPages/assets/plane.png";
@@ -9,6 +11,7 @@ import { RiMoneyRupeeCircleFill } from "react-icons/ri";
 import { MdAirlineSeatReclineNormal } from "react-icons/md";
 import CustomTabs from "./CustomTabs";
 import FareModalDemo from "./FareModal";
+import { setSelectedFlight } from "../../redux/slices/checkoutSlice";
 
 /* =============== helpers =============== */
 const fmtTime = (t) =>
@@ -19,56 +22,41 @@ const fmtTime = (t) =>
     : "";
 const safe = (v, d = "") => (v === undefined || v === null || v === "" ? d : v);
 
-// Put near your other helpers
-
-// Nice label normalizer
 const cabinLabel = (raw) => {
   if (!raw) return "Economy";
   const v = String(raw).trim();
-
-  // UI labels first
   const lower = v.toLowerCase();
   if (lower === "economy") return "Economy";
   if (lower === "premium economy") return "Premium Economy";
   if (lower === "business" || lower === "business class") return "Business";
   if (lower === "first" || lower === "first class") return "First";
-
-  // API tokens (common cases)
   if (v === "PremiumEconomy") return "Premium Economy";
   if (v.toUpperCase() === "ECONOMY") return "Economy";
   if (v.toUpperCase() === "BUSINESS") return "Business";
   if (v.toUpperCase() === "FIRST") return "First";
-
-  // Booking/cabin codes
   const up = v.toUpperCase();
   if (up === "Y") return "Economy";
   if (up === "C" || up === "J") return "Business";
   if (up === "F") return "First";
-
-  // fuzzy
   if (lower.includes("premium")) return "Premium Economy";
   if (lower.includes("business")) return "Business";
   if (lower.includes("first")) return "First";
-
   return "Economy";
 };
 
-// Pull a representative cabin from the first segment we find
 const extractCabinFromSegments = (flight) => {
   const legs = getLegs(flight);
   for (const leg of legs) {
     const segs = leg?.flightSegments || [];
     for (const s of segs) {
-      // prefer explicit cabinType, then code, then booking class
-      if (s?.cabinType) return s.cabinType; // e.g. "BUSINESS"
-      if (s?.cabinTypeCode) return s.cabinTypeCode; // e.g. "C"
-      if (s?.bookingClass) return s.bookingClass; // e.g. "D"
+      if (s?.cabinType) return s.cabinType;
+      if (s?.cabinTypeCode) return s.cabinTypeCode;
+      if (s?.bookingClass) return s.bookingClass;
     }
   }
   return null;
 };
 
-// pick legs (outbound/return)
 const getLegs = (flight) => {
   if (Array.isArray(flight?.flights) && flight.flights.length)
     return flight.flights;
@@ -102,16 +90,17 @@ const isRefundable = (flight) =>
   flight?.raw?.totalFare?.refundable ??
   false;
 
-// pax helpers
 const getPassengerFares = (flight) =>
   flight?.fares?.[0]?.passengerFares ||
   flight?.raw?.fares?.[0]?.passengerFares ||
   [];
+
 const bdtPart = (pf, type) =>
   Number(
     pf?.referanceFares?.find((r) => r.currency === "BDT" && r.type === type)
       ?.amount ?? 0
   );
+
 const buildPaxMap = (flight) => {
   const list = getPassengerFares(flight);
   const map = {};
@@ -124,6 +113,7 @@ const buildPaxMap = (flight) => {
   });
   return map;
 };
+
 const paxLabel = (t) =>
   t === "ADT" ? "Adult" : t === "CHD" ? "Child" : t === "INF" ? "Infant" : t;
 
@@ -212,6 +202,9 @@ function TimelineRow({ leg }) {
 
 /* =============== main =============== */
 export default function FlightCard({ flight }) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [open, setOpen] = useState(false);
   const legs = useMemo(() => getLegs(flight), [flight]);
   const isRoundTrip = legs.length >= 2;
@@ -232,20 +225,18 @@ export default function FlightCard({ flight }) {
   );
 
   const travelClass = useMemo(() => {
-    // 1) Prefer UI label you passed along (if present)
     const preferred =
       flight?.travelClassLabel ||
       flight?.raw?.travelClassLabel ||
       flight?.raw?.criteria?.travelClassLabel ||
       flight?.raw?.searchRequest?.travelClassLabel;
 
-    // 2) Otherwise fallback to API-level tokens and finally segment-level data
     const token =
       flight?.travelClass ||
       flight?.raw?.cabinClass ||
       flight?.raw?.criteria?.cabinClass ||
       flight?.raw?.searchRequest?.cabinClass ||
-      extractCabinFromSegments(flight); // <- from the sample you shared
+      extractCabinFromSegments(flight);
 
     return cabinLabel(preferred || token);
   }, [flight]);
@@ -261,6 +252,23 @@ export default function FlightCard({ flight }) {
   const promoCode = "FTEBLDOM18";
   const couponBDT = isRoundTrip ? 3895 : 1894;
   const totalBDT = Math.max(airFareBDT - couponBDT, 0);
+
+  const handleSelect = () => {
+    dispatch(
+      setSelectedFlight({
+        flight,
+        pricing: {
+          airFareBDT,
+          couponBDT,
+          totalBDT,
+          promoCode,
+        },
+        travelClass,
+        travelerCount,
+      })
+    );
+    navigate("/booking"); // 👈 booking page route
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl font-murecho relative">
@@ -354,7 +362,6 @@ export default function FlightCard({ flight }) {
                 BDT {airFareBDT.toLocaleString()}
               </p>
 
-              {/* NEW: class + traveler count (matches your screenshot) */}
               <p className="text-sm text-gray-700 mt-2">{travelClass}</p>
               <p className="text-sm text-gray-700">
                 {travelerCount} {travelerCount === 1 ? "Traveler" : "Travelers"}
@@ -370,6 +377,7 @@ export default function FlightCard({ flight }) {
                 </button>
                 <button
                   type="button"
+                  onClick={handleSelect}
                   className="flex-[1.2] h-10 rounded-full bg-red-700 text-white text-sm font-semibold hover:bg-red-700 transition"
                 >
                   Select
@@ -434,7 +442,6 @@ export default function FlightCard({ flight }) {
                     BDT {airFareBDT.toLocaleString()}
                   </p>
 
-                  {/* ALSO SHOW class + travelers in expanded view */}
                   <p className="text-sm text-gray-700 mt-2">{travelClass}</p>
                   <p className="text-sm text-gray-700">
                     {travelerCount}{" "}
