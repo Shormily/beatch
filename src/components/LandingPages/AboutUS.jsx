@@ -19,7 +19,7 @@ const AboutUS = () => {
 
 
                     <h1 className="relative z-10 text-white font-bold tracking-tight text-5xl  drop-shadow-md">
-                        About Us
+                        About Us yup
                     </h1>
                 </section>
 
