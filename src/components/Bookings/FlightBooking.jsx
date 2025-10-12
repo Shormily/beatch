@@ -13,7 +13,6 @@ import {
   setContact,
   selectSelectedFlight,
 } from "../../redux/slices/checkoutSlice";
-import { persistor } from "../../redux/store";
 
 /* ------------------ helpers ------------------ */
 const useCountdown = (seconds = 360) => {
