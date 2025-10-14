@@ -13,6 +13,7 @@ import SignUp from "./components/Auth/signup";
 import FlightBooking from "./components/Bookings/FlightBooking";
 import FareModalDemo from "./components/FlightSearch/FareModal";
 import RequireAuth from "./components/Auth/RequireAuth";
+import Myaccount from "./components/LandingPages/Myaccount";
 
 function App() {
   const dispatch = useDispatch();
@@ -26,6 +27,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/searchresult" element={<SearchDesign />} />
         <Route path="/aboutus" element={<AboutUs />} />
+        <Route path="/myprofile" element={<Myaccount />} />
         <Route path="/sign" element={<Sign />} />
         <Route path="/signup" element={<SignUp />} />
         <Route
