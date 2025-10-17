@@ -14,6 +14,15 @@ import {
 } from "date-fns";
 
 /* ---------- helpers ---------- */
+
+/* ---------- helpers ---------- */
+const disabledStyle = {
+  filter: "grayscale(1)",
+  opacity: 0.45,
+  cursor: "not-allowed",
+  pointerEvents: "none",
+};
+
 const strip = (d) => {
   if (!(d instanceof Date) || !isValid(d)) return null;
   const x = new Date(d);
@@ -236,6 +245,9 @@ export default function FirsttripCalendarClone({
               pagedNavigation
               fixedWeeks
               showOutsideDays
+              /* NEW: gray out past dates */
+              disabled={[{ before: minDate }]}
+              modifiersStyles={{ disabled: disabledStyle }}
             />
           </div>
         )}
