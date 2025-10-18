@@ -107,7 +107,7 @@ export default function Navbar() {
                       {user?.name || user?.email || "My Account"}
                     </span>
                     <img
-                      src={user.image}
+                      src={user?.image}
                       alt="Profile"
                       className="w-10 h-10 bg-pink-100 rounded-full object-cover"
                     />
