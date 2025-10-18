@@ -78,9 +78,8 @@ export default function Navbar() {
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    className={`relative flex flex-col items-center group ${
-                      isActive ? "text-gray-800 font-semibold" : "text-black"
-                    }`}
+                    className={`relative flex flex-col items-center group ${isActive ? "text-gray-800 font-semibold" : "text-black"
+                      }`}
                   >
                     <img className="h-7 w-auto mb-1" src={item.icon} alt="" />
                     {item.label === "Business Class" ? (
@@ -91,9 +90,8 @@ export default function Navbar() {
                       item.label
                     )}
                     <span
-                      className={`absolute -bottom-1 left-1/2 h-[2px] bg-red-500 transition-all duration-300 transform -translate-x-1/2 ${
-                        isActive ? "w-full" : "w-0 group-hover:w-full"
-                      }`}
+                      className={`absolute -bottom-1 left-1/2 h-[2px] bg-red-500 transition-all duration-300 transform -translate-x-1/2 ${isActive ? "w-full" : "w-0 group-hover:w-full"
+                        }`}
                     />
                   </NavLink>
                 );
@@ -108,12 +106,18 @@ export default function Navbar() {
                     <span className="text-sm text-gray-700">
                       {user?.name || user?.email || "My Account"}
                     </span>
+                    <img
+                      src={user.image}
+                      alt="Profile"
+                      className="w-10 h-10 bg-pink-100 rounded-full object-cover"
+                    />
                     <button
                       onClick={handleLogout}
                       className="px-5 py-2 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-100 transition-all duration-300"
                     >
                       Log out
                     </button>
+
                   </>
                 ) : (
                   <>
@@ -143,9 +147,8 @@ export default function Navbar() {
 
         {/* Mobile Drawer */}
         <div
-          className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 z-50 ${
-            open ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 z-50 ${open ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           <div className="flex justify-between items-center p-4">
             <img className="h-10" src={navlogo} alt="logo" />
@@ -161,10 +164,9 @@ export default function Navbar() {
                 to={item.to}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 ${
-                    item.label === "Business Class"
-                      ? "bg-gradient-to-r from-teal-900 to-teal-400 bg-clip-text text-transparent font-semibold"
-                      : isActive
+                  `flex items-center gap-3 ${item.label === "Business Class"
+                    ? "bg-gradient-to-r from-teal-900 to-teal-400 bg-clip-text text-transparent font-semibold"
+                    : isActive
                       ? "text-red-500 font-semibold"
                       : "text-black"
                   }`
@@ -218,10 +220,9 @@ export default function Navbar() {
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${
-                isActive
-                  ? "bg-[#7A1C1C] text-white"
-                  : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${isActive
+                ? "bg-[#7A1C1C] text-white"
+                : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Flight"
@@ -232,10 +233,9 @@ export default function Navbar() {
           <NavLink
             to="/hotel"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${
-                isActive
-                  ? "bg-[#7A1C1C] text-white"
-                  : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${isActive
+                ? "bg-[#7A1C1C] text-white"
+                : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Hotel"
@@ -246,10 +246,9 @@ export default function Navbar() {
           <NavLink
             to="/promotions"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${
-                isActive
-                  ? "bg-[#7A1C1C] text-white"
-                  : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${isActive
+                ? "bg-[#7A1C1C] text-white"
+                : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Promotions"
@@ -260,10 +259,9 @@ export default function Navbar() {
           <NavLink
             to="/business"
             className={({ isActive }) =>
-              `flex items-center justify-center h-12 transition-all ${
-                isActive
-                  ? "bg-[#7A1C1C] text-white"
-                  : "text-white/70 hover:text-white"
+              `flex items-center justify-center h-12 transition-all ${isActive
+                ? "bg-[#7A1C1C] text-white"
+                : "text-white/70 hover:text-white"
               }`
             }
             aria-label="Business"
